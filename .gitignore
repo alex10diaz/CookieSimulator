@@ -1,0 +1,15 @@
+# Rojo / Roblox
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Rokit / toolchain binaries
+.rokit/
+
+# Claude Code session data
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
