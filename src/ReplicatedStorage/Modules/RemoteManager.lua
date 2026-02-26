@@ -39,6 +39,16 @@ local REMOTES = {
     "BoxCarried",
     "BoxDelivered",
     "BoxCreated",
+    -- M1: Game state & session
+    "GameStateChanged",
+    "AcceptOrder",
+    "OrderAccepted",
+    "OrderFailed",
+    "HUDUpdate",
+    "DeliverBox",
+    "DeliveryResult",
+    "EndOfDaySummary",
+    "TutorialComplete",
 }
 
 -- Ensure all remotes exist
