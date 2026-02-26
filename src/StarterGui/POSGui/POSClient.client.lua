@@ -15,10 +15,52 @@ local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local posGui    = playerGui:WaitForChild("POSGui")
 
+-- ─── Build UI ─────────────────────────────────────────────────────────────────
+local bg = posGui:FindFirstChild("Background")
+if not bg then
+    bg = Instance.new("Frame")
+    bg.Name              = "Background"
+    bg.Size              = UDim2.new(0, 360, 0, 480)
+    bg.Position          = UDim2.new(0.5, -180, 0.5, -240)
+    bg.BackgroundColor3  = Color3.fromRGB(20, 20, 20)
+    bg.BackgroundTransparency = 0.1
+    bg.BorderSizePixel   = 0
+    bg.Parent            = posGui
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 12)
+    c.Parent = bg
+
+    local title = Instance.new("TextLabel")
+    title.Name              = "Title"
+    title.Size              = UDim2.new(1, 0, 0, 50)
+    title.BackgroundTransparency = 1
+    title.TextColor3        = Color3.fromRGB(255, 255, 255)
+    title.TextScaled        = true
+    title.Font              = Enum.Font.GothamBold
+    title.Text              = "POS — Order Queue"
+    title.Parent            = bg
+end
+
+local orderList = bg:FindFirstChild("OrderList")
+if not orderList then
+    orderList = Instance.new("ScrollingFrame")
+    orderList.Name              = "OrderList"
+    orderList.Size              = UDim2.new(1, -20, 1, -60)
+    orderList.Position          = UDim2.new(0, 10, 0, 55)
+    orderList.BackgroundTransparency = 1
+    orderList.ScrollBarThickness = 4
+    orderList.CanvasSize        = UDim2.new(0, 0, 0, 0)
+    orderList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    orderList.Parent            = bg
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 6)
+    layout.Parent  = orderList
+end
+
 -- ─── State ────────────────────────────────────────────────────────────────────
 local isOpen = false
 
--- ─── UI Builder ───────────────────────────────────────────────────────────────
+-- ─── Order Tickets ────────────────────────────────────────────────────────────
 local function buildOrderTicket(orderId, orderData, parent)
     local frame = Instance.new("Frame")
     frame.Name              = "Order_" .. orderId
@@ -28,10 +70,9 @@ local function buildOrderTicket(orderId, orderData, parent)
                               or  Color3.fromRGB(240, 240, 240)
     frame.BorderSizePixel   = 0
     frame.Parent            = parent
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = frame
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = frame
 
     local label = Instance.new("TextLabel")
     label.Size              = UDim2.new(0.65, 0, 1, 0)
@@ -56,10 +97,9 @@ local function buildOrderTicket(orderId, orderData, parent)
     btn.Text                = "Accept"
     btn.BorderSizePixel     = 0
     btn.Parent              = frame
-
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
-    btnCorner.Parent = btn
+    local bc = Instance.new("UICorner")
+    bc.CornerRadius = UDim.new(0, 6)
+    bc.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
         acceptRemote:FireServer(orderId)
@@ -68,14 +108,12 @@ local function buildOrderTicket(orderId, orderData, parent)
 end
 
 local function refreshPOS()
-    local list = posGui:FindFirstChild("OrderList")
-    if not list then return end
-    for _, c in ipairs(list:GetChildren()) do
+    for _, c in ipairs(orderList:GetChildren()) do
         if c:IsA("Frame") then c:Destroy() end
     end
     local orders = OrderManager.GetNPCOrders()
     for _, data in ipairs(orders) do
-        buildOrderTicket(data.orderId, data, list)
+        buildOrderTicket(data.orderId, data, orderList)
     end
 end
 
@@ -89,18 +127,13 @@ local function closePOS()
     posGui.Enabled = false
 end
 
--- ─── POS ProximityPrompt ──────────────────────────────────────────────────────
+-- ─── Interactions ─────────────────────────────────────────────────────────────
 ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer)
     if triggeringPlayer ~= player then return end
     if prompt.Name ~= "POSPrompt" then return end
-    if posGui.Enabled then
-        closePOS()
-    else
-        openPOS()
-    end
+    if posGui.Enabled then closePOS() else openPOS() end
 end)
 
--- Close POS with Escape
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if input.KeyCode == Enum.KeyCode.Escape and posGui.Enabled then
@@ -108,13 +141,11 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- ─── Game State ───────────────────────────────────────────────────────────────
 stateRemote.OnClientEvent:Connect(function(state)
     isOpen = (state == "Open")
     if not isOpen then closePOS() end
 end)
 
--- ─── Order Accepted Feedback ──────────────────────────────────────────────────
 acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
     print("[POSClient] Order accepted: " .. tostring(orderId))
     closePOS()
