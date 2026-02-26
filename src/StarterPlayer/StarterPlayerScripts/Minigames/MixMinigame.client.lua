@@ -15,16 +15,15 @@ local HIT_THRESHOLD = 22   -- degrees tolerance
 local ROUND_TIMEOUT = 4    -- seconds per round
 local TOTAL_ROUNDS  = 3
 local RING_RADIUS   = 110  -- px from center to marker
-local GREEN_ANGLE   = 90   -- degrees; 90 = right side (3 o'clock) in Roblox screen coords
-
 startRemote.OnClientEvent:Connect(function()
+    if player:WaitForChild("PlayerGui"):FindFirstChild("MixGui") then return end
     -- Lock movement
     local char = player.Character
     if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
     humanoid.WalkSpeed = 0
-    humanoid.JumpPower = 0
+    humanoid.JumpHeight = 0
 
     -- Build GUI
     local sg = Instance.new("ScreenGui")
@@ -106,7 +105,7 @@ startRemote.OnClientEvent:Connect(function()
         if roundConn then roundConn:Disconnect() end
         if hitConn   then hitConn:Disconnect()   end
         humanoid.WalkSpeed = 16
-        humanoid.JumpPower = 7.2
+        humanoid.JumpHeight = 7.2
         sg:Destroy()
         resultRemote:FireServer(math.min(hits * 34, 100))
     end
@@ -140,7 +139,8 @@ startRemote.OnClientEvent:Connect(function()
             if elapsed >= ROUND_TIMEOUT then
                 roundActive = false
                 roundConn:Disconnect()
-                task.delay(0.3, function() startRound(currentRound + 1) end)
+                local nextRound = currentRound + 1
+                task.delay(0.3, function() startRound(nextRound) end)
             end
         end)
 
@@ -159,9 +159,10 @@ startRemote.OnClientEvent:Connect(function()
             else
                 hitBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
             end
+            local nextRound = currentRound + 1
             task.delay(0.4, function()
                 hitBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 100)
-                startRound(currentRound + 1)
+                startRound(nextRound)
             end)
         end)
     end
