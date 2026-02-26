@@ -8,7 +8,7 @@ from datetime import datetime
 
 # -------- CONFIG --------
 PROJECT_DIR = r"C:\Users\alex1\Documents\CookieSimulator"
-CHECK_INTERVAL = 180  # seconds (3 minutes)
+CHECK_INTERVAL = 60  # seconds (3 minutes)
 # ------------------------
 
 def now():
