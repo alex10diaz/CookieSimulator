@@ -52,7 +52,13 @@ acceptRemote.OnServerEvent:Connect(function(player, orderId)
     end
 
     local orders = OrderManager.GetNPCOrders()
-    local order  = orders[tostring(orderId)]
+    local order
+    for _, o in ipairs(orders) do
+        if o.orderId == orderId then
+            order = o
+            break
+        end
+    end
     if not order then
         failedRemote:FireClient(player, orderId, "Order not found")
         return

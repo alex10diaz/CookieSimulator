@@ -74,8 +74,8 @@ local function refreshPOS()
         if c:IsA("Frame") then c:Destroy() end
     end
     local orders = OrderManager.GetNPCOrders()
-    for id, data in pairs(orders) do
-        buildOrderTicket(id, data, list)
+    for _, data in ipairs(orders) do
+        buildOrderTicket(data.orderId, data, list)
     end
 end
 
