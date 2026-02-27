@@ -94,31 +94,9 @@ local function showPicker()
     end
 end
 
--- Connect to every MixPrompt in Workspace/Mixers
-local function hookMixer(mixer)
-    for _, obj in ipairs(mixer:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then
-            -- Client-side Triggered fires with no args (only fires for LocalPlayer)
-            obj.Triggered:Connect(function()
-                showPicker()
-            end)
-        end
-    end
-end
-
-local function hookAllMixers()
-    local mixers = workspace:WaitForChild("Mixers", 10)
-    if not mixers then
-        warn("[MixerController] Workspace.Mixers not found")
-        return
-    end
-    for _, mixer in ipairs(mixers:GetChildren()) do
-        hookMixer(mixer)
-    end
-    -- Handle mixers added later
-    mixers.ChildAdded:Connect(hookMixer)
-end
-
-hookAllMixers()
+-- Server fires ShowMixPicker when player triggers a Mixer ProximityPrompt
+showPickerRemote.OnClientEvent:Connect(function()
+    showPicker()
+end)
 
 print("[MixerController] Ready.")
