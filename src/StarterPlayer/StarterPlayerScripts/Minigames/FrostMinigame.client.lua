@@ -27,7 +27,7 @@ local CHECKPOINT_OFFSETS = {
 }
 
 startRemote.OnClientEvent:Connect(function()
-    if player:WaitForChild("PlayerGui"):FindFirstChild("FrostGui") then return end
+    if player.PlayerGui:FindFirstChild("FrostGui") then return end
     local char = player.Character
     if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid")
@@ -140,7 +140,7 @@ startRemote.OnClientEvent:Connect(function()
         local dot        = dots[activeIndex]
         if not dot or not dot.Parent then return end
 
-        local dotCenter  = dot.AbsolutePosition + Vector2.new(20, 20)
+        local dotCenter  = dot.AbsolutePosition + dot.AbsoluteSize * 0.5
         local mousePos   = UserInputService:GetMouseLocation()
         local dist       = (mousePos - dotCenter).Magnitude
 
