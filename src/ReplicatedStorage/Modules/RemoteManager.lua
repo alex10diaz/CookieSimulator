@@ -10,6 +10,7 @@ local RemoteManager = {}
 -- Registry of all valid remote names
 local REMOTES = {
     -- Mix
+    "ShowMixPicker",
     "RequestMixStart",
     "StartMixMinigame",
     "MixMinigameResult",

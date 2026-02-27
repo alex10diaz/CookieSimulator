@@ -331,4 +331,31 @@ Players.PlayerRemoving:Connect(function(player)
     dressPending[player]   = nil
 end)
 
+-- ============================================================
+-- MIXER PROXIMITY PROMPTS → ShowMixPicker (server-side trigger)
+-- Client-side Triggered is unreliable; server hooks the prompts
+-- and fires ShowMixPicker back to the triggering player.
+-- ============================================================
+local ShowMixPicker = RemoteManager.Get("ShowMixPicker")
+
+local function hookMixerPrompts(model)
+    for _, obj in ipairs(model:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            obj.Triggered:Connect(function(player)
+                ShowMixPicker:FireClient(player)
+            end)
+        end
+    end
+end
+
+local mixersFolder = workspace:WaitForChild("Mixers", 10)
+if mixersFolder then
+    for _, mixer in ipairs(mixersFolder:GetChildren()) do
+        hookMixerPrompts(mixer)
+    end
+    mixersFolder.ChildAdded:Connect(hookMixerPrompts)
+else
+    warn("[MinigameServer] Workspace.Mixers not found")
+end
+
 print("[MinigameServer] Ready")
