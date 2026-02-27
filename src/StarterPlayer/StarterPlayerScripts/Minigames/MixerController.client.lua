@@ -97,10 +97,9 @@ end
 local function hookMixer(mixer)
     for _, obj in ipairs(mixer:GetDescendants()) do
         if obj:IsA("ProximityPrompt") and string.find(obj.Name, "Mix", 1, true) then
-            obj.Triggered:Connect(function(plr)
-                if plr == player then
-                    showPicker()
-                end
+            -- Client-side Triggered fires with no args (only fires for LocalPlayer)
+            obj.Triggered:Connect(function()
+                showPicker()
             end)
         end
     end
