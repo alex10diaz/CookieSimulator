@@ -138,7 +138,7 @@ local function startSession(player, stationName, ...)
         dressPending[player] = entry
         activeSessions[player] = { station = stationName, batchId = batchId, warmerEntry = entry }
         local startRemote = RemoteManager.Get(config.start)
-        startRemote:FireClient(player)
+        startRemote:FireClient(player, entry.cookieId)
         return
     end
 
