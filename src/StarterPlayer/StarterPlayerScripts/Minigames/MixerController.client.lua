@@ -25,16 +25,14 @@ local COOKIES = {
 local BTN_W, BTN_H, BTN_PAD = 118, 60, 8
 
 local function showPicker()
-    -- Reentrancy guard — only one picker at a time
     if playerGui:FindFirstChild("MixPickerGui") then return end
-    -- Don't open if a minigame is already running
     if playerGui:FindFirstChild("MixGui") then return end
 
     local sg = Instance.new("ScreenGui")
-    sg.Name          = "MixPickerGui"
-    sg.ResetOnSpawn  = false
+    sg.Name           = "MixPickerGui"
+    sg.ResetOnSpawn   = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.Parent        = playerGui
+    sg.Parent         = playerGui
 
     local bg = Instance.new("Frame")
     bg.Size                   = UDim2.new(0, 280, 0, 340)
@@ -54,7 +52,6 @@ local function showPicker()
     title.Text                   = "Choose a Cookie"
     title.Parent                 = bg
 
-    -- Cancel button (top-right X)
     local cancelBtn = Instance.new("TextButton")
     cancelBtn.Size             = UDim2.new(0, 28, 0, 28)
     cancelBtn.Position         = UDim2.new(1, -34, 0, 4)
@@ -62,13 +59,12 @@ local function showPicker()
     cancelBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
     cancelBtn.TextScaled       = true
     cancelBtn.Font             = Enum.Font.GothamBold
-    cancelBtn.Text             = "✕"
+    cancelBtn.Text             = "X"
     cancelBtn.BorderSizePixel  = 0
     cancelBtn.Parent           = bg
     Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 6)
     cancelBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
-    -- 3×2 grid of cookie buttons
     local COLS = 3
     for i, cookie in ipairs(COOKIES) do
         local col = (i - 1) % COLS
@@ -94,9 +90,15 @@ local function showPicker()
     end
 end
 
--- Server fires ShowMixPicker when player triggers a Mixer ProximityPrompt
-showPickerRemote.OnClientEvent:Connect(function()
-    showPicker()
+-- Same pattern as POSClient: ProximityPromptService.PromptTriggered fires client-side
+local mixersFolder = workspace:WaitForChild("Mixers", 10)
+ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer)
+    if triggeringPlayer ~= player then return end
+    local obj = prompt.Parent
+    while obj do
+        if obj == mixersFolder then showPicker() return end
+        obj = obj.Parent
+    end
 end)
 
 print("[MixerController] Ready.")
