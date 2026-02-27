@@ -10,11 +10,10 @@ local resultRemote  = RemoteManager.Get("FrostMinigameResult")
 
 local player = Players.LocalPlayer
 
-local TIMER           = 7    -- seconds
-local HIT_RADIUS      = 30   -- px from dot center counts as hit
+local TIMER           = 7
+local HIT_RADIUS      = 30
 local NUM_CHECKPOINTS = 8
 
--- Pixel offsets from center of 360×360 play area
 local CHECKPOINT_OFFSETS = {
     Vector2.new(  0, -150),
     Vector2.new(120,  -90),
@@ -27,7 +26,7 @@ local CHECKPOINT_OFFSETS = {
 }
 
 startRemote.OnClientEvent:Connect(function()
-    if player.PlayerGui:FindFirstChild("FrostGui") then return end
+    if player:WaitForChild("PlayerGui"):FindFirstChild("FrostGui") then return end
     local char = player.Character
     if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid")
@@ -59,7 +58,6 @@ startRemote.OnClientEvent:Connect(function()
     titleLbl.Text                   = "FROST — Trace the path!"
     titleLbl.Parent                 = bg
 
-    -- Timer bar
     local timerBar = Instance.new("Frame")
     timerBar.Size             = UDim2.new(1, -20, 0, 8)
     timerBar.Position         = UDim2.new(0, 10, 1, -20)
@@ -73,7 +71,6 @@ startRemote.OnClientEvent:Connect(function()
     timerFill.Parent           = timerBar
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
-    -- Play area
     local playArea = Instance.new("Frame")
     playArea.Size             = UDim2.new(0, 360, 0, 360)
     playArea.Position         = UDim2.new(0.5, -180, 0, 50)
@@ -85,7 +82,6 @@ startRemote.OnClientEvent:Connect(function()
 
     local AREA_CENTER = Vector2.new(180, 180)
 
-    -- Build checkpoint dots
     local dots = {}
     for i, offset in ipairs(CHECKPOINT_OFFSETS) do
         local dot = Instance.new("TextLabel")
@@ -94,8 +90,8 @@ startRemote.OnClientEvent:Connect(function()
         dot.Position    = UDim2.new(0, AREA_CENTER.X + offset.X,
                                      0, AREA_CENTER.Y + offset.Y)
         dot.BackgroundColor3 = i == 1
-            and Color3.fromRGB(255, 220, 0)    -- active: yellow
-            or  Color3.fromRGB(180, 180, 255)  -- inactive: blue-ish
+            and Color3.fromRGB(255, 220, 0)
+            or  Color3.fromRGB(180, 180, 255)
         dot.TextColor3  = Color3.fromRGB(20, 20, 20)
         dot.TextScaled  = true
         dot.Font        = Enum.Font.GothamBold
@@ -124,14 +120,12 @@ startRemote.OnClientEvent:Connect(function()
         resultRemote:FireServer(math.floor(numHit / NUM_CHECKPOINTS * 100))
     end
 
-    -- Timer
     mainConn = RunService.Heartbeat:Connect(function(dt)
         elapsed = elapsed + dt
         timerFill.Size = UDim2.new(math.clamp(1 - elapsed / TIMER, 0, 1), 0, 1, 0)
         if elapsed >= TIMER then finish() end
     end)
 
-    -- Mouse proximity detection (no click required, just hover)
     moveConn = UserInputService.InputChanged:Connect(function(input)
         if finished then return end
         if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
@@ -140,13 +134,13 @@ startRemote.OnClientEvent:Connect(function()
         local dot        = dots[activeIndex]
         if not dot or not dot.Parent then return end
 
-        local dotCenter  = dot.AbsolutePosition + dot.AbsoluteSize * 0.5
+        local dotCenter  = dot.AbsolutePosition + Vector2.new(20, 20)
         local mousePos   = UserInputService:GetMouseLocation()
         local dist       = (mousePos - dotCenter).Magnitude
 
         if dist <= HIT_RADIUS then
             numHit = numHit + 1
-            dot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)  -- green = hit
+            dot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
             activeIndex = activeIndex + 1
             if activeIndex <= NUM_CHECKPOINTS then
                 dots[activeIndex].BackgroundColor3 = Color3.fromRGB(255, 220, 0)

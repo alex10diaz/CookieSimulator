@@ -14,7 +14,6 @@ local BAR_HEIGHT     = 260   -- px
 local ZONE_HEIGHT_PX = 56    -- px (~21.5% of bar)
 local ZONE_MIN       = 0.25  -- zone center drifts within this range (fraction from bottom)
 local ZONE_MAX       = 0.75
-local BURN_SCORE     = 10    -- score if bar fills completely (burned)
 
 startRemote.OnClientEvent:Connect(function()
     if player:WaitForChild("PlayerGui"):FindFirstChild("OvenGui") then return end
@@ -135,11 +134,9 @@ startRemote.OnClientEvent:Connect(function()
         resultRemote:FireServer(math.clamp(score, 0, 100))
     end
 
-    local stopConn
-    stopConn = stopBtn.MouseButton1Click:Connect(function()
+    stopBtn.MouseButton1Click:Connect(function()
         if stopped then return end
         stopped = true
-        if stopConn then stopConn:Disconnect() end
         finish(calcScore(math.clamp(elapsed / FILL_TIME, 0, 1)))
     end)
 
@@ -157,7 +154,7 @@ startRemote.OnClientEvent:Connect(function()
 
         if frac >= 1 and not stopped then
             stopped = true
-            finish(BURN_SCORE)
+            finish(10)   -- burned
         end
     end)
 end)

@@ -131,15 +131,13 @@ startRemote.OnClientEvent:Connect(function()
     local spotsHit    = 0
     local sliderDone  = false
     local isDragging  = false
-    local handleFrac  = 0   -- 0..1 position along track
+    local handleFrac  = 0
     local elapsed     = 0
     local finished    = false
-    local inputConn   = nil
 
     local function finalize()
         if finished then return end
         finished = true
-        if inputConn then inputConn:Disconnect() end
         local tapScore = math.floor(spotsHit / SPOT_COUNT * 50)
         humanoid.WalkSpeed = 16
         humanoid.JumpHeight = 7.2
@@ -151,7 +149,7 @@ startRemote.OnClientEvent:Connect(function()
         isDragging = true
     end)
 
-    inputConn = UserInputService.InputEnded:Connect(function(input)
+    UserInputService.InputEnded:Connect(function(input)
         if finished then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 and isDragging then
             isDragging = false
