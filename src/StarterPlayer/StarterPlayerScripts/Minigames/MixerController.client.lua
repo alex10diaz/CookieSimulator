@@ -2,12 +2,12 @@
 -- Handles Mixer ProximityPrompt → cookie picker → fires RequestMixStart to server.
 -- Server then fires StartMixMinigame back; MixMinigame.client.lua takes over from there.
 
-local Players           = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players                = game:GetService("Players")
+local ReplicatedStorage      = game:GetService("ReplicatedStorage")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local RemoteManager   = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local requestMixStart = RemoteManager.Get("RequestMixStart")
-local showPickerRemote = RemoteManager.Get("ShowMixPicker")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
