@@ -96,7 +96,7 @@ end
 -- Connect to every MixPrompt in Workspace/Mixers
 local function hookMixer(mixer)
     for _, obj in ipairs(mixer:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") and string.find(obj.Name, "Mix", 1, true) then
+        if obj:IsA("ProximityPrompt") then
             -- Client-side Triggered fires with no args (only fires for LocalPlayer)
             obj.Triggered:Connect(function()
                 showPicker()
