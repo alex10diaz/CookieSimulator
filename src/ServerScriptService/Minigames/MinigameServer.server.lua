@@ -253,6 +253,7 @@ end)
 local RequestMixStart = RemoteManager.Get("RequestMixStart")
 
 RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
+    print("[MinigameServer] RequestMixStart received from " .. player.Name .. " cookieId=" .. tostring(cookieId))
     if activeSessions[player] then
         warn("[MinigameServer] " .. player.Name .. " already in a session")
         return
