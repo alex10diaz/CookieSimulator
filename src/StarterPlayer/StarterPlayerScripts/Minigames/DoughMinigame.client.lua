@@ -1,4 +1,9 @@
 -- src/StarterPlayer/StarterPlayerScripts/Minigames/DoughMinigame.client.lua
+-- Redesigned: three sequential sub-games
+--   1. Weigh  — hold button to fill bar, release within green zone (0-34 pts)
+--   2. Form   — growing circle, press STOP at the right size  (0-33 pts)
+--   3. Tray   — click 6 cookie spots on a 2×3 tray             (0-33 pts)
+
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
@@ -10,11 +15,23 @@ local resultRemote  = RemoteManager.Get("DoughMinigameResult")
 
 local player = Players.LocalPlayer
 
-local TOTAL_TIMEOUT  = 10    -- seconds for both tasks combined
-local SPOT_FADE_TIME = 2.5   -- seconds before each spot disappears
-local SPOT_COUNT     = 4
-local TRACK_WIDTH    = 300
-local HANDLE_SIZE    = 32
+-- Sub-game timing
+local WEIGH_MAX_TIME  = 10   -- seconds total for weigh phase
+local FORM_FILL_TIME  = 4    -- seconds for circle to grow to max
+local TRAY_TIME       = 6    -- seconds to click all spots
+
+-- Weigh green zone (fraction of bar)
+local WEIGH_ZONE_MIN  = 0.55
+local WEIGH_ZONE_MAX  = 0.75
+
+-- Form green zone (fraction of max size)
+local FORM_ZONE_MIN   = 0.45
+local FORM_ZONE_MAX   = 0.65
+
+-- Score weights
+local WEIGH_MAX_PTS   = 34
+local FORM_MAX_PTS    = 33
+local TRAY_MAX_PTS    = 33
 
 startRemote.OnClientEvent:Connect(function()
     if player:WaitForChild("PlayerGui"):FindFirstChild("DoughGui") then return end
@@ -32,8 +49,8 @@ startRemote.OnClientEvent:Connect(function()
     sg.Parent         = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
-    bg.Size                   = UDim2.new(0, 420, 0, 480)
-    bg.Position               = UDim2.new(0.5, -210, 0.5, -240)
+    bg.Size                   = UDim2.new(0, 380, 0, 460)
+    bg.Position               = UDim2.new(0.5, -190, 0.5, -230)
     bg.BackgroundColor3       = Color3.fromRGB(20, 20, 20)
     bg.BackgroundTransparency = 0.1
     bg.BorderSizePixel        = 0
@@ -46,10 +63,28 @@ startRemote.OnClientEvent:Connect(function()
     titleLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
     titleLbl.TextScaled             = true
     titleLbl.Font                   = Enum.Font.GothamBold
-    titleLbl.Text                   = "DOUGH — Knead it!"
+    titleLbl.Text                   = "DOUGH — Step 1/3: Weigh"
     titleLbl.Parent                 = bg
 
-    -- Timer bar
+    local subLbl = Instance.new("TextLabel")
+    subLbl.Size                   = UDim2.new(1, -20, 0, 28)
+    subLbl.Position               = UDim2.new(0, 10, 0, 40)
+    subLbl.BackgroundTransparency = 1
+    subLbl.TextColor3             = Color3.fromRGB(180, 180, 180)
+    subLbl.TextScaled             = true
+    subLbl.Font                   = Enum.Font.Gotham
+    subLbl.Text                   = "Hold button — release in the green zone"
+    subLbl.Parent                 = bg
+
+    -- Content area (swapped per phase)
+    local content = Instance.new("Frame")
+    content.Size             = UDim2.new(1, -20, 0, 340)
+    content.Position         = UDim2.new(0, 10, 0, 74)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel  = 0
+    content.Parent           = bg
+
+    -- Timer bar (shared)
     local timerBar = Instance.new("Frame")
     timerBar.Size             = UDim2.new(1, -20, 0, 8)
     timerBar.Position         = UDim2.new(0, 10, 1, -20)
@@ -63,171 +98,327 @@ startRemote.OnClientEvent:Connect(function()
     timerFill.Parent           = timerBar
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
-    -- SLIDER
-    local sliderLabel = Instance.new("TextLabel")
-    sliderLabel.Size                   = UDim2.new(1, 0, 0, 28)
-    sliderLabel.Position               = UDim2.new(0, 0, 0, 48)
-    sliderLabel.BackgroundTransparency = 1
-    sliderLabel.TextColor3             = Color3.fromRGB(200, 200, 200)
-    sliderLabel.TextScaled             = true
-    sliderLabel.Font                   = Enum.Font.Gotham
-    sliderLabel.Text                   = "Drag handle into the green zone, then release"
-    sliderLabel.Parent                 = bg
+    -- Accumulated score
+    local totalScore = 0
+    local finished   = false
+    local phaseConn
 
-    local track = Instance.new("Frame")
-    track.Size             = UDim2.new(0, TRACK_WIDTH, 0, 24)
-    track.Position         = UDim2.new(0.5, -TRACK_WIDTH / 2, 0, 84)
-    track.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    track.BorderSizePixel  = 0
-    track.ClipsDescendants = false
-    track.Parent           = bg
-    Instance.new("UICorner", track).CornerRadius = UDim.new(0, 6)
-
-    local zoneStartFrac = math.random(20, 60) / 100
-    local zoneWidthFrac = 0.20
-    local zoneFrame = Instance.new("Frame")
-    zoneFrame.Size             = UDim2.new(zoneWidthFrac, 0, 1, 0)
-    zoneFrame.Position         = UDim2.new(zoneStartFrac, 0, 0, 0)
-    zoneFrame.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-    zoneFrame.BorderSizePixel  = 0
-    zoneFrame.Parent           = track
-    Instance.new("UICorner", zoneFrame).CornerRadius = UDim.new(0, 6)
-
-    local handle = Instance.new("TextButton")
-    handle.Size             = UDim2.new(0, HANDLE_SIZE, 1, 10)
-    handle.Position         = UDim2.new(0, -HANDLE_SIZE / 2, 0, -5)
-    handle.BackgroundColor3 = Color3.fromRGB(220, 180, 80)
-    handle.TextColor3       = Color3.fromRGB(30, 30, 30)
-    handle.TextScaled       = true
-    handle.Font             = Enum.Font.GothamBold
-    handle.Text             = "||"
-    handle.BorderSizePixel  = 0
-    handle.ZIndex           = 2
-    handle.Parent           = track
-    Instance.new("UICorner", handle).CornerRadius = UDim.new(0, 6)
-
-    -- SPOT TAP AREA
-    local tapLabel = Instance.new("TextLabel")
-    tapLabel.Size                   = UDim2.new(1, 0, 0, 28)
-    tapLabel.Position               = UDim2.new(0, 0, 0, 130)
-    tapLabel.BackgroundTransparency = 1
-    tapLabel.TextColor3             = Color3.fromRGB(200, 200, 200)
-    tapLabel.TextScaled             = true
-    tapLabel.Font                   = Enum.Font.Gotham
-    tapLabel.Text                   = "Tap the spots before they fade!"
-    tapLabel.Parent                 = bg
-
-    local tapArea = Instance.new("Frame")
-    tapArea.Size             = UDim2.new(1, -20, 0, 260)
-    tapArea.Position         = UDim2.new(0, 10, 0, 164)
-    tapArea.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    tapArea.BorderSizePixel  = 0
-    tapArea.ClipsDescendants = true
-    tapArea.Parent           = bg
-    Instance.new("UICorner", tapArea).CornerRadius = UDim.new(0, 8)
-
-    -- STATE
-    local sliderScore = 0
-    local spotsHit    = 0
-    local sliderDone  = false
-    local isDragging  = false
-    local handleFrac  = 0
-    local elapsed     = 0
-    local finished    = false
-
-    local function finalize()
+    local function endMinigame()
         if finished then return end
         finished = true
-        local tapScore = math.floor(spotsHit / SPOT_COUNT * 50)
+        if phaseConn then phaseConn:Disconnect() end
         humanoid.WalkSpeed = 16
         humanoid.JumpHeight = 7.2
         sg:Destroy()
-        resultRemote:FireServer(sliderScore + tapScore)
+        resultRemote:FireServer(math.clamp(totalScore, 0, 100))
     end
 
-    handle.MouseButton1Down:Connect(function()
-        isDragging = true
-    end)
+    -- ============================================================
+    -- PHASE 3: TRAY
+    -- ============================================================
+    local function startTray(prevScore)
+        totalScore = prevScore
+        content:ClearAllChildren()
+        titleLbl.Text = "DOUGH — Step 3/3: Tray"
+        subLbl.Text   = "Click all 6 spots!"
 
-    UserInputService.InputEnded:Connect(function(input)
-        if finished then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and isDragging then
-            isDragging = false
-            if not sliderDone then
-                sliderDone = true
-                local zoneCenter = zoneStartFrac + zoneWidthFrac / 2
-                local dist       = math.abs(handleFrac - zoneCenter)
-                local halfZone   = zoneWidthFrac / 2
-                if handleFrac >= zoneStartFrac and handleFrac <= zoneStartFrac + zoneWidthFrac then
-                    sliderScore = 50
-                elseif dist < halfZone + 0.12 then
-                    sliderScore = math.floor(50 * math.max(0, 1 - (dist - halfZone) / 0.12))
-                else
-                    sliderScore = 0
-                end
-                handle.BackgroundColor3 = sliderScore >= 25
-                    and Color3.fromRGB(80, 200, 80)
-                    or  Color3.fromRGB(200, 80, 80)
+        -- 2×3 tray grid
+        local trayFrame = Instance.new("Frame")
+        trayFrame.Size             = UDim2.new(0, 280, 0, 200)
+        trayFrame.Position         = UDim2.new(0.5, -140, 0.5, -100)
+        trayFrame.BackgroundColor3 = Color3.fromRGB(180, 140, 80)
+        trayFrame.BorderSizePixel  = 0
+        trayFrame.Parent           = content
+        Instance.new("UICorner", trayFrame).CornerRadius = UDim.new(0, 12)
+
+        local COLS, ROWS = 3, 2
+        local SPOT_W, SPOT_H = 60, 60
+        local PAD_X = (280 - COLS * SPOT_W) / (COLS + 1)
+        local PAD_Y = (200 - ROWS * SPOT_H) / (ROWS + 1)
+
+        local spotsClicked = 0
+        local spots = {}
+        for row = 1, ROWS do
+            for col = 1, COLS do
+                local spot = Instance.new("TextButton")
+                spot.Size             = UDim2.new(0, SPOT_W, 0, SPOT_H)
+                spot.Position         = UDim2.new(
+                    0, PAD_X + (col - 1) * (SPOT_W + PAD_X),
+                    0, PAD_Y + (row - 1) * (SPOT_H + PAD_Y)
+                )
+                spot.BackgroundColor3 = Color3.fromRGB(220, 180, 100)
+                spot.TextColor3       = Color3.fromRGB(100, 60, 20)
+                spot.TextScaled       = true
+                spot.Font             = Enum.Font.GothamBold
+                spot.Text             = "+"
+                spot.BorderSizePixel  = 0
+                spot.AutoButtonColor  = false
+                spot.Parent           = trayFrame
+                Instance.new("UICorner", spot).CornerRadius = UDim.new(1, 0)
+                table.insert(spots, spot)
+
+                spot.MouseButton1Click:Connect(function()
+                    if finished or spot.BackgroundColor3 == Color3.fromRGB(80, 200, 80) then return end
+                    spot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+                    spot.Text = "✓"
+                    spotsClicked = spotsClicked + 1
+                    if spotsClicked >= COLS * ROWS then
+                        totalScore = prevScore + TRAY_MAX_PTS
+                        task.delay(0.3, endMinigame)
+                    end
+                end)
             end
         end
-    end)
 
-    for i = 1, SPOT_COUNT do
-        task.delay(i * 0.15, function()
-            if finished then return end
-            local spot = Instance.new("TextButton")
-            spot.Size             = UDim2.new(0, 52, 0, 52)
-            spot.Position         = UDim2.new(0, math.random(10, 320), 0, math.random(10, 195))
-            spot.BackgroundColor3 = Color3.fromRGB(255, 160, 40)
-            spot.TextColor3       = Color3.fromRGB(255, 255, 255)
-            spot.TextScaled       = true
-            spot.Font             = Enum.Font.GothamBold
-            spot.Text             = "!"
-            spot.BorderSizePixel  = 0
-            spot.ZIndex           = 3
-            spot.Parent           = tapArea
-            Instance.new("UICorner", spot).CornerRadius = UDim.new(1, 0)
-
-            local spotHit = false
-            spot.MouseButton1Click:Connect(function()
-                if spotHit or finished then return end
-                spotHit  = true
-                spotsHit = spotsHit + 1
-                spot:Destroy()
-            end)
-
-            local fadeElapsed = 0
-            local fadeConn
-            fadeConn = RunService.Heartbeat:Connect(function(dt)
-                if not spot.Parent then fadeConn:Disconnect() return end
-                fadeElapsed = fadeElapsed + dt
-                spot.BackgroundTransparency = math.clamp(fadeElapsed / SPOT_FADE_TIME, 0, 1)
-                if fadeElapsed >= SPOT_FADE_TIME then
-                    fadeConn:Disconnect()
-                    if spot.Parent then spot:Destroy() end
-                end
-            end)
+        local elapsed = 0
+        if phaseConn then phaseConn:Disconnect() end
+        phaseConn = RunService.Heartbeat:Connect(function(dt)
+            elapsed = elapsed + dt
+            timerFill.Size = UDim2.new(math.clamp(1 - elapsed / TRAY_TIME, 0, 1), 0, 1, 0)
+            if elapsed >= TRAY_TIME then
+                totalScore = prevScore + math.floor(spotsClicked / (COLS * ROWS) * TRAY_MAX_PTS)
+                phaseConn:Disconnect()
+                endMinigame()
+            end
         end)
     end
 
-    local mainConn
-    mainConn = RunService.Heartbeat:Connect(function(dt)
-        if finished then mainConn:Disconnect() return end
-        elapsed = elapsed + dt
-        timerFill.Size = UDim2.new(math.clamp(1 - elapsed / TOTAL_TIMEOUT, 0, 1), 0, 1, 0)
+    -- ============================================================
+    -- PHASE 2: FORM
+    -- ============================================================
+    local function startForm(prevScore)
+        content:ClearAllChildren()
+        titleLbl.Text = "DOUGH — Step 2/3: Form"
+        subLbl.Text   = "Press STOP when the circle is in the green zone!"
 
-        if isDragging then
-            local mousePos = UserInputService:GetMouseLocation()
-            local trackAbs = track.AbsolutePosition
-            handleFrac     = math.clamp((mousePos.X - trackAbs.X) / TRACK_WIDTH, 0, 1)
-            handle.Position = UDim2.new(handleFrac, -HANDLE_SIZE / 2, 0, -5)
+        local BAR_SIZE = 200  -- max circle diameter (px)
+
+        local areaFrame = Instance.new("Frame")
+        areaFrame.Size             = UDim2.new(0, BAR_SIZE + 60, 0, BAR_SIZE + 60)
+        areaFrame.Position         = UDim2.new(0.5, -(BAR_SIZE + 60) / 2, 0.5, -(BAR_SIZE + 60) / 2)
+        areaFrame.BackgroundTransparency = 1
+        areaFrame.BorderSizePixel  = 0
+        areaFrame.Parent           = content
+
+        -- Green zone ring: shows the target size range
+        local zoneMin = math.floor(BAR_SIZE * FORM_ZONE_MIN)
+        local zoneMax = math.floor(BAR_SIZE * FORM_ZONE_MAX)
+        local zoneMid = (zoneMin + zoneMax) / 2
+        local zoneOuter = Instance.new("Frame")
+        zoneOuter.Size             = UDim2.new(0, zoneMax, 0, zoneMax)
+        zoneOuter.Position         = UDim2.new(0.5, -zoneMax / 2, 0.5, -zoneMax / 2)
+        zoneOuter.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+        zoneOuter.BackgroundTransparency = 0.4
+        zoneOuter.BorderSizePixel  = 0
+        zoneOuter.ZIndex           = 1
+        zoneOuter.Parent           = areaFrame
+        Instance.new("UICorner", zoneOuter).CornerRadius = UDim.new(1, 0)
+
+        local zoneInner = Instance.new("Frame")
+        zoneInner.Size             = UDim2.new(0, zoneMin, 0, zoneMin)
+        zoneInner.Position         = UDim2.new(0.5, -zoneMin / 2, 0.5, -zoneMin / 2)
+        zoneInner.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        zoneInner.BorderSizePixel  = 0
+        zoneInner.ZIndex           = 2
+        zoneInner.Parent           = areaFrame
+        Instance.new("UICorner", zoneInner).CornerRadius = UDim.new(1, 0)
+
+        -- Growing circle (starts small, expands over FORM_FILL_TIME)
+        local growCircle = Instance.new("Frame")
+        growCircle.Size             = UDim2.new(0, 0, 0, 0)
+        growCircle.AnchorPoint      = Vector2.new(0.5, 0.5)
+        growCircle.Position         = UDim2.new(0.5, 0, 0.5, 0)
+        growCircle.BackgroundColor3 = Color3.fromRGB(220, 180, 100)
+        growCircle.BorderSizePixel  = 0
+        growCircle.ZIndex           = 3
+        growCircle.Parent           = areaFrame
+        Instance.new("UICorner", growCircle).CornerRadius = UDim.new(1, 0)
+
+        local stopBtn = Instance.new("TextButton")
+        stopBtn.Size             = UDim2.new(0, 120, 0, 44)
+        stopBtn.Position         = UDim2.new(0.5, -60, 1, -50)
+        stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        stopBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
+        stopBtn.TextScaled       = true
+        stopBtn.Font             = Enum.Font.GothamBold
+        stopBtn.Text             = "STOP"
+        stopBtn.BorderSizePixel  = 0
+        stopBtn.Parent           = content
+        Instance.new("UICorner", stopBtn).CornerRadius = UDim.new(0, 10)
+
+        local elapsed = 0
+        local stopped = false
+
+        local function calcFormScore(frac)
+            local dist = math.abs(frac - (FORM_ZONE_MIN + FORM_ZONE_MAX) / 2)
+            local halfZone = (FORM_ZONE_MAX - FORM_ZONE_MIN) / 2
+            if dist <= halfZone then
+                return math.floor(FORM_MAX_PTS * (1 - dist / halfZone * 0.3))
+            elseif dist <= halfZone + 0.15 then
+                return math.floor(FORM_MAX_PTS * 0.5 * (1 - (dist - halfZone) / 0.15))
+            else
+                return 0
+            end
         end
 
-        if elapsed >= TOTAL_TIMEOUT then
-            mainConn:Disconnect()
-            finalize()
+        stopBtn.MouseButton1Click:Connect(function()
+            if stopped then return end
+            stopped = true
+            local frac = math.clamp(elapsed / FORM_FILL_TIME, 0, 1)
+            local pts  = calcFormScore(frac)
+            task.delay(0.3, function() startTray(prevScore + pts) end)
+        end)
+
+        if phaseConn then phaseConn:Disconnect() end
+        phaseConn = RunService.Heartbeat:Connect(function(dt)
+            if stopped then phaseConn:Disconnect() return end
+            elapsed = elapsed + dt
+            local frac = math.clamp(elapsed / FORM_FILL_TIME, 0, 1)
+            timerFill.Size = UDim2.new(math.clamp(1 - elapsed / FORM_FILL_TIME, 0, 1), 0, 1, 0)
+
+            local sz = math.floor(frac * BAR_SIZE)
+            growCircle.Size = UDim2.new(0, sz, 0, sz)
+
+            -- Auto-end if circle maxed out (poor score)
+            if frac >= 1 then
+                stopped = true
+                phaseConn:Disconnect()
+                task.delay(0.3, function() startTray(prevScore + 0) end)
+            end
+        end)
+    end
+
+    -- ============================================================
+    -- PHASE 1: WEIGH
+    -- ============================================================
+    do
+        local BAR_H   = 260   -- px, vertical bar height
+        local barTrack = Instance.new("Frame")
+        barTrack.Size             = UDim2.new(0, 60, 0, BAR_H)
+        barTrack.Position         = UDim2.new(0.5, -30, 0.5, -BAR_H / 2)
+        barTrack.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        barTrack.BorderSizePixel  = 0
+        barTrack.ClipsDescendants = false
+        barTrack.Parent           = content
+        Instance.new("UICorner", barTrack).CornerRadius = UDim.new(0, 8)
+
+        -- Green zone (anchored from bottom)
+        local zoneH  = math.floor(BAR_H * (WEIGH_ZONE_MAX - WEIGH_ZONE_MIN))
+        local zoneY  = math.floor(BAR_H * (1 - WEIGH_ZONE_MAX))
+        local zoneFrame = Instance.new("Frame")
+        zoneFrame.Size             = UDim2.new(1, 6, 0, zoneH)
+        zoneFrame.Position         = UDim2.new(-3/60, -3, 0, zoneY)
+        zoneFrame.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+        zoneFrame.BackgroundTransparency = 0.35
+        zoneFrame.BorderSizePixel  = 0
+        zoneFrame.ZIndex           = 2
+        zoneFrame.Parent           = barTrack
+        Instance.new("UICorner", zoneFrame).CornerRadius = UDim.new(0, 4)
+
+        -- Fill (grows from bottom)
+        local fillFrame = Instance.new("Frame")
+        fillFrame.Size             = UDim2.new(1, 0, 0, 0)
+        fillFrame.AnchorPoint      = Vector2.new(0, 1)
+        fillFrame.Position         = UDim2.new(0, 0, 1, 0)
+        fillFrame.BackgroundColor3 = Color3.fromRGB(220, 180, 80)
+        fillFrame.BorderSizePixel  = 0
+        fillFrame.Parent           = barTrack
+        Instance.new("UICorner", fillFrame).CornerRadius = UDim.new(0, 8)
+
+        -- Hold button
+        local holdBtn = Instance.new("TextButton")
+        holdBtn.Size             = UDim2.new(0, 130, 0, 50)
+        holdBtn.Position         = UDim2.new(0.5, -65, 1, -55)
+        holdBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
+        holdBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
+        holdBtn.TextScaled       = true
+        holdBtn.Font             = Enum.Font.GothamBold
+        holdBtn.Text             = "HOLD"
+        holdBtn.BorderSizePixel  = 0
+        holdBtn.Parent           = content
+        Instance.new("UICorner", holdBtn).CornerRadius = UDim.new(0, 10)
+
+        -- Side labels
+        local function sideLabel(text, yPos, col)
+            local lbl = Instance.new("TextLabel")
+            lbl.Size                   = UDim2.new(0, 50, 0, 24)
+            lbl.Position               = UDim2.new(0.5, 38, 0.5, yPos - BAR_H / 2)
+            lbl.BackgroundTransparency = 1
+            lbl.TextColor3             = col
+            lbl.TextScaled             = true
+            lbl.Font                   = Enum.Font.GothamBold
+            lbl.Text                   = text
+            lbl.Parent                 = content
         end
-    end)
+        sideLabel("HEAVY", -BAR_H / 2 + 10, Color3.fromRGB(255, 100, 50))
+        sideLabel("LIGHT",  BAR_H / 2 - 20, Color3.fromRGB(100, 180, 255))
+
+        local fillFrac    = 0
+        local isHolding   = false
+        local weighDone   = false
+        local elapsed     = 0
+        local FILL_RATE   = 1 / 3   -- fills bar in 3 seconds of holding
+
+        local function calcWeighScore(frac)
+            if frac >= WEIGH_ZONE_MIN and frac <= WEIGH_ZONE_MAX then
+                local center  = (WEIGH_ZONE_MIN + WEIGH_ZONE_MAX) / 2
+                local halfZ   = (WEIGH_ZONE_MAX - WEIGH_ZONE_MIN) / 2
+                local dist    = math.abs(frac - center)
+                return math.floor(WEIGH_MAX_PTS * (1 - dist / halfZ * 0.25))
+            else
+                local nearest = frac < WEIGH_ZONE_MIN and WEIGH_ZONE_MIN or WEIGH_ZONE_MAX
+                local dist    = math.abs(frac - nearest)
+                if dist < 0.15 then
+                    return math.floor(WEIGH_MAX_PTS * 0.5 * (1 - dist / 0.15))
+                end
+                return 0
+            end
+        end
+
+        holdBtn.MouseButton1Down:Connect(function()
+            if weighDone then return end
+            isHolding = true
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if weighDone or finished then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 and isHolding then
+                isHolding = false
+                weighDone = true
+                local pts = calcWeighScore(fillFrac)
+                holdBtn.BackgroundColor3 = pts >= math.floor(WEIGH_MAX_PTS * 0.5)
+                    and Color3.fromRGB(80, 200, 80)
+                    or  Color3.fromRGB(200, 80, 80)
+                task.delay(0.4, function() startForm(pts) end)
+            end
+        end)
+
+        if phaseConn then phaseConn:Disconnect() end
+        phaseConn = RunService.Heartbeat:Connect(function(dt)
+            if finished then phaseConn:Disconnect() return end
+            elapsed = elapsed + dt
+            timerFill.Size = UDim2.new(math.clamp(1 - elapsed / WEIGH_MAX_TIME, 0, 1), 0, 1, 0)
+
+            if isHolding and not weighDone then
+                fillFrac = math.clamp(fillFrac + FILL_RATE * dt, 0, 1)
+                fillFrame.Size = UDim2.new(1, 0, fillFrac, 0)
+                -- Auto-release if overfilled
+                if fillFrac >= 1 then
+                    isHolding = false
+                    weighDone = true
+                    holdBtn.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
+                    task.delay(0.4, function() startForm(0) end)
+                end
+            end
+
+            if elapsed >= WEIGH_MAX_TIME and not weighDone then
+                weighDone = true
+                phaseConn:Disconnect()
+                local pts = calcWeighScore(fillFrac)
+                startForm(pts)
+            end
+        end)
+    end
 end)
 
 print("[DoughMinigame] Ready.")
