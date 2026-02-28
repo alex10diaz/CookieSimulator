@@ -1,9 +1,10 @@
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
-local PlayerDataManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("PlayerDataManager")) -- Added this
+local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
 local deliverRemote  = RemoteManager.Get("DeliverBox")
 local deliveryResult = RemoteManager.Get("DeliveryResult")

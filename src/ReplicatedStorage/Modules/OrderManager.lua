@@ -260,7 +260,7 @@ end
 -- ============================================================
 -- FROST SCORE
 -- ============================================================
-function OrderManager.RecordFrostScore(playerName, batchId, score, snapshot)
+function OrderManager.RecordFrostScore(playerName, batchId, score, snapshot, cookieId)
     frostPending[playerName] = {
         batchId  = batchId,
         score    = score,
@@ -270,7 +270,7 @@ function OrderManager.RecordFrostScore(playerName, batchId, score, snapshot)
     -- After frost, cookie moves to warmers for dress (needsFrost=false now)
     table.insert(warmers, {
         batchId    = batchId,
-        cookieId   = nil,  -- already tracked in postOvenScores
+        cookieId   = cookieId,  -- preserved for dress minigame display
         needsFrost = false,
         snapshot   = snapshot,
         frostScore = score,

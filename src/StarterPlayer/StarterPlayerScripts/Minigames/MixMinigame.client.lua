@@ -9,13 +9,14 @@ local resultRemote   = RemoteManager.Get("MixMinigameResult")
 
 local player = Players.LocalPlayer
 
--- deg/s for each of the 3 rounds
-local ROUND_SPEEDS  = {120, 168, 216}
+-- deg/s base for each of the 3 rounds (scaled by server settings.speed if provided)
+local ROUND_SPEEDS_BASE = {120, 168, 216}
 local HIT_THRESHOLD = 22   -- degrees tolerance
 local ROUND_TIMEOUT = 4    -- seconds per round
 local TOTAL_ROUNDS  = 3
 local RING_RADIUS   = 110  -- px from center to marker
-startRemote.OnClientEvent:Connect(function()
+
+startRemote.OnClientEvent:Connect(function(settings, label)
     if player:WaitForChild("PlayerGui"):FindFirstChild("MixGui") then return end
     -- Lock movement
     local char = player.Character
@@ -95,6 +96,12 @@ startRemote.OnClientEvent:Connect(function()
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
     -- State
+    local speedScale = (settings and type(settings) == "table" and settings.speed) or 1
+    local roundSpeeds = {
+        ROUND_SPEEDS_BASE[1] * speedScale,
+        ROUND_SPEEDS_BASE[2] * speedScale,
+        ROUND_SPEEDS_BASE[3] * speedScale,
+    }
     local hits         = 0
     local markerAngle  = 0
     local currentRound = 0
@@ -119,7 +126,7 @@ startRemote.OnClientEvent:Connect(function()
         titleLbl.Text = "MIX — Round " .. roundNum .. "/" .. TOTAL_ROUNDS
         markerAngle   = 0
         roundActive   = true
-        local speed   = ROUND_SPEEDS[roundNum]
+        local speed   = roundSpeeds[roundNum] or ROUND_SPEEDS_BASE[roundNum]
         local elapsed = 0
 
         if roundConn then roundConn:Disconnect() end

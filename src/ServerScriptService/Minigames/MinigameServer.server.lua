@@ -95,7 +95,9 @@ local function endSession(player, stationName, score)
 
     elseif stationName == "frost" then
         local entry = session.warmerEntry
-        OrderManager.RecordFrostScore(player.Name, batchId, score, entry and entry.snapshot or 0)
+        local snapshot = entry and entry.snapshot or 0
+        local cookieId = entry and entry.cookieId or nil
+        OrderManager.RecordFrostScore(player.Name, batchId, score, snapshot, cookieId)
 
     elseif stationName == "dress" then
         local entry = dressPending[player]

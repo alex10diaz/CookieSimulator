@@ -92,8 +92,8 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     for _ = 1, REQUIRED do
         table.insert(buttonData, { id = cookieId, correct = true })
     end
-    table.insert(buttonData, { id = wrongIds[1], correct = false })
-    table.insert(buttonData, { id = wrongIds[2], correct = false })
+    if wrongIds[1] then table.insert(buttonData, { id = wrongIds[1], correct = false }) end
+    if wrongIds[2] then table.insert(buttonData, { id = wrongIds[2], correct = false }) end
     -- Shuffle button list
     for i = #buttonData, 2, -1 do
         local j = math.random(1, i)
