@@ -276,14 +276,16 @@ local function handleMixCookieSelection(player)
     print("[MinigameServer] Mix started for " .. player.Name .. " cookie=" .. cookieId)
 end
 
-local function watchPlayerMixAttr(player)
-    player:GetAttributeChangedSignal("PendingMixCookie"):Connect(function()
-        handleMixCookieSelection(player)
-    end)
-end
-
-for _, p in ipairs(Players:GetPlayers()) do watchPlayerMixAttr(p) end
-Players.PlayerAdded:Connect(watchPlayerMixAttr)
+-- Poll every frame — client SetAttribute does not cross Solo Play boundary via signals
+local RunService = game:GetService("RunService")
+RunService.Heartbeat:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        local cookieId = player:GetAttribute("PendingMixCookie")
+        if cookieId and cookieId ~= "" then
+            handleMixCookieSelection(player)
+        end
+    end
+end)
 
 -- ============================================================
 -- WIRE UP MINIGAME START/RESULT REMOTES
