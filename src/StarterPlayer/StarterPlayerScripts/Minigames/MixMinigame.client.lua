@@ -17,6 +17,7 @@ local NUM_CHECKPOINTS = 6     -- total dots to sweep through
 local TOTAL_TIME      = 15    -- seconds
 local MIN_NEXT_DELTA  = 90    -- min CW degrees to next checkpoint
 local MAX_NEXT_DELTA  = 270   -- max CW degrees to next checkpoint
+local MAX_ANG_SPEED   = 200   -- degrees/sec cap on cursor rotation speed
 
 -- Convert atan2 to 0–360 (0=right, increasing clockwise in screen space)
 local function toAngle360(dx, dy)
@@ -144,6 +145,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     local numHit          = 0
     local elapsed         = 0
     local finished        = false
+    local cursorAngle     = 0       -- speed-capped cursor position on ring
     local prevCursorAngle = nil
     local cpAngle         = math.random(0, 359)
     local hitFlash        = false  -- blocks re-trigger during flash delay
@@ -175,31 +177,33 @@ startRemote.OnClientEvent:Connect(function(settings, label)
         timerFill.Size = UDim2.new(math.clamp(1 - elapsed / TOTAL_TIME, 0, 1), 0, 1, 0)
         if elapsed >= TOTAL_TIME then finish() return end
 
-        -- Cursor angle relative to ringFrame center
-        local mousePos = UserInputService:GetMouseLocation()
-        local abs      = ringFrame.AbsolutePosition
-        local absSize  = ringFrame.AbsoluteSize
-        local cx       = abs.X + absSize.X * 0.5
-        local cy       = abs.Y + absSize.Y * 0.5
-        local curAngle = toAngle360(mousePos.X - cx, mousePos.Y - cy)
+        -- Raw target angle from mouse
+        local mousePos  = UserInputService:GetMouseLocation()
+        local abs       = ringFrame.AbsolutePosition
+        local absSize   = ringFrame.AbsoluteSize
+        local cx        = abs.X + absSize.X * 0.5
+        local cy        = abs.Y + absSize.Y * 0.5
+        local targetAngle = toAngle360(mousePos.X - cx, mousePos.Y - cy)
 
-        -- Move cursor dot to ring surface at current angle
-        local crad = math.rad(curAngle)
+        -- Advance cursor toward target capped at MAX_ANG_SPEED (shortest path)
+        local maxStep  = MAX_ANG_SPEED * dt
+        local rawDelta = (targetAngle - cursorAngle + 360) % 360
+        if rawDelta > 180 then rawDelta = rawDelta - 360 end
+        cursorAngle = (cursorAngle + math.clamp(rawDelta, -maxStep, maxStep) + 360) % 360
+
+        -- Move cursor dot to ring surface
+        local crad = math.rad(cursorAngle)
         cursorDot.Position = UDim2.new(
             0, 150 + math.cos(crad) * RING_RADIUS,
             0, 150 + math.sin(crad) * RING_RADIUS
         )
 
-        -- Clockwise sweep detection
+        -- Clockwise sweep detection (uses damped cursorAngle)
         if prevCursorAngle and not hitFlash then
-            -- CW delta: how many degrees clockwise since last frame
-            local cwDelta = (curAngle - prevCursorAngle + 360) % 360
-            -- cwDelta > 180 means cursor actually moved CCW; skip
+            local cwDelta = (cursorAngle - prevCursorAngle + 360) % 360
             if cwDelta > 0 and cwDelta <= 180 then
-                -- Did we sweep through cpAngle this frame?
                 local angToCP = (cpAngle - prevCursorAngle + 360) % 360
                 if angToCP < cwDelta then
-                    -- HIT
                     hitFlash = true
                     numHit   = numHit + 1
                     progressLbl.Text = numHit .. " / " .. NUM_CHECKPOINTS
@@ -207,7 +211,6 @@ startRemote.OnClientEvent:Connect(function(settings, label)
                     if numHit >= NUM_CHECKPOINTS then
                         task.delay(0.3, finish)
                     else
-                        -- Update cpAngle immediately to prevent same-frame re-trigger
                         cpAngle = (cpAngle + math.random(MIN_NEXT_DELTA, MAX_NEXT_DELTA)) % 360
                         task.delay(0.25, placeCpDot)
                     end
@@ -215,7 +218,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
             end
         end
 
-        prevCursorAngle = curAngle
+        prevCursorAngle = cursorAngle
     end)
 end)
 
