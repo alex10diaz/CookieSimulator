@@ -7,7 +7,8 @@ local ReplicatedStorage      = game:GetService("ReplicatedStorage")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local RemoteManager   = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local requestMixStart = RemoteManager.Get("RequestMixStart")
+-- Direct lookup bypasses any RemoteManager caching issue
+local requestMixStart = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("RequestMixStart", 10)
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -84,7 +85,7 @@ local function showPicker()
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
         btn.MouseButton1Click:Connect(function()
-            print("[MixerController] Cookie clicked: " .. tostring(cookie.id) .. " | remote type: " .. typeof(requestMixStart))
+            print("[MixerController] Cookie clicked: " .. tostring(cookie.id) .. " | ClassName: " .. requestMixStart.ClassName .. " | Path: " .. requestMixStart:GetFullName())
             sg:Destroy()
             requestMixStart:FireServer(cookie.id)
             print("[MixerController] FireServer called")
