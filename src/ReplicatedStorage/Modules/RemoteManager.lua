@@ -3,6 +3,7 @@
 -- No system should create or find remotes outside this module.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService        = game:GetService("RunService")
 local GameEvents        = ReplicatedStorage:WaitForChild("GameEvents")
 
 local RemoteManager = {}
@@ -52,18 +53,26 @@ local REMOTES = {
     "TutorialComplete",
 }
 
--- Ensure all remotes exist
-for _, name in ipairs(REMOTES) do
-    if not GameEvents:FindFirstChild(name) then
-        local r = Instance.new("RemoteEvent")
-        r.Name   = name
-        r.Parent = GameEvents
+-- Server creates all remotes; client waits for server-created ones.
+-- This prevents client-side ghost RemoteEvents that FireServer silently drops.
+if RunService:IsServer() then
+    for _, name in ipairs(REMOTES) do
+        if not GameEvents:FindFirstChild(name) then
+            local r = Instance.new("RemoteEvent")
+            r.Name   = name
+            r.Parent = GameEvents
+        end
     end
 end
 
 -- Get a remote by name (errors loudly if invalid)
 function RemoteManager.Get(name)
-    local remote = GameEvents:FindFirstChild(name)
+    local remote
+    if RunService:IsServer() then
+        remote = GameEvents:FindFirstChild(name)
+    else
+        remote = GameEvents:WaitForChild(name, 10)
+    end
     if not remote then
         error("[RemoteManager] Unknown remote: " .. tostring(name), 2)
     end
