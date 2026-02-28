@@ -2,7 +2,6 @@
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
-local UserInputService  = game:GetService("UserInputService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local startRemote   = RemoteManager.Get("StartFrostMinigame")
@@ -82,63 +81,47 @@ startRemote.OnClientEvent:Connect(function()
 
     local AREA_CENTER = Vector2.new(180, 180)
 
-    local dots = {}
-    for i, offset in ipairs(CHECKPOINT_OFFSETS) do
-        local dot = Instance.new("TextLabel")
-        dot.Size        = UDim2.new(0, 40, 0, 40)
-        dot.AnchorPoint = Vector2.new(0.5, 0.5)
-        dot.Position    = UDim2.new(0, AREA_CENTER.X + offset.X,
-                                     0, AREA_CENTER.Y + offset.Y)
-        dot.BackgroundColor3 = i == 1
-            and Color3.fromRGB(255, 220, 0)
-            or  Color3.fromRGB(180, 180, 255)
-        dot.TextColor3  = Color3.fromRGB(20, 20, 20)
-        dot.TextScaled  = true
-        dot.Font        = Enum.Font.GothamBold
-        dot.Text        = tostring(i)
-        dot.BorderSizePixel = 0
-        dot.ZIndex      = 3
-        dot.Parent      = playArea
-        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-        dots[i] = dot
-    end
-
     local activeIndex = 1
     local numHit      = 0
     local elapsed     = 0
     local finished    = false
-    local mainConn, moveConn
+    local mainConn
 
     local function finish()
         if finished then return end
         finished = true
         if mainConn then mainConn:Disconnect() end
-        if moveConn then moveConn:Disconnect() end
         humanoid.WalkSpeed = 16
         humanoid.JumpHeight = 7.2
         sg:Destroy()
         resultRemote:FireServer(math.floor(numHit / NUM_CHECKPOINTS * 100))
     end
 
-    mainConn = RunService.Heartbeat:Connect(function(dt)
-        elapsed = elapsed + dt
-        timerFill.Size = UDim2.new(math.clamp(1 - elapsed / TIMER, 0, 1), 0, 1, 0)
-        if elapsed >= TIMER then finish() end
-    end)
+    local dots = {}
+    for i, offset in ipairs(CHECKPOINT_OFFSETS) do
+        local dot = Instance.new("TextButton")
+        dot.Size        = UDim2.new(0, 48, 0, 48)
+        dot.AnchorPoint = Vector2.new(0.5, 0.5)
+        dot.Position    = UDim2.new(0, AREA_CENTER.X + offset.X,
+                                     0, AREA_CENTER.Y + offset.Y)
+        dot.BackgroundColor3 = i == 1
+            and Color3.fromRGB(255, 220, 0)
+            or  Color3.fromRGB(100, 100, 180)
+        dot.TextColor3  = Color3.fromRGB(20, 20, 20)
+        dot.TextScaled  = true
+        dot.Font        = Enum.Font.GothamBold
+        dot.Text        = tostring(i)
+        dot.BorderSizePixel = 0
+        dot.ZIndex      = 3
+        dot.AutoButtonColor = false
+        dot.Parent      = playArea
+        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+        dots[i] = dot
 
-    moveConn = UserInputService.InputChanged:Connect(function(input)
-        if finished then return end
-        if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
-        if activeIndex > NUM_CHECKPOINTS then return end
-
-        local dot        = dots[activeIndex]
-        if not dot or not dot.Parent then return end
-
-        local dotCenter  = dot.AbsolutePosition + Vector2.new(20, 20)
-        local mousePos   = UserInputService:GetMouseLocation()
-        local dist       = (mousePos - dotCenter).Magnitude
-
-        if dist <= HIT_RADIUS then
+        local idx = i
+        dot.MouseButton1Click:Connect(function()
+            if finished then return end
+            if idx ~= activeIndex then return end  -- must click in order
             numHit = numHit + 1
             dot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
             activeIndex = activeIndex + 1
@@ -147,7 +130,13 @@ startRemote.OnClientEvent:Connect(function()
             else
                 task.delay(0.3, finish)
             end
-        end
+        end)
+    end
+
+    mainConn = RunService.Heartbeat:Connect(function(dt)
+        elapsed = elapsed + dt
+        timerFill.Size = UDim2.new(math.clamp(1 - elapsed / TIMER, 0, 1), 0, 1, 0)
+        if elapsed >= TIMER then finish() end
     end)
 end)
 
