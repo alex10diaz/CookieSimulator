@@ -58,14 +58,19 @@ local function showPicker()
     Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 6)
     cancelBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
-    local list = Instance.new("UIListLayout", bg)
+    local listFrame = Instance.new("Frame", bg)
+    listFrame.Size                   = UDim2.new(1, 0, 1, -44)
+    listFrame.Position               = UDim2.new(0, 0, 0, 44)
+    listFrame.BackgroundTransparency = 1
+    listFrame.BorderSizePixel        = 0
+
+    local list = Instance.new("UIListLayout", listFrame)
     list.Padding             = UDim.new(0, 6)
     list.HorizontalAlignment = Enum.HorizontalAlignment.Center
     list.SortOrder           = Enum.SortOrder.LayoutOrder
-    list.Position            = UDim2.new(0, 0, 0, 44)
 
     for i, cookie in ipairs(COOKIES) do
-        local btn = Instance.new("TextButton", bg)
+        local btn = Instance.new("TextButton", listFrame)
         btn.LayoutOrder      = i
         btn.Size             = UDim2.new(0.9, 0, 0, 30)
         btn.BackgroundColor3 = Color3.fromRGB(240, 200, 140)
