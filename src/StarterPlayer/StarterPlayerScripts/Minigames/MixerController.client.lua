@@ -84,8 +84,10 @@ local function showPicker()
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
         btn.MouseButton1Click:Connect(function()
+            print("[MixerController] Cookie clicked: " .. tostring(cookie.id) .. " | remote type: " .. typeof(requestMixStart))
             sg:Destroy()
             requestMixStart:FireServer(cookie.id)
+            print("[MixerController] FireServer called")
         end)
     end
 end
