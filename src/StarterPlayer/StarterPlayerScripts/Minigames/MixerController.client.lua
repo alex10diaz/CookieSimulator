@@ -1,9 +1,12 @@
 -- src/StarterPlayer/StarterPlayerScripts/Minigames/MixerController.client.lua
--- Handles Mixer ProximityPrompt → cookie picker → signals server via player attribute.
--- Server watches PendingMixCookie attribute and fires StartMixMinigame back to client.
+-- Handles the cookie picker UI and signals the server via player attribute.
+-- The server fires "ShowMixPicker" to this client to open the UI.
 
-local Players                = game:GetService("Players")
-local ProximityPromptService = game:GetService("ProximityPromptService")
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local ShowMixPicker = RemoteManager.Get("ShowMixPicker")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -18,11 +21,8 @@ local COOKIES = {
     { id = "lemon_blackraspberry", label = "Lemon Berry"    },
 }
 
-local BTN_W, BTN_H, BTN_PAD = 118, 60, 8
-
 local function showPicker()
-    if playerGui:FindFirstChild("MixPickerGui") then return end
-    if playerGui:FindFirstChild("MixGui") then return end
+    if playerGui:FindFirstChild("MixPickerGui") or playerGui:FindFirstChild("MixGui") then return end
 
     local sg = Instance.new("ScreenGui")
     sg.Name           = "MixPickerGui"
@@ -30,25 +30,22 @@ local function showPicker()
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     sg.Parent         = playerGui
 
-    local bg = Instance.new("Frame")
-    bg.Size                   = UDim2.new(0, 280, 0, 340)
-    bg.Position               = UDim2.new(0.5, -140, 0.5, -170)
-    bg.BackgroundColor3       = Color3.fromRGB(20, 20, 20)
+    local bg = Instance.new("Frame", sg)
+    bg.Size                   = UDim2.new(0, 280, 0, 260) -- Adjusted size
+    bg.Position               = UDim2.new(0.5, -140, 0.5, -130)
+    bg.BackgroundColor3       = Color3.fromRGB(30, 30, 30)
     bg.BackgroundTransparency = 0.1
-    bg.BorderSizePixel        = 0
-    bg.Parent                 = sg
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 14)
 
-    local title = Instance.new("TextLabel")
+    local title = Instance.new("TextLabel", bg)
     title.Size                   = UDim2.new(1, 0, 0, 36)
     title.BackgroundTransparency = 1
     title.TextColor3             = Color3.fromRGB(255, 255, 255)
     title.TextScaled             = true
     title.Font                   = Enum.Font.GothamBold
     title.Text                   = "Choose a Cookie"
-    title.Parent                 = bg
-
-    local cancelBtn = Instance.new("TextButton")
+    
+    local cancelBtn = Instance.new("TextButton", bg)
     cancelBtn.Size             = UDim2.new(0, 28, 0, 28)
     cancelBtn.Position         = UDim2.new(1, -34, 0, 4)
     cancelBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
@@ -56,45 +53,34 @@ local function showPicker()
     cancelBtn.TextScaled       = true
     cancelBtn.Font             = Enum.Font.GothamBold
     cancelBtn.Text             = "X"
-    cancelBtn.BorderSizePixel  = 0
-    cancelBtn.Parent           = bg
     Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 6)
     cancelBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
-    local COLS = 3
+    local list = Instance.new("UIListLayout", bg)
+    list.Padding = UDim.new(0, 8)
+    list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    list.SortOrder = Enum.SortOrder.LayoutOrder
+    list.Position = UDim2.new(0, 0, 0, 44)
+
     for i, cookie in ipairs(COOKIES) do
-        local col = (i - 1) % COLS
-        local row = math.floor((i - 1) / COLS)
-        local btn = Instance.new("TextButton")
-        btn.Size             = UDim2.new(0, BTN_W, 0, BTN_H)
-        btn.Position         = UDim2.new(0, 12 + col * (BTN_W + BTN_PAD),
-                                          0, 44  + row * (BTN_H + BTN_PAD))
+        local btn = Instance.new("TextButton", bg)
+        btn.LayoutOrder = i
+        btn.Size             = UDim2.new(0.9, 0, 0, 50)
         btn.BackgroundColor3 = Color3.fromRGB(240, 200, 140)
         btn.TextColor3       = Color3.fromRGB(30, 30, 30)
         btn.TextScaled       = true
         btn.TextWrapped      = true
         btn.Font             = Enum.Font.GothamBold
         btn.Text             = cookie.label
-        btn.BorderSizePixel  = 0
-        btn.Parent           = bg
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
         btn.MouseButton1Click:Connect(function()
-            sg:Destroy()
             player:SetAttribute("PendingMixCookie", cookie.id)
+            sg:Destroy()
         end)
     end
 end
 
--- Same pattern as POSClient: ProximityPromptService.PromptTriggered fires client-side
-local mixersFolder = workspace:WaitForChild("Mixers", 10)
-ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer)
-    if triggeringPlayer ~= player then return end
-    local obj = prompt.Parent
-    while obj do
-        if obj == mixersFolder then showPicker() return end
-        obj = obj.Parent
-    end
-end)
+ShowMixPicker.OnClientEvent:Connect(showPicker)
 
 print("[MixerController] Ready.")

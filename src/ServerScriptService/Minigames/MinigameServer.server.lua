@@ -1,9 +1,11 @@
 -- MinigameServer
 -- Manages all minigame sessions and integrates with OrderManager.
--- Pipeline: Mix → Dough → Fridge → Oven → (Frost? → Warmers) → Dress → Counter
+-- Handles ProximityPrompt triggers for game stations.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
+local Workspace         = game:GetService("Workspace")
+
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
@@ -31,8 +33,7 @@ local MINIGAMES = {
 -- activeSessions[player] = { station, batchId, extra }
 -- ============================================================
 local activeSessions = {}
-local playerBatch    = {}       -- player → batchId for mix/dough stage
-local ovenSession    = {}       -- player → batchId they pulled from fridge
+local ovenSession    = {}       -- player → batchId they pulled from fridge, ready for oven
 local dressPending   = {}       -- player → warmerEntry taken for dress
 
 -- ============================================================
@@ -44,7 +45,7 @@ local FridgeUpdated  = RemoteManager.Get("FridgeUpdated")
 local BoxCreated     = RemoteManager.Get("BoxCreated")
 local BoxDelivered   = RemoteManager.Get("BoxDelivered")
 
-local function broadcastAll()
+local function broadcastState()
     local batchState  = OrderManager.GetBatchState()
     local fridgeState = OrderManager.GetFridgeState()
     local warmerState = OrderManager.GetWarmerState()
@@ -55,9 +56,9 @@ local function broadcastAll()
     end
 end
 
-OrderManager.On("BatchUpdated",   broadcastAll)
-OrderManager.On("FridgeUpdated",  broadcastAll)
-OrderManager.On("WarmersUpdated", broadcastAll)
+OrderManager.On("BatchUpdated",   broadcastState)
+OrderManager.On("FridgeUpdated",  broadcastState)
+OrderManager.On("WarmersUpdated", broadcastState)
 OrderManager.On("BoxCreated", function(box)
     for _, p in ipairs(Players:GetPlayers()) do BoxCreated:FireClient(p, box) end
 end)
@@ -65,93 +66,6 @@ OrderManager.On("BoxDelivered", function(data)
     for _, p in ipairs(Players:GetPlayers()) do BoxDelivered:FireClient(p, data) end
 end)
 
--- ============================================================
--- START SESSION
--- ============================================================
-local function startSession(player, stationName, ...)
-    if activeSessions[player] then
-        warn("[MinigameServer] " .. player.Name .. " already in a session: " .. tostring(activeSessions[player].station))
-        return
-    end
-
-    local config = MINIGAMES[stationName]
-    if not config then return end
-
-    local batchId = nil
-
-    if stationName == "mix" then
-        -- cookieId set by RequestMixStart handler before this is called
-        local cookieId = activeSessions[player] and activeSessions[player].cookieId
-        if not cookieId then
-            warn("[MinigameServer] No cookieId for mix session: " .. player.Name)
-            return
-        end
-        local id = OrderManager.TryStartBatch(player, cookieId)
-        if not id then return end
-        batchId = id
-        playerBatch[player] = batchId
-
-    elseif stationName == "dough" then
-        local batch = OrderManager.GetBatchAtStage("dough")
-        if not batch then
-            warn("[MinigameServer] No batch at dough stage for " .. player.Name)
-            return
-        end
-        -- Check no other active player already claimed this batch
-        for otherPlayer, pid in pairs(playerBatch) do
-            if pid == batch.batchId and otherPlayer ~= player then
-                warn("[MinigameServer] Batch #" .. batch.batchId .. " already claimed by " .. otherPlayer.Name)
-                return
-            end
-        end
-        batchId = batch.batchId
-        playerBatch[player] = batchId
-
-    elseif stationName == "oven" then
-        -- batchId comes from fridge pull (handled separately below)
-        batchId = ovenSession[player]
-        if not batchId then
-            warn("[MinigameServer] " .. player.Name .. " has no dough pulled from fridge")
-            return
-        end
-
-    elseif stationName == "frost" then
-        local entry = OrderManager.TakeFromWarmers(true) -- wantsForFrost=true
-        if not entry then
-            warn("[MinigameServer] No frost-ready cookies in warmers")
-            return
-        end
-        batchId = entry.batchId
-        -- Store snapshot for score recording
-        activeSessions[player] = { station = stationName, batchId = batchId, warmerEntry = entry }
-        local startRemote = RemoteManager.Get(config.start)
-        startRemote:FireClient(player)
-        return  -- early return, session already set
-
-    elseif stationName == "dress" then
-        local entry = OrderManager.TakeFromWarmers(false) -- wantsForFrost=false (ready for dress)
-        if not entry then
-            warn("[MinigameServer] No dress-ready cookies in warmers")
-            return
-        end
-        batchId = entry.batchId
-        dressPending[player] = entry
-        activeSessions[player] = { station = stationName, batchId = batchId, warmerEntry = entry }
-        local startRemote = RemoteManager.Get(config.start)
-        startRemote:FireClient(player, entry.cookieId)
-        return
-    end
-
-    activeSessions[player] = { station = stationName, batchId = batchId }
-
-    local startRemote = RemoteManager.Get(config.start)
-    if config.getSettings then
-        local settings, label = config.getSettings()
-        startRemote:FireClient(player, settings, label)
-    else
-        startRemote:FireClient(player)
-    end
-end
 
 -- ============================================================
 -- END SESSION / RECORD SCORE
@@ -174,7 +88,6 @@ local function endSession(player, stationName, score)
 
     elseif stationName == "dough" then
         OrderManager.RecordStationScore(player, "dough", score, batchId)
-        playerBatch[player] = nil
 
     elseif stationName == "oven" then
         OrderManager.RecordOvenScore(player, score, batchId)
@@ -195,180 +108,196 @@ local function endSession(player, stationName, score)
 end
 
 -- ============================================================
--- FRIDGE PULL → player receives tray, must carry to oven
--- DepositDough fires when they interact with a specific oven
+-- PROXIMITY PROMPT HANDLERS
 -- ============================================================
-local PullRemote       = RemoteManager.Get("PullFromFridge")
-local PullResultRemote = RemoteManager.Get("PullFromFridgeResult")
-local DepositDough     = RemoteManager.Get("DepositDough")
 
-PullRemote.OnServerEvent:Connect(function(player, fridgeId)
-    if ovenSession[player] then
-        warn("[MinigameServer] " .. player.Name .. " already carrying dough")
-        PullResultRemote:FireClient(player, nil, false)
-        return
-    end
-    local batchId = OrderManager.PullFromFridge(player, fridgeId)
-    if batchId then
-        ovenSession[player] = batchId  -- reserve slot, oven session starts on deposit
-        PullResultRemote:FireClient(player, batchId, true)
-    else
-        PullResultRemote:FireClient(player, nil, false)
-    end
-end)
-
-DepositDough.OnServerEvent:Connect(function(player, batchId, ovenName)
-    if ovenSession[player] ~= batchId then
-        warn("[MinigameServer] " .. player.Name .. " deposit mismatch")
-        return
-    end
-    print(string.format("[MinigameServer] %s deposited batch #%d into %s", player.Name, batchId, ovenName))
-    -- Oven minigame session starts now — client OvenPrompt triggered it,
-    -- StartOvenMinigame fires to client to begin the minigame
-    local startRemote = RemoteManager.Get("StartOvenMinigame")
-    startRemote:FireClient(player)
-end)
-
--- ============================================================
--- BOX CARRY & DELIVER
--- ============================================================
-local BoxCarriedRemote   = RemoteManager.Get("BoxCarried")
-local BoxDeliveredRemote = RemoteManager.Get("BoxDelivered")
-
-BoxCarriedRemote.OnServerEvent:Connect(function(player, boxId)
-    OrderManager.PickupBox(player, boxId)
-end)
-
-BoxDeliveredRemote.OnServerEvent:Connect(function(player, boxId, npcOrderId)
-    local ok, quality = OrderManager.DeliverBox(player, boxId, npcOrderId)
-    if ok then
-        print(string.format("[MinigameServer] %s delivered box #%d | Quality: %d%%", player.Name, boxId, quality))
-        -- TODO: reward player currency/xp
-    end
-end)
-
--- ============================================================
--- REQUEST MIX START — via Player attribute (bypasses RemoteEvent)
--- Client sets PendingMixCookie attribute; server detects change here.
--- ============================================================
-local function handleMixCookieSelection(player)
-    local cookieId = player:GetAttribute("PendingMixCookie")
-    if not cookieId or cookieId == "" then return end
-    player:SetAttribute("PendingMixCookie", "")  -- clear immediately
+-- DOUGH, FROST, DRESS prompts
+local function handleSimpleStart(player, stationName)
     if activeSessions[player] then
-        warn("[MinigameServer] " .. player.Name .. " already in a session")
+        warn("[MinigameServer] " .. player.Name .. " already in a session.")
         return
     end
-    local cookie = CookieData.GetById(cookieId)
-    if not cookie then
-        warn("[MinigameServer] Invalid cookieId: " .. tostring(cookieId))
-        return
+
+    local config = MINIGAMES[stationName]
+    if not config then return end
+
+    local batchId, extraData
+    
+    if stationName == "dough" then
+        local batch = OrderManager.GetBatchAtStage("dough")
+        if not batch then
+            warn("[MinigameServer] No batch at dough stage for " .. player.Name)
+            return
+        end
+        batchId = batch.batchId
+    elseif stationName == "frost" then
+        local entry = OrderManager.TakeFromWarmers(true) -- wantsForFrost=true
+        if not entry then
+            warn("[MinigameServer] No frost-ready cookies in warmers")
+            return
+        end
+        batchId = entry.batchId
+        extraData = { warmerEntry = entry }
+    elseif stationName == "dress" then
+        local entry = OrderManager.TakeFromWarmers(false) -- wantsForFrost=false
+        if not entry then
+            warn("[MinigameServer] No dress-ready cookies in warmers")
+            return
+        end
+        batchId = entry.batchId
+        extraData = { warmerEntry = entry }
+        dressPending[player] = entry
     end
-    local batchId = OrderManager.TryStartBatch(player, cookieId)
-    if not batchId then
-        warn("[MinigameServer] Could not start batch for " .. player.Name)
-        return
+
+    activeSessions[player] = { station = stationName, batchId = batchId, warmerEntry = extraData and extraData.warmerEntry }
+    
+    local startRemote = RemoteManager.Get(config.start)
+    if stationName == "dress" and extraData and extraData.warmerEntry then
+         startRemote:FireClient(player, extraData.warmerEntry.cookieId)
+    else
+         startRemote:FireClient(player)
     end
-    playerBatch[player] = batchId
-    activeSessions[player] = { station = "mix", batchId = batchId, cookieId = cookieId }
-    local settings, label = MINIGAMES.mix.getSettings()
-    RemoteManager.Get("StartMixMinigame"):FireClient(player, settings, label)
-    print("[MinigameServer] Mix started for " .. player.Name .. " cookie=" .. cookieId)
 end
 
--- Poll every frame — client SetAttribute does not cross Solo Play boundary via signals
-local RunService = game:GetService("RunService")
-RunService.Heartbeat:Connect(function()
-    for _, player in ipairs(Players:GetPlayers()) do
-        local cookieId = player:GetAttribute("PendingMixCookie")
-        if cookieId and cookieId ~= "" then
-            handleMixCookieSelection(player)
+-- HOOK UP PROMPTS (Dough, Frost, Dress stations)
+-- This assumes you have ProximityPrompts named "DoughPrompt", "FrostPrompt", "DressPrompt" in your workspace.
+local function hookSimplePrompts(parent)
+    for _, prompt in ipairs(parent:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") then
+            if prompt.Name == "DoughPrompt" then
+                prompt.Triggered:Connect(function(player) handleSimpleStart(player, "dough") end)
+            elseif prompt.Name == "FrostPrompt" then
+                prompt.Triggered:Connect(function(player) handleSimpleStart(player, "frost") end)
+            elseif prompt.Name == "DressPrompt" then
+                prompt.Triggered:Connect(function(player) handleSimpleStart(player, "dress") end)
+            end
         end
     end
-end)
-
--- ============================================================
--- WIRE UP MINIGAME START/RESULT REMOTES
--- ============================================================
-for name, config in pairs(MINIGAMES) do
-    local startRemote  = RemoteManager.Get(config.start)
-    local resultRemote = RemoteManager.Get(config.result)
-
-    -- Mix start is handled exclusively by RequestMixStart above
-    if name ~= "mix" then
-        startRemote.OnServerEvent:Connect(function(player, ...)
-            startSession(player, name, ...)
-        end)
-    end
-
-    resultRemote.OnServerEvent:Connect(function(player, score)
-        endSession(player, name, score)
-    end)
+end
+-- Example: hook prompts in a folder named "Stations"
+local stationsFolder = Workspace:WaitForChild("Stations", 10)
+if stationsFolder then
+    hookSimplePrompts(stationsFolder)
+    stationsFolder.ChildAdded:Connect(hookSimplePrompts)
 end
 
--- ============================================================
--- CLEANUP
--- ============================================================
 
--- ============================================================
--- BRIDGE: FridgeOvenSystem → MinigameServer (server BindableEvents)
--- FridgeOvenSystem handles ProximityPrompt triggers server-side.
--- It fires these BindableEvents to keep MinigameServer session state in sync.
--- ============================================================
-local ServerStorage2 = game:GetService("ServerStorage")
-local bridgeEvents   = ServerStorage2:WaitForChild("Events")
-local fridgePulledBE  = bridgeEvents:WaitForChild("FridgePulled")
-local ovenDepositedBE = bridgeEvents:WaitForChild("OvenDeposited")
-
-fridgePulledBE.Event:Connect(function(player, batchId)
-    -- Player pulled a batch from the fridge; track for oven session
-    ovenSession[player] = batchId
-    print(string.format("[MinigameServer] ovenSession set for %s: batch #%d", player.Name, batchId))
-end)
-
-ovenDepositedBE.Event:Connect(function(player, ovenName)
-    -- Player deposited at oven; fire client to start oven minigame
-    if not ovenSession[player] then
-        warn("[MinigameServer] OvenDeposited with no ovenSession for " .. player.Name)
-        return
-    end
-    print(string.format("[MinigameServer] %s deposited at %s — starting oven minigame", player.Name, ovenName))
-    local startRemote = RemoteManager.Get("StartOvenMinigame")
-    startRemote:FireClient(player)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    activeSessions[player] = nil
-    playerBatch[player]    = nil
-    ovenSession[player]    = nil
-    dressPending[player]   = nil
-end)
-
--- ============================================================
--- MIXER PROXIMITY PROMPTS → ShowMixPicker (server-side trigger)
--- Client-side Triggered is unreliable; server hooks the prompts
--- and fires ShowMixPicker back to the triggering player.
--- ============================================================
+-- MIXER PROMPTS → Show Client Picker
 local ShowMixPicker = RemoteManager.Get("ShowMixPicker")
-
 local function hookMixerPrompts(model)
     for _, obj in ipairs(model:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then
+        if obj:IsA("ProximityPrompt") and obj.Name == "MixerPrompt" then
             obj.Triggered:Connect(function(player)
+                if activeSessions[player] then return end
                 ShowMixPicker:FireClient(player)
             end)
         end
     end
 end
 
-local mixersFolder = workspace:WaitForChild("Mixers", 10)
+local mixersFolder = Workspace:WaitForChild("Mixers", 10)
 if mixersFolder then
-    for _, mixer in ipairs(mixersFolder:GetChildren()) do
-        hookMixerPrompts(mixer)
-    end
+    for _, mixer in ipairs(mixersFolder:GetChildren()) do hookMixerPrompts(mixer) end
     mixersFolder.ChildAdded:Connect(hookMixerPrompts)
 else
     warn("[MinigameServer] Workspace.Mixers not found")
 end
+
+-- MIX COOKIE SELECTION (from client)
+local function onMixCookieSelected(player)
+    local cookieId = player:GetAttribute("PendingMixCookie")
+    if not cookieId or cookieId == "" then return end
+    
+    player:SetAttribute("PendingMixCookie", nil) -- Clear attribute
+    
+    if activeSessions[player] then return end
+
+    local batchId = OrderManager.TryStartBatch(player, cookieId)
+    if not batchId then
+        warn("[MinigameServer] Could not start batch for " .. player.Name)
+        return
+    end
+
+    activeSessions[player] = { station = "mix", batchId = batchId, cookieId = cookieId }
+    
+    local settings, label = MINIGAMES.mix.getSettings()
+    RemoteManager.Get("StartMixMinigame"):FireClient(player, settings, label)
+    print("[MinigameServer] Mix started for " .. player.Name .. " cookie=" .. cookieId)
+end
+
+
+-- FRIDGE & OVEN PROMPTS
+local PullResultRemote = RemoteManager.Get("PullFromFridgeResult")
+
+local function hookFridgeOvenPrompts()
+    -- Fridges
+    local fridges = Workspace:WaitForChild("Fridges")
+    for _, fridge in ipairs(fridges:GetChildren()) do
+        local prompt = fridge:FindFirstChild("FridgePrompt", true)
+        local fridgeId = fridge:GetAttribute("FridgeId")
+        if prompt and fridgeId then
+            prompt.Triggered:Connect(function(player)
+                if ovenSession[player] or activeSessions[player] then return end
+                
+                local batchId = OrderManager.PullFromFridge(player, fridgeId)
+                if batchId then
+                    ovenSession[player] = batchId -- Reserve oven spot
+                    PullResultRemote:FireClient(player, batchId, true)
+                else
+                    PullResultRemote:FireClient(player, nil, false)
+                end
+            end)
+        end
+    end
+
+    -- Ovens
+    local ovens = Workspace:WaitForChild("Ovens")
+    for _, oven in ipairs(ovens:GetChildren()) do
+        local prompt = oven:FindFirstChild("OvenPrompt", true)
+        if prompt then
+            prompt.Triggered:Connect(function(player)
+                local batchId = ovenSession[player]
+                if not batchId or activeSessions[player] then return end
+                
+                print(string.format("[MinigameServer] %s deposited batch #%d into %s", player.Name, batchId, oven.Name))
+                
+                -- Start the oven minigame session
+                activeSessions[player] = { station = "oven", batchId = batchId }
+                
+                local startRemote = RemoteManager.Get("StartOvenMinigame")
+                startRemote:FireClient(player)
+            end)
+        end
+    end
+end
+
+hookFridgeOvenPrompts()
+
+
+-- ============================================================
+-- WIRE UP RESULT & CLEANUP
+-- ============================================================
+for name, config in pairs(MINIGAMES) do
+    local resultRemote = RemoteManager.Get(config.result)
+    resultRemote.OnServerEvent:Connect(function(player, score)
+        endSession(player, name, score)
+    end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player:SetAttribute("PendingMixCookie", nil)
+    player.AttributeChanged:Connect(function(attribute)
+        if attribute == "PendingMixCookie" then
+            onMixCookieSelected(player)
+        end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    activeSessions[player] = nil
+    ovenSession[player]    = nil
+    dressPending[player]   = nil
+end)
+
 
 print("[MinigameServer] Ready")

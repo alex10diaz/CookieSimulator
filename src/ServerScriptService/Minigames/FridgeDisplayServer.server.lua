@@ -3,10 +3,9 @@
 -- Runs server-side so all players see correct stock without extra remotes.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
 
-local FridgeUpdated = RemoteManager.Get("FridgeUpdated")
-local MAX_STOCK     = 4
+local MAX_STOCK = 4
 
 local function updateBillboards(state)
     local fridgesFolder = workspace:FindFirstChild("Fridges")
@@ -19,7 +18,6 @@ local function updateBillboards(state)
         local count    = state[fridgeId] or 0
         local ratio    = count / MAX_STOCK
 
-        -- Color: green when stocked, amber at half, red when empty
         local fillColor = ratio > 0.5  and Color3.fromRGB(80, 210, 120)
                        or ratio > 0    and Color3.fromRGB(255, 185, 50)
                        or                  Color3.fromRGB(200, 70, 70)
@@ -46,19 +44,7 @@ local function updateBillboards(state)
     end
 end
 
--- FridgeUpdated fires with state table whenever fridge changes
-FridgeUpdated.OnServerEvent:Connect(function(_, state)
-    -- This remote fires client→server only for testing; actual updates come from OrderManager
-    -- We hook into the remote that fires TO clients and intercept from there
-end)
-
--- Better: hook directly into the OrderManager notify system via a server script approach
--- The MinigameServer already fires FridgeUpdated to all clients via broadcastAll()
--- We need to update billboards whenever FridgeUpdated would fire
--- Solution: listen to the same OrderManager event that triggers broadcastAll
-
-local OrderManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
-
+-- Hook directly into the OrderManager notify system.
 OrderManager.On("FridgeUpdated", function(state)
     updateBillboards(state)
 end)
