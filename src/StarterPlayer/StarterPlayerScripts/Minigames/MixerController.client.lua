@@ -1,12 +1,9 @@
 -- src/StarterPlayer/StarterPlayerScripts/Minigames/MixerController.client.lua
--- Handles Mixer ProximityPrompt → cookie picker → fires RequestMixStart to server.
--- Server then fires StartMixMinigame back; MixMinigame.client.lua takes over from there.
+-- Handles Mixer ProximityPrompt → cookie picker → signals server via player attribute.
+-- Server watches PendingMixCookie attribute and fires StartMixMinigame back to client.
 
 local Players                = game:GetService("Players")
-local ReplicatedStorage      = game:GetService("ReplicatedStorage")
 local ProximityPromptService = game:GetService("ProximityPromptService")
-
--- Cookie selection sent via player attribute (bypasses RemoteEvent infrastructure)
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -83,10 +80,8 @@ local function showPicker()
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
         btn.MouseButton1Click:Connect(function()
-            print("[MixerController] Cookie clicked: " .. tostring(cookie.id) .. " | ClassName: " .. requestMixStart.ClassName .. " | Path: " .. requestMixStart:GetFullName())
             sg:Destroy()
-            requestMixStart:FireServer(cookie.id)
-            print("[MixerController] FireServer called")
+            player:SetAttribute("PendingMixCookie", cookie.id)
         end)
     end
 end
