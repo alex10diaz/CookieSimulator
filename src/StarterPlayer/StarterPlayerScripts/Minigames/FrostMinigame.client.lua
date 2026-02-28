@@ -9,8 +9,7 @@ local resultRemote  = RemoteManager.Get("FrostMinigameResult")
 
 local player = Players.LocalPlayer
 
-local TIMER           = 7
-local HIT_RADIUS      = 30
+local TIMER           = 10
 local NUM_CHECKPOINTS = 8
 
 local CHECKPOINT_OFFSETS = {
