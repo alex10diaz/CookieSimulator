@@ -205,14 +205,11 @@ else
     warn("[MinigameServer] Workspace.Mixers not found")
 end
 
--- MIX COOKIE SELECTION (from client)
-local function onMixCookieSelected(player)
-    local cookieId = player:GetAttribute("PendingMixCookie")
-    if not cookieId or cookieId == "" then return end
-    
-    player:SetAttribute("PendingMixCookie", nil) -- Clear attribute
-    
+-- MIX COOKIE SELECTION (from client via FireServer)
+local RequestMixStart = RemoteManager.Get("RequestMixStart")
+RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
     if activeSessions[player] then return end
+    if not cookieId or cookieId == "" then return end
 
     local batchId = OrderManager.TryStartBatch(player, cookieId)
     if not batchId then
@@ -221,11 +218,11 @@ local function onMixCookieSelected(player)
     end
 
     activeSessions[player] = { station = "mix", batchId = batchId, cookieId = cookieId }
-    
+
     local settings, label = MINIGAMES.mix.getSettings()
     RemoteManager.Get("StartMixMinigame"):FireClient(player, settings, label)
     print("[MinigameServer] Mix started for " .. player.Name .. " cookie=" .. cookieId)
-end
+end)
 
 
 -- FRIDGE & OVEN PROMPTS
@@ -285,15 +282,6 @@ for name, config in pairs(MINIGAMES) do
         endSession(player, name, score)
     end)
 end
-
-Players.PlayerAdded:Connect(function(player)
-    player:SetAttribute("PendingMixCookie", nil)
-    player.AttributeChanged:Connect(function(attribute)
-        if attribute == "PendingMixCookie" then
-            onMixCookieSelected(player)
-        end
-    end)
-end)
 
 Players.PlayerRemoving:Connect(function(player)
     activeSessions[player] = nil
