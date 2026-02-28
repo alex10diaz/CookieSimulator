@@ -162,26 +162,22 @@ local function handleSimpleStart(player, stationName)
 end
 
 -- HOOK UP PROMPTS (Dough, Frost, Dress stations)
--- This assumes you have ProximityPrompts named "DoughPrompt", "FrostPrompt", "DressPrompt" in your workspace.
-local function hookSimplePrompts(parent)
-    for _, prompt in ipairs(parent:GetDescendants()) do
-        if prompt:IsA("ProximityPrompt") then
-            if prompt.Name == "DoughPrompt" then
-                prompt.Triggered:Connect(function(player) handleSimpleStart(player, "dough") end)
-            elseif prompt.Name == "FrostPrompt" then
-                prompt.Triggered:Connect(function(player) handleSimpleStart(player, "frost") end)
-            elseif prompt.Name == "DressPrompt" then
-                prompt.Triggered:Connect(function(player) handleSimpleStart(player, "dress") end)
-            end
-        end
+-- Scans the whole workspace for named ProximityPrompts so station models can live anywhere.
+local function hookPromptIfNamed(desc)
+    if not desc:IsA("ProximityPrompt") then return end
+    if desc.Name == "DoughPrompt" then
+        desc.Triggered:Connect(function(player) handleSimpleStart(player, "dough") end)
+    elseif desc.Name == "FrostPrompt" then
+        desc.Triggered:Connect(function(player) handleSimpleStart(player, "frost") end)
+    elseif desc.Name == "DressPrompt" then
+        desc.Triggered:Connect(function(player) handleSimpleStart(player, "dress") end)
     end
 end
--- Example: hook prompts in a folder named "Stations"
-local stationsFolder = Workspace:WaitForChild("Stations", 10)
-if stationsFolder then
-    hookSimplePrompts(stationsFolder)
-    stationsFolder.ChildAdded:Connect(hookSimplePrompts)
+
+for _, desc in ipairs(Workspace:GetDescendants()) do
+    hookPromptIfNamed(desc)
 end
+Workspace.DescendantAdded:Connect(hookPromptIfNamed)
 
 
 -- MIXER PROMPTS → Show Client Picker
