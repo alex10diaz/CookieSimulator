@@ -248,12 +248,13 @@ BoxDeliveredRemote.OnServerEvent:Connect(function(player, boxId, npcOrderId)
 end)
 
 -- ============================================================
--- REQUEST MIX START (client picks cookie type, then minigame begins)
+-- REQUEST MIX START — via Player attribute (bypasses RemoteEvent)
+-- Client sets PendingMixCookie attribute; server detects change here.
 -- ============================================================
-local RequestMixStart = RemoteManager.Get("RequestMixStart")
-
-RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
-    print("[MinigameServer] RequestMixStart received from " .. player.Name .. " cookieId=" .. tostring(cookieId))
+local function handleMixCookieSelection(player)
+    local cookieId = player:GetAttribute("PendingMixCookie")
+    if not cookieId or cookieId == "" then return end
+    player:SetAttribute("PendingMixCookie", "")  -- clear immediately
     if activeSessions[player] then
         warn("[MinigameServer] " .. player.Name .. " already in a session")
         return
@@ -263,7 +264,6 @@ RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
         warn("[MinigameServer] Invalid cookieId: " .. tostring(cookieId))
         return
     end
-    -- Start the batch immediately so stage transitions are tracked from here
     local batchId = OrderManager.TryStartBatch(player, cookieId)
     if not batchId then
         warn("[MinigameServer] Could not start batch for " .. player.Name)
@@ -273,7 +273,17 @@ RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
     activeSessions[player] = { station = "mix", batchId = batchId, cookieId = cookieId }
     local settings, label = MINIGAMES.mix.getSettings()
     RemoteManager.Get("StartMixMinigame"):FireClient(player, settings, label)
-end)
+    print("[MinigameServer] Mix started for " .. player.Name .. " cookie=" .. cookieId)
+end
+
+local function watchPlayerMixAttr(player)
+    player:GetAttributeChangedSignal("PendingMixCookie"):Connect(function()
+        handleMixCookieSelection(player)
+    end)
+end
+
+for _, p in ipairs(Players:GetPlayers()) do watchPlayerMixAttr(p) end
+Players.PlayerAdded:Connect(watchPlayerMixAttr)
 
 -- ============================================================
 -- WIRE UP MINIGAME START/RESULT REMOTES
