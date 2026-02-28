@@ -4,7 +4,19 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
-local GameEvents        = ReplicatedStorage:WaitForChild("GameEvents")
+
+-- Server creates the folder; client waits for it.
+local GameEvents
+if RunService:IsServer() then
+    GameEvents = ReplicatedStorage:FindFirstChild("GameEvents")
+    if not GameEvents then
+        GameEvents = Instance.new("Folder")
+        GameEvents.Name = "GameEvents"
+        GameEvents.Parent = ReplicatedStorage
+    end
+else
+    GameEvents = ReplicatedStorage:WaitForChild("GameEvents", 30)
+end
 
 local RemoteManager = {}
 
