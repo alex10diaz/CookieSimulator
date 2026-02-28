@@ -6,9 +6,7 @@ local Players                = game:GetService("Players")
 local ReplicatedStorage      = game:GetService("ReplicatedStorage")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 
-local RemoteManager   = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
--- Direct lookup bypasses any RemoteManager caching issue
-local requestMixStart = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("RequestMixStart", 10)
+-- Cookie selection sent via player attribute (bypasses RemoteEvent infrastructure)
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
