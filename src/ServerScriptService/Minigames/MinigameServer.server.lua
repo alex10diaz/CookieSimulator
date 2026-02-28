@@ -59,6 +59,36 @@ end
 OrderManager.On("BatchUpdated",   broadcastState)
 OrderManager.On("FridgeUpdated",  broadcastState)
 OrderManager.On("WarmersUpdated", broadcastState)
+
+-- Update physical warmer CountLabels on the Studio models
+local function updateWarmerDisplays()
+    local counts = OrderManager.GetWarmerCountsByType()
+    local warmersFolder = Workspace:FindFirstChild("Warmers")
+    if not warmersFolder then return end
+    for _, warmerModel in ipairs(warmersFolder:GetChildren()) do
+        local cookieId = warmerModel:GetAttribute("CookieId")
+        if cookieId then
+            local count = counts[cookieId] or 0
+            local doorPanel = warmerModel:FindFirstChild("DoorPanel")
+            if doorPanel then
+                local sg = doorPanel:FindFirstChild("WarmersDisplay")
+                if sg then
+                    local lbl = sg:FindFirstChild("CountLabel")
+                    if lbl then
+                        lbl.Text = count > 0 and (count .. " ready") or "empty"
+                        lbl.TextColor3 = count > 0
+                            and Color3.fromRGB(80, 200, 80)
+                            or  Color3.fromRGB(130, 130, 130)
+                    end
+                end
+            end
+        end
+    end
+end
+
+OrderManager.On("WarmersUpdated", updateWarmerDisplays)
+updateWarmerDisplays()  -- initialise on load
+
 OrderManager.On("BoxCreated", function(box)
     for _, p in ipairs(Players:GetPlayers()) do BoxCreated:FireClient(p, box) end
 end)
