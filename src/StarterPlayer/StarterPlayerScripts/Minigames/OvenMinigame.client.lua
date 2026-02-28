@@ -1,4 +1,8 @@
 -- src/StarterPlayer/StarterPlayerScripts/Minigames/OvenMinigame.client.lua
+-- Redesigned: two sequential sub-games
+--   1. Load  — click 3 rack rows to slide trays in   (0-50 pts)
+--   2. Bake  — rising bar, press STOP in green zone  (0-50 pts)
+
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
@@ -9,11 +13,15 @@ local resultRemote  = RemoteManager.Get("OvenMinigameResult")
 
 local player = Players.LocalPlayer
 
-local FILL_TIME      = 6     -- seconds for bar to fill completely
-local BAR_HEIGHT     = 260   -- px
-local ZONE_HEIGHT_PX = 56    -- px (~21.5% of bar)
-local ZONE_MIN       = 0.25  -- zone center drifts within this range (fraction from bottom)
-local ZONE_MAX       = 0.75
+local NUM_RACKS     = 3
+local LOAD_TIME     = 8    -- seconds to load all racks
+local BAKE_TIME     = 6    -- seconds for bar to fill completely
+local BAR_H         = 240  -- px, bake bar height
+
+-- Bake green zone (fraction from bottom)
+local ZONE_MIN = 0.25
+local ZONE_MAX = 0.75
+local ZONE_H_FRAC = 0.22  -- zone height as fraction of bar
 
 startRemote.OnClientEvent:Connect(function()
     if player:WaitForChild("PlayerGui"):FindFirstChild("OvenGui") then return end
@@ -31,8 +39,8 @@ startRemote.OnClientEvent:Connect(function()
     sg.Parent         = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
-    bg.Size                   = UDim2.new(0, 300, 0, 420)
-    bg.Position               = UDim2.new(0.5, -150, 0.5, -210)
+    bg.Size                   = UDim2.new(0, 360, 0, 440)
+    bg.Position               = UDim2.new(0.5, -180, 0.5, -220)
     bg.BackgroundColor3       = Color3.fromRGB(20, 20, 20)
     bg.BackgroundTransparency = 0.1
     bg.BorderSizePixel        = 0
@@ -40,123 +48,242 @@ startRemote.OnClientEvent:Connect(function()
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
 
     local titleLbl = Instance.new("TextLabel")
-    titleLbl.Size                   = UDim2.new(1, 0, 0, 44)
+    titleLbl.Size                   = UDim2.new(1, 0, 0, 40)
     titleLbl.BackgroundTransparency = 1
     titleLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
     titleLbl.TextScaled             = true
-    titleLbl.TextWrapped            = true
     titleLbl.Font                   = Enum.Font.GothamBold
-    titleLbl.Text                   = "OVEN — Stop at the right temp!"
+    titleLbl.Text                   = "OVEN — Step 1/2: Load Trays"
     titleLbl.Parent                 = bg
 
-    -- Vertical bar track
-    local barTrack = Instance.new("Frame")
-    barTrack.Size             = UDim2.new(0, 60, 0, BAR_HEIGHT)
-    barTrack.Position         = UDim2.new(0.5, -30, 0, 50)
-    barTrack.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    barTrack.BorderSizePixel  = 0
-    barTrack.ClipsDescendants = false
-    barTrack.Parent           = bg
-    Instance.new("UICorner", barTrack).CornerRadius = UDim.new(0, 8)
+    local subLbl = Instance.new("TextLabel")
+    subLbl.Size                   = UDim2.new(1, -20, 0, 28)
+    subLbl.Position               = UDim2.new(0, 10, 0, 40)
+    subLbl.BackgroundTransparency = 1
+    subLbl.TextColor3             = Color3.fromRGB(180, 180, 180)
+    subLbl.TextScaled             = true
+    subLbl.Font                   = Enum.Font.Gotham
+    subLbl.Text                   = "Click each rack to slide the tray in!"
+    subLbl.Parent                 = bg
 
-    -- Fill (anchored at bottom, grows upward)
-    local fillFrame = Instance.new("Frame")
-    fillFrame.Size             = UDim2.new(1, 0, 0, 0)
-    fillFrame.AnchorPoint      = Vector2.new(0, 1)
-    fillFrame.Position         = UDim2.new(0, 0, 1, 0)
-    fillFrame.BackgroundColor3 = Color3.fromRGB(220, 120, 30)
-    fillFrame.BorderSizePixel  = 0
-    fillFrame.Parent           = barTrack
-    Instance.new("UICorner", fillFrame).CornerRadius = UDim.new(0, 8)
+    local content = Instance.new("Frame")
+    content.Size             = UDim2.new(1, -20, 0, 330)
+    content.Position         = UDim2.new(0, 10, 0, 74)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel  = 0
+    content.Parent           = bg
 
-    -- Green zone (drifts, rendered in barTrack space)
-    local zoneCenter = (ZONE_MIN + ZONE_MAX) / 2
-    local zoneFrame  = Instance.new("Frame")
-    zoneFrame.Size             = UDim2.new(1, 6, 0, ZONE_HEIGHT_PX)
-    zoneFrame.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-    zoneFrame.BackgroundTransparency = 0.3
-    zoneFrame.BorderSizePixel  = 0
-    zoneFrame.ZIndex           = 2
-    zoneFrame.AnchorPoint      = Vector2.new(0.5, 0.5)
-    zoneFrame.Position         = UDim2.new(0.5, 0, 1 - zoneCenter, 0)
-    zoneFrame.Parent           = barTrack
-    Instance.new("UICorner", zoneFrame).CornerRadius = UDim.new(0, 4)
+    local timerBar = Instance.new("Frame")
+    timerBar.Size             = UDim2.new(1, -20, 0, 8)
+    timerBar.Position         = UDim2.new(0, 10, 1, -20)
+    timerBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    timerBar.BorderSizePixel  = 0
+    timerBar.Parent           = bg
+    local timerFill = Instance.new("Frame")
+    timerFill.Size             = UDim2.new(1, 0, 1, 0)
+    timerFill.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+    timerFill.BorderSizePixel  = 0
+    timerFill.Parent           = timerBar
+    Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
-    -- HOT / COLD labels
-    local function sideLabel(text, yPos, col)
-        local lbl = Instance.new("TextLabel")
-        lbl.Size                   = UDim2.new(0, 55, 0, 24)
-        lbl.Position               = UDim2.new(0.5, 38, 0, yPos)
-        lbl.BackgroundTransparency = 1
-        lbl.TextColor3             = col
-        lbl.TextScaled             = true
-        lbl.Font                   = Enum.Font.GothamBold
-        lbl.Text                   = text
-        lbl.Parent                 = bg
-    end
-    sideLabel("HOT",  50,  Color3.fromRGB(255, 100, 50))
-    sideLabel("COLD", 310, Color3.fromRGB(100, 180, 255))
+    local finished  = false
+    local phaseConn
 
-    -- STOP button
-    local stopBtn = Instance.new("TextButton")
-    stopBtn.Size             = UDim2.new(0.6, 0, 0, 50)
-    stopBtn.Position         = UDim2.new(0.2, 0, 1, -70)
-    stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-    stopBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
-    stopBtn.TextScaled       = true
-    stopBtn.Font             = Enum.Font.GothamBold
-    stopBtn.Text             = "STOP"
-    stopBtn.BorderSizePixel  = 0
-    stopBtn.Parent           = bg
-    Instance.new("UICorner", stopBtn).CornerRadius = UDim.new(0, 10)
-
-    local function calcScore(fillFrac)
-        local halfZone = (ZONE_HEIGHT_PX / 2) / BAR_HEIGHT
-        local dist     = math.abs(fillFrac - zoneCenter)
-        if dist <= halfZone then
-            return math.floor(70 + 30 * (1 - dist / halfZone))
-        elseif dist <= halfZone + 0.10 then
-            return math.floor(40 + 30 * (1 - (dist - halfZone) / 0.10))
-        else
-            return math.floor(math.max(0, 39 * (1 - dist)))
-        end
-    end
-
-    local elapsed  = 0
-    local stopped  = false
-    local mainConn
-
-    local function finish(score)
-        if mainConn then mainConn:Disconnect() end
+    local function endMinigame(score)
+        if finished then return end
+        finished = true
+        if phaseConn then phaseConn:Disconnect() end
         humanoid.WalkSpeed = 16
         humanoid.JumpHeight = 7.2
         sg:Destroy()
         resultRemote:FireServer(math.clamp(score, 0, 100))
     end
 
-    stopBtn.MouseButton1Click:Connect(function()
-        if stopped then return end
-        stopped = true
-        finish(calcScore(math.clamp(elapsed / FILL_TIME, 0, 1)))
-    end)
+    -- ============================================================
+    -- PHASE 2: BAKE TIMING
+    -- ============================================================
+    local function startBake(loadScore)
+        content:ClearAllChildren()
+        titleLbl.Text = "OVEN — Step 2/2: Bake!"
+        subLbl.Text   = "Press STOP at the right temperature!"
 
-    mainConn = RunService.Heartbeat:Connect(function(dt)
-        elapsed = elapsed + dt
-        local frac = math.clamp(elapsed / FILL_TIME, 0, 1)
+        local barTrack = Instance.new("Frame")
+        barTrack.Size             = UDim2.new(0, 60, 0, BAR_H)
+        barTrack.Position         = UDim2.new(0.5, -30, 0.5, -BAR_H / 2)
+        barTrack.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        barTrack.BorderSizePixel  = 0
+        barTrack.ClipsDescendants = false
+        barTrack.Parent           = content
+        Instance.new("UICorner", barTrack).CornerRadius = UDim.new(0, 8)
 
-        -- Grow fill from bottom
-        fillFrame.Size = UDim2.new(1, 0, frac, 0)
+        -- Fill (grows from bottom)
+        local fillFrame = Instance.new("Frame")
+        fillFrame.Size             = UDim2.new(1, 0, 0, 0)
+        fillFrame.AnchorPoint      = Vector2.new(0, 1)
+        fillFrame.Position         = UDim2.new(0, 0, 1, 0)
+        fillFrame.BackgroundColor3 = Color3.fromRGB(220, 120, 30)
+        fillFrame.BorderSizePixel  = 0
+        fillFrame.Parent           = barTrack
+        Instance.new("UICorner", fillFrame).CornerRadius = UDim.new(0, 8)
 
-        -- Drift zone via sin wave
-        local drift  = math.sin(elapsed * 0.8) * 0.18
-        zoneCenter   = math.clamp((ZONE_MIN + ZONE_MAX) / 2 + drift, ZONE_MIN, ZONE_MAX)
-        zoneFrame.Position = UDim2.new(0.5, 0, 1 - zoneCenter, 0)
+        -- Green zone (drifts via sin wave)
+        local zoneCenter = (ZONE_MIN + ZONE_MAX) / 2
+        local zoneFrameH = math.floor(BAR_H * ZONE_H_FRAC)
+        local zoneFrame  = Instance.new("Frame")
+        zoneFrame.Size             = UDim2.new(1, 6, 0, zoneFrameH)
+        zoneFrame.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+        zoneFrame.BackgroundTransparency = 0.3
+        zoneFrame.BorderSizePixel  = 0
+        zoneFrame.ZIndex           = 2
+        zoneFrame.AnchorPoint      = Vector2.new(0.5, 0.5)
+        zoneFrame.Position         = UDim2.new(0.5, 0, 1 - zoneCenter, 0)
+        zoneFrame.Parent           = barTrack
+        Instance.new("UICorner", zoneFrame).CornerRadius = UDim.new(0, 4)
 
-        if frac >= 1 and not stopped then
-            stopped = true
-            finish(10)   -- burned
+        -- HOT / COLD labels
+        local function sideLabel(text, yFrac, col)
+            local lbl = Instance.new("TextLabel")
+            lbl.Size                   = UDim2.new(0, 50, 0, 22)
+            lbl.Position               = UDim2.new(0.5, 38, 0.5, -BAR_H / 2 + math.floor(yFrac * BAR_H))
+            lbl.BackgroundTransparency = 1
+            lbl.TextColor3             = col
+            lbl.TextScaled             = true
+            lbl.Font                   = Enum.Font.GothamBold
+            lbl.Text                   = text
+            lbl.Parent                 = content
         end
-    end)
+        sideLabel("HOT",  0,    Color3.fromRGB(255, 100, 50))
+        sideLabel("COLD", 0.9,  Color3.fromRGB(100, 180, 255))
+
+        local stopBtn = Instance.new("TextButton")
+        stopBtn.Size             = UDim2.new(0, 120, 0, 50)
+        stopBtn.Position         = UDim2.new(0.5, -60, 1, -55)
+        stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        stopBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
+        stopBtn.TextScaled       = true
+        stopBtn.Font             = Enum.Font.GothamBold
+        stopBtn.Text             = "STOP"
+        stopBtn.BorderSizePixel  = 0
+        stopBtn.Parent           = content
+        Instance.new("UICorner", stopBtn).CornerRadius = UDim.new(0, 10)
+
+        local function calcBakeScore(fillFrac)
+            local halfZone = ZONE_H_FRAC / 2
+            local dist     = math.abs(fillFrac - zoneCenter)
+            if dist <= halfZone then
+                return math.floor(50 * (1 - dist / halfZone * 0.3))
+            elseif dist <= halfZone + 0.12 then
+                return math.floor(25 * (1 - (dist - halfZone) / 0.12))
+            else
+                return math.floor(math.max(0, 20 * (1 - dist)))
+            end
+        end
+
+        local elapsed = 0
+        local stopped = false
+
+        stopBtn.MouseButton1Click:Connect(function()
+            if stopped then return end
+            stopped = true
+            local bakeScore = calcBakeScore(math.clamp(elapsed / BAKE_TIME, 0, 1))
+            endMinigame(loadScore + bakeScore)
+        end)
+
+        if phaseConn then phaseConn:Disconnect() end
+        phaseConn = RunService.Heartbeat:Connect(function(dt)
+            if stopped then phaseConn:Disconnect() return end
+            elapsed = elapsed + dt
+            local frac = math.clamp(elapsed / BAKE_TIME, 0, 1)
+
+            fillFrame.Size = UDim2.new(1, 0, frac, 0)
+            timerFill.Size = UDim2.new(1 - frac, 0, 1, 0)
+
+            -- Drift zone
+            local drift = math.sin(elapsed * 0.8) * 0.18
+            zoneCenter  = math.clamp((ZONE_MIN + ZONE_MAX) / 2 + drift, ZONE_MIN, ZONE_MAX)
+            zoneFrame.Position = UDim2.new(0.5, 0, 1 - zoneCenter, 0)
+
+            if frac >= 1 then
+                stopped = true
+                phaseConn:Disconnect()
+                endMinigame(loadScore + 5)   -- burned
+            end
+        end)
+    end
+
+    -- ============================================================
+    -- PHASE 1: LOAD TRAYS
+    -- ============================================================
+    do
+        -- Oven door visual
+        local ovenBody = Instance.new("Frame")
+        ovenBody.Size             = UDim2.new(0, 260, 0, 280)
+        ovenBody.Position         = UDim2.new(0.5, -130, 0.5, -140)
+        ovenBody.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+        ovenBody.BorderSizePixel  = 0
+        ovenBody.Parent           = content
+        Instance.new("UICorner", ovenBody).CornerRadius = UDim.new(0, 10)
+
+        local rackLoaded = 0
+        local loadDone   = false
+
+        for i = 1, NUM_RACKS do
+            local rackBtn = Instance.new("TextButton")
+            local rowH    = 60
+            rackBtn.Size             = UDim2.new(1, -20, 0, rowH - 8)
+            rackBtn.Position         = UDim2.new(0, 10, 0, 20 + (i - 1) * (rowH + 8))
+            rackBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 100)
+            rackBtn.TextColor3       = Color3.fromRGB(200, 200, 200)
+            rackBtn.TextScaled       = true
+            rackBtn.Font             = Enum.Font.Gotham
+            rackBtn.Text             = "→ Rack " .. i
+            rackBtn.BorderSizePixel  = 0
+            rackBtn.AutoButtonColor  = false
+            rackBtn.Parent           = ovenBody
+            Instance.new("UICorner", rackBtn).CornerRadius = UDim.new(0, 6)
+
+            -- Tray indicator inside rack
+            local traySlide = Instance.new("Frame")
+            traySlide.Size             = UDim2.new(0, 0, 0.7, 0)
+            traySlide.Position         = UDim2.new(0, 4, 0.15, 0)
+            traySlide.BackgroundColor3 = Color3.fromRGB(180, 140, 70)
+            traySlide.BorderSizePixel  = 0
+            traySlide.ZIndex           = 2
+            traySlide.Parent           = rackBtn
+            Instance.new("UICorner", traySlide).CornerRadius = UDim.new(0, 4)
+
+            local clicked = false
+            rackBtn.MouseButton1Click:Connect(function()
+                if clicked or loadDone then return end
+                clicked = true
+                rackBtn.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+                rackBtn.TextColor3       = Color3.fromRGB(20, 20, 20)
+                rackBtn.Text             = "✓ Rack " .. i .. " loaded"
+                -- Animate tray sliding in
+                traySlide.Size = UDim2.new(0.85, 0, 0.7, 0)
+
+                rackLoaded = rackLoaded + 1
+                if rackLoaded >= NUM_RACKS then
+                    loadDone = true
+                    task.delay(0.4, function() startBake(50) end)
+                end
+            end)
+        end
+
+        local elapsed = 0
+        if phaseConn then phaseConn:Disconnect() end
+        phaseConn = RunService.Heartbeat:Connect(function(dt)
+            if finished then phaseConn:Disconnect() return end
+            elapsed = elapsed + dt
+            timerFill.Size = UDim2.new(math.clamp(1 - elapsed / LOAD_TIME, 0, 1), 0, 1, 0)
+            if elapsed >= LOAD_TIME and not loadDone then
+                loadDone = true
+                phaseConn:Disconnect()
+                local pts = math.floor(rackLoaded / NUM_RACKS * 50)
+                startBake(pts)
+            end
+        end)
+    end
 end)
 
 print("[OvenMinigame] Ready.")
