@@ -425,4 +425,16 @@ function OrderManager.GetOvenBatch(batchId)
     return ovenBatches[batchId]
 end
 
+-- Per-cookieId counts for dress-ready (needsFrost=false) warmer entries
+function OrderManager.GetWarmerCountsByType()
+    local counts = {}
+    for _, entry in ipairs(warmers) do
+        if not entry.needsFrost then
+            local id = entry.cookieId or "unknown"
+            counts[id] = (counts[id] or 0) + 1
+        end
+    end
+    return counts
+end
+
 return OrderManager
