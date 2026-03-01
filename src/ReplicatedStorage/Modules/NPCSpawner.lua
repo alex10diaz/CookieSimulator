@@ -1,21 +1,145 @@
-local module = {}
+-- NPCSpawner
+-- Handles NPC model creation and pathfinding movement.
+-- Used exclusively by NPCController (server-side).
 
-function module.SpawnRig()
-	local replicatedStorage = game:GetService("ReplicatedStorage")
-	local workspace = game:GetService("Workspace")
-	local rigTemplate = replicatedStorage:FindFirstChild("Rig")
-	if rigTemplate then
-		local Rig = rigTemplate:Clone()
-		Rig.Parent = workspace
-		local movementScript = replicatedStorage:FindFirstChild("WorkingAdvancedMovement")
-		if movementScript then
-			local newScript = movementScript:Clone()
-			newScript.Parent = Rig
-		end
-		return Rig
-	end
-	return
+local PathfindingService = game:GetService("PathfindingService")
+local ServerStorage      = game:GetService("ServerStorage")
+local Workspace          = game:GetService("Workspace")
+
+local NPCSpawner = {}
+
+local TEMPLATE_NAME = "NPCTemplate"
+local NPC_FOLDER    = "NPCs"
+
+-- ─── CreateNPC ────────────────────────────────────────────────────────────────
+-- config: { name, isVIP, spawnCFrame }
+-- Returns the NPC Model, or nil on failure.
+function NPCSpawner.CreateNPC(config)
+    local template = ServerStorage:FindFirstChild(TEMPLATE_NAME)
+    if not template then
+        warn("[NPCSpawner] NPCTemplate not found in ServerStorage")
+        return nil
+    end
+
+    local npc  = template:Clone()
+    npc.Name   = config.name or "Customer"
+
+    if config.isVIP then
+        local torso = npc:FindFirstChild("Torso")
+        if torso then torso.BrickColor = BrickColor.new("Bright orange") end
+        local head = npc:FindFirstChild("Head")
+        if head then head.BrickColor = BrickColor.new("Bright yellow") end
+    end
+
+    local spawnCF = config.spawnCFrame or CFrame.new(Vector3.new(-5, 2, 30))
+    npc:SetPrimaryPartCFrame(spawnCF)
+
+    local npcFolder = Workspace:FindFirstChild(NPC_FOLDER)
+    if not npcFolder then
+        npcFolder        = Instance.new("Folder")
+        npcFolder.Name   = NPC_FOLDER
+        npcFolder.Parent = Workspace
+    end
+    npc.Parent = npcFolder
+    return npc
 end
 
-return module
+-- ─── MoveTo ───────────────────────────────────────────────────────────────────
+-- Pathfinds the NPC to targetPos.  Calls onArrived(reached) when done.
+-- Returns a cancel() function.
+function NPCSpawner.MoveTo(npcModel, targetPos, onArrived)
+    local humanoid = npcModel:FindFirstChildOfClass("Humanoid")
+    local hrp      = npcModel:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not hrp then
+        if onArrived then onArrived(false) end
+        return function() end
+    end
 
+    local cancelled = false
+    local function cancel()
+        cancelled = true
+        pcall(function() humanoid:MoveTo(hrp.Position) end)
+    end
+
+    local path = PathfindingService:CreatePath({
+        AgentHeight   = 5,
+        AgentRadius   = 2,
+        AgentCanJump  = false,
+        AgentCanClimb = false,
+    })
+
+    local ok = pcall(function()
+        path:ComputeAsync(hrp.Position, targetPos)
+    end)
+
+    local waypoints = {}
+    if ok and path.Status == Enum.PathStatus.Success then
+        waypoints = path:GetWaypoints()
+    end
+
+    if #waypoints == 0 then
+        -- Fallback: direct Humanoid:MoveTo
+        humanoid:MoveTo(targetPos)
+        local conn
+        conn = humanoid.MoveToFinished:Connect(function(reached)
+            conn:Disconnect()
+            if not cancelled and onArrived then onArrived(reached) end
+        end)
+        return cancel
+    end
+
+    local idx  = 1
+    local conn
+    conn = humanoid.MoveToFinished:Connect(function(reached)
+        if cancelled then
+            conn:Disconnect()
+            return
+        end
+        idx += 1
+        if not reached or idx > #waypoints then
+            conn:Disconnect()
+            if onArrived then onArrived(reached) end
+            return
+        end
+        humanoid:MoveTo(waypoints[idx].Position)
+    end)
+
+    humanoid:MoveTo(waypoints[1].Position)
+    return cancel
+end
+
+-- ─── SetTimerText ─────────────────────────────────────────────────────────────
+function NPCSpawner.SetTimerText(npcModel, text)
+    local head = npcModel:FindFirstChild("Head")
+    if not head then return end
+    local gui   = head:FindFirstChild("PatienceGui")
+    if not gui then return end
+    local frame = gui:FindFirstChildOfClass("Frame")
+    if not frame then return end
+    local lbl   = frame:FindFirstChild("TimerLabel")
+    if lbl then lbl.Text = text end
+end
+
+-- ─── SetPromptEnabled ─────────────────────────────────────────────────────────
+function NPCSpawner.SetPromptEnabled(npcModel, enabled)
+    local head = npcModel:FindFirstChild("Head")
+    if not head then return end
+    local pp = head:FindFirstChild("OrderPrompt")
+    if pp then pp.Enabled = enabled end
+end
+
+-- ─── GetPrompt ────────────────────────────────────────────────────────────────
+function NPCSpawner.GetPrompt(npcModel)
+    local head = npcModel:FindFirstChild("Head")
+    if not head then return nil end
+    return head:FindFirstChild("OrderPrompt")
+end
+
+-- ─── Remove ───────────────────────────────────────────────────────────────────
+function NPCSpawner.Remove(npcModel)
+    if npcModel and npcModel.Parent then
+        npcModel:Destroy()
+    end
+end
+
+return NPCSpawner
