@@ -53,7 +53,7 @@ startRemote.OnClientEvent:Connect(function()
     titleLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
     titleLbl.TextScaled             = true
     titleLbl.Font                   = Enum.Font.GothamBold
-    titleLbl.Text                   = "FROST — Trace the path!"
+    titleLbl.Text                   = "FROST — Click dots 1 to 8!"
     titleLbl.Parent                 = bg
 
     local timerBar = Instance.new("Frame")

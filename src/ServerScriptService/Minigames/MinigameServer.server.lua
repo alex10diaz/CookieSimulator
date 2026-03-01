@@ -33,8 +33,8 @@ local MINIGAMES = {
 -- activeSessions[player] = { station, batchId, extra }
 -- ============================================================
 local activeSessions = {}
-local ovenSession    = {}       -- player → batchId they pulled from fridge, ready for oven
-local dressPending   = {}       -- player → warmerEntry taken for dress
+local ovenSession    = {}       -- player -> batchId they pulled from fridge, ready for oven
+local dressPending   = {}       -- player -> warmerEntry taken for dress
 
 -- ============================================================
 -- BROADCAST HELPERS
@@ -192,7 +192,6 @@ local function handleSimpleStart(player, stationName)
 end
 
 -- HOOK UP PROMPTS (Dough, Frost, Dress stations)
--- Scans the whole workspace for named ProximityPrompts so station models can live anywhere.
 local function hookPromptIfNamed(desc)
     if not desc:IsA("ProximityPrompt") then return end
     if desc.Name == "DoughPrompt" then
@@ -210,7 +209,7 @@ end
 Workspace.DescendantAdded:Connect(hookPromptIfNamed)
 
 
--- MIXER PROMPTS → Show Client Picker
+-- MIXER PROMPTS -> Show Client Picker
 local ShowMixPicker = RemoteManager.Get("ShowMixPicker")
 local function hookMixerPrompts(model)
     for _, obj in ipairs(model:GetDescendants()) do
@@ -266,7 +265,7 @@ local function hookFridgeOvenPrompts()
                 
                 local batchId = OrderManager.PullFromFridge(player, fridgeId)
                 if batchId then
-                    ovenSession[player] = batchId -- Reserve oven spot
+                    ovenSession[player] = batchId
                     PullResultRemote:FireClient(player, batchId, true)
                 else
                     PullResultRemote:FireClient(player, nil, false)
@@ -286,7 +285,6 @@ local function hookFridgeOvenPrompts()
                 
                 print(string.format("[MinigameServer] %s deposited batch #%d into %s", player.Name, batchId, oven.Name))
                 
-                -- Start the oven minigame session
                 activeSessions[player] = { station = "oven", batchId = batchId }
                 
                 local startRemote = RemoteManager.Get("StartOvenMinigame")

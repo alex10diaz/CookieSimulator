@@ -1,7 +1,6 @@
--- src/StarterPlayer/StarterPlayerScripts/Minigames/OvenMinigame.client.lua
--- Redesigned: two sequential sub-games
---   1. Load  — click 3 rack rows to slide trays in   (0-50 pts)
---   2. Bake  — rising bar, press STOP in green zone  (0-50 pts)
+-- OvenMinigame.client.lua (redesigned)
+-- Two sub-games: Load Trays -> Bake Timing
+-- Load: 0-50 pts, Bake: 0-50 pts
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,15 +12,13 @@ local resultRemote  = RemoteManager.Get("OvenMinigameResult")
 
 local player = Players.LocalPlayer
 
-local NUM_RACKS     = 3
-local LOAD_TIME     = 8    -- seconds to load all racks
-local BAKE_TIME     = 6    -- seconds for bar to fill completely
-local BAR_H         = 240  -- px, bake bar height
-
--- Bake green zone (fraction from bottom)
-local ZONE_MIN = 0.25
-local ZONE_MAX = 0.75
-local ZONE_H_FRAC = 0.22  -- zone height as fraction of bar
+local NUM_RACKS   = 3
+local LOAD_TIME   = 8
+local BAKE_TIME   = 6
+local BAR_H       = 240
+local ZONE_MIN    = 0.25
+local ZONE_MAX    = 0.75
+local ZONE_H_FRAC = 0.22
 
 startRemote.OnClientEvent:Connect(function()
     if player:WaitForChild("PlayerGui"):FindFirstChild("OvenGui") then return end
@@ -53,7 +50,7 @@ startRemote.OnClientEvent:Connect(function()
     titleLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
     titleLbl.TextScaled             = true
     titleLbl.Font                   = Enum.Font.GothamBold
-    titleLbl.Text                   = "OVEN — Step 1/2: Load Trays"
+    titleLbl.Text                   = "OVEN -- Step 1/2: Load Trays"
     titleLbl.Parent                 = bg
 
     local subLbl = Instance.new("TextLabel")
@@ -99,12 +96,10 @@ startRemote.OnClientEvent:Connect(function()
         resultRemote:FireServer(math.clamp(score, 0, 100))
     end
 
-    -- ============================================================
-    -- PHASE 2: BAKE TIMING
-    -- ============================================================
+    -- PHASE 2: BAKE
     local function startBake(loadScore)
         content:ClearAllChildren()
-        titleLbl.Text = "OVEN — Step 2/2: Bake!"
+        titleLbl.Text = "OVEN -- Step 2/2: Bake!"
         subLbl.Text   = "Press STOP at the right temperature!"
 
         local barTrack = Instance.new("Frame")
@@ -116,7 +111,6 @@ startRemote.OnClientEvent:Connect(function()
         barTrack.Parent           = content
         Instance.new("UICorner", barTrack).CornerRadius = UDim.new(0, 8)
 
-        -- Fill (grows from bottom)
         local fillFrame = Instance.new("Frame")
         fillFrame.Size             = UDim2.new(1, 0, 0, 0)
         fillFrame.AnchorPoint      = Vector2.new(0, 1)
@@ -126,7 +120,6 @@ startRemote.OnClientEvent:Connect(function()
         fillFrame.Parent           = barTrack
         Instance.new("UICorner", fillFrame).CornerRadius = UDim.new(0, 8)
 
-        -- Green zone (drifts via sin wave)
         local zoneCenter = (ZONE_MIN + ZONE_MAX) / 2
         local zoneFrameH = math.floor(BAR_H * ZONE_H_FRAC)
         local zoneFrame  = Instance.new("Frame")
@@ -140,20 +133,25 @@ startRemote.OnClientEvent:Connect(function()
         zoneFrame.Parent           = barTrack
         Instance.new("UICorner", zoneFrame).CornerRadius = UDim.new(0, 4)
 
-        -- HOT / COLD labels
-        local function sideLabel(text, yFrac, col)
-            local lbl = Instance.new("TextLabel")
-            lbl.Size                   = UDim2.new(0, 50, 0, 22)
-            lbl.Position               = UDim2.new(0.5, 38, 0.5, -BAR_H / 2 + math.floor(yFrac * BAR_H))
-            lbl.BackgroundTransparency = 1
-            lbl.TextColor3             = col
-            lbl.TextScaled             = true
-            lbl.Font                   = Enum.Font.GothamBold
-            lbl.Text                   = text
-            lbl.Parent                 = content
-        end
-        sideLabel("HOT",  0,    Color3.fromRGB(255, 100, 50))
-        sideLabel("COLD", 0.9,  Color3.fromRGB(100, 180, 255))
+        local hotLbl = Instance.new("TextLabel")
+        hotLbl.Size = UDim2.new(0, 50, 0, 22)
+        hotLbl.Position = UDim2.new(0.5, 38, 0.5, -BAR_H/2)
+        hotLbl.BackgroundTransparency = 1
+        hotLbl.TextColor3 = Color3.fromRGB(255, 100, 50)
+        hotLbl.TextScaled = true
+        hotLbl.Font = Enum.Font.GothamBold
+        hotLbl.Text = "HOT"
+        hotLbl.Parent = content
+
+        local coldLbl = Instance.new("TextLabel")
+        coldLbl.Size = UDim2.new(0, 50, 0, 22)
+        coldLbl.Position = UDim2.new(0.5, 38, 0.5, BAR_H/2 - 22)
+        coldLbl.BackgroundTransparency = 1
+        coldLbl.TextColor3 = Color3.fromRGB(100, 180, 255)
+        coldLbl.TextScaled = true
+        coldLbl.Font = Enum.Font.GothamBold
+        coldLbl.Text = "COLD"
+        coldLbl.Parent = content
 
         local stopBtn = Instance.new("TextButton")
         stopBtn.Size             = UDim2.new(0, 120, 0, 50)
@@ -185,8 +183,7 @@ startRemote.OnClientEvent:Connect(function()
         stopBtn.MouseButton1Click:Connect(function()
             if stopped then return end
             stopped = true
-            local bakeScore = calcBakeScore(math.clamp(elapsed / BAKE_TIME, 0, 1))
-            endMinigame(loadScore + bakeScore)
+            endMinigame(loadScore + calcBakeScore(math.clamp(elapsed / BAKE_TIME, 0, 1)))
         end)
 
         if phaseConn then phaseConn:Disconnect() end
@@ -198,7 +195,6 @@ startRemote.OnClientEvent:Connect(function()
             fillFrame.Size = UDim2.new(1, 0, frac, 0)
             timerFill.Size = UDim2.new(1 - frac, 0, 1, 0)
 
-            -- Drift zone
             local drift = math.sin(elapsed * 0.8) * 0.18
             zoneCenter  = math.clamp((ZONE_MIN + ZONE_MAX) / 2 + drift, ZONE_MIN, ZONE_MAX)
             zoneFrame.Position = UDim2.new(0.5, 0, 1 - zoneCenter, 0)
@@ -206,16 +202,13 @@ startRemote.OnClientEvent:Connect(function()
             if frac >= 1 then
                 stopped = true
                 phaseConn:Disconnect()
-                endMinigame(loadScore + 5)   -- burned
+                endMinigame(loadScore + 5)
             end
         end)
     end
 
-    -- ============================================================
-    -- PHASE 1: LOAD TRAYS
-    -- ============================================================
+    -- PHASE 1: LOAD
     do
-        -- Oven door visual
         local ovenBody = Instance.new("Frame")
         ovenBody.Size             = UDim2.new(0, 260, 0, 280)
         ovenBody.Position         = UDim2.new(0.5, -130, 0.5, -140)
@@ -229,20 +222,19 @@ startRemote.OnClientEvent:Connect(function()
 
         for i = 1, NUM_RACKS do
             local rackBtn = Instance.new("TextButton")
-            local rowH    = 60
+            local rowH = 60
             rackBtn.Size             = UDim2.new(1, -20, 0, rowH - 8)
             rackBtn.Position         = UDim2.new(0, 10, 0, 20 + (i - 1) * (rowH + 8))
             rackBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 100)
             rackBtn.TextColor3       = Color3.fromRGB(200, 200, 200)
             rackBtn.TextScaled       = true
             rackBtn.Font             = Enum.Font.Gotham
-            rackBtn.Text             = "→ Rack " .. i
+            rackBtn.Text             = "-> Rack " .. i
             rackBtn.BorderSizePixel  = 0
             rackBtn.AutoButtonColor  = false
             rackBtn.Parent           = ovenBody
             Instance.new("UICorner", rackBtn).CornerRadius = UDim.new(0, 6)
 
-            -- Tray indicator inside rack
             local traySlide = Instance.new("Frame")
             traySlide.Size             = UDim2.new(0, 0, 0.7, 0)
             traySlide.Position         = UDim2.new(0, 4, 0.15, 0)
@@ -258,10 +250,8 @@ startRemote.OnClientEvent:Connect(function()
                 clicked = true
                 rackBtn.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
                 rackBtn.TextColor3       = Color3.fromRGB(20, 20, 20)
-                rackBtn.Text             = "✓ Rack " .. i .. " loaded"
-                -- Animate tray sliding in
+                rackBtn.Text             = "OK Rack " .. i
                 traySlide.Size = UDim2.new(0.85, 0, 0.7, 0)
-
                 rackLoaded = rackLoaded + 1
                 if rackLoaded >= NUM_RACKS then
                     loadDone = true
@@ -279,8 +269,7 @@ startRemote.OnClientEvent:Connect(function()
             if elapsed >= LOAD_TIME and not loadDone then
                 loadDone = true
                 phaseConn:Disconnect()
-                local pts = math.floor(rackLoaded / NUM_RACKS * 50)
-                startBake(pts)
+                startBake(math.floor(rackLoaded / NUM_RACKS * 50))
             end
         end)
     end

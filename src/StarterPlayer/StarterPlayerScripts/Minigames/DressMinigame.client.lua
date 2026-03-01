@@ -34,9 +34,9 @@ local ALL_IDS = {
     "cookies_and_cream", "snickerdoodle", "lemon_blackraspberry",
 }
 
-local NUM_COOKIES   = 6    -- total cards shown
-local NUM_CORRECT   = 3    -- how many should be KEEP
-local PER_CARD_TIME = 1.8  -- seconds per card
+local NUM_COOKIES   = 6
+local NUM_CORRECT   = 3
+local PER_CARD_TIME = 1.8
 
 startRemote.OnClientEvent:Connect(function(cookieId)
     if player.PlayerGui:FindFirstChild("DressGui") then return end
@@ -47,7 +47,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     humanoid.WalkSpeed = 0
     humanoid.JumpHeight = 0
 
-    -- Build deck: NUM_CORRECT matching + rest wrong, shuffled
     local wrongIds = {}
     for _, id in ipairs(ALL_IDS) do
         if id ~= cookieId then table.insert(wrongIds, id) end
@@ -68,7 +67,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
         deck[i], deck[j] = deck[j], deck[i]
     end
 
-    -- GUI
     local sg = Instance.new("ScreenGui")
     sg.Name           = "DressGui"
     sg.ResetOnSpawn   = false
@@ -84,7 +82,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     bg.Parent                 = sg
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
 
-    -- Order ticket
     local orderLbl = Instance.new("TextLabel")
     orderLbl.Size             = UDim2.new(1, -20, 0, 48)
     orderLbl.Position         = UDim2.new(0, 10, 0, 10)
@@ -107,7 +104,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     instrLbl.Text                   = "KEEP or TOSS each cookie!"
     instrLbl.Parent                 = bg
 
-    -- Decision history dots
     local dotsFrame = Instance.new("Frame")
     dotsFrame.Size                   = UDim2.new(0, NUM_COOKIES * 28, 0, 20)
     dotsFrame.Position               = UDim2.new(0.5, -NUM_COOKIES * 14, 0, 92)
@@ -125,7 +121,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
         dots[i] = d
     end
 
-    -- Cookie card
     local card = Instance.new("Frame")
     card.Size             = UDim2.new(0, 240, 0, 180)
     card.Position         = UDim2.new(0.5, -120, 0, 124)
@@ -151,7 +146,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     cardLabel.Text                   = ""
     cardLabel.Parent                 = card
 
-    -- Per-card countdown bar
     local cardTimerBg = Instance.new("Frame")
     cardTimerBg.Size             = UDim2.new(0.85, 0, 0, 5)
     cardTimerBg.Position         = UDim2.new(0.075, 0, 1, -10)
@@ -166,7 +160,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     cardTimerFill.Parent           = cardTimerBg
     Instance.new("UICorner", cardTimerFill).CornerRadius = UDim.new(1, 0)
 
-    -- KEEP button
     local keepBtn = Instance.new("TextButton")
     keepBtn.Size             = UDim2.new(0, 155, 0, 60)
     keepBtn.Position         = UDim2.new(0, 14, 0, 318)
@@ -174,12 +167,11 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     keepBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
     keepBtn.TextScaled       = true
     keepBtn.Font             = Enum.Font.GothamBold
-    keepBtn.Text             = "✓ KEEP"
+    keepBtn.Text             = "KEEP"
     keepBtn.BorderSizePixel  = 0
     keepBtn.Parent           = bg
     Instance.new("UICorner", keepBtn).CornerRadius = UDim.new(0, 10)
 
-    -- TOSS button
     local tossBtn = Instance.new("TextButton")
     tossBtn.Size             = UDim2.new(0, 155, 0, 60)
     tossBtn.Position         = UDim2.new(1, -169, 0, 318)
@@ -187,12 +179,11 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     tossBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
     tossBtn.TextScaled       = true
     tossBtn.Font             = Enum.Font.GothamBold
-    tossBtn.Text             = "✗ TOSS"
+    tossBtn.Text             = "TOSS"
     tossBtn.BorderSizePixel  = 0
     tossBtn.Parent           = bg
     Instance.new("UICorner", tossBtn).CornerRadius = UDim.new(0, 10)
 
-    -- Progress counter
     local progLbl = Instance.new("TextLabel")
     progLbl.Size                   = UDim2.new(1, 0, 0, 22)
     progLbl.Position               = UDim2.new(0, 0, 0, 388)
@@ -203,7 +194,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     progLbl.Text                   = "1 / " .. NUM_COOKIES
     progLbl.Parent                 = bg
 
-    -- Overall timer bar
     local timerBar = Instance.new("Frame")
     timerBar.Size             = UDim2.new(1, -20, 0, 8)
     timerBar.Position         = UDim2.new(0, 10, 1, -20)
@@ -217,7 +207,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
     timerFill.Parent           = timerBar
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
-    -- STATE
     local cardIndex    = 0
     local correctCount = 0
     local done         = false
@@ -250,7 +239,7 @@ startRemote.OnClientEvent:Connect(function(cookieId)
         progLbl.Text                = idx .. " / " .. NUM_COOKIES
         keepBtn.BackgroundColor3    = Color3.fromRGB(50, 170, 70)
         tossBtn.BackgroundColor3    = Color3.fromRGB(190, 50, 50)
-        dots[idx].BackgroundColor3  = Color3.fromRGB(200, 200, 50)  -- yellow = current
+        dots[idx].BackgroundColor3  = Color3.fromRGB(200, 200, 50)
     end
 
     local function answer(keepChoice)
@@ -283,7 +272,6 @@ startRemote.OnClientEvent:Connect(function(cookieId)
 
     showCard(1)
 
-    -- Safety total: generous buffer beyond per-card timers
     local totalTime    = NUM_COOKIES * (PER_CARD_TIME + 0.4) + 1
     local totalElapsed = 0
 
@@ -301,7 +289,7 @@ startRemote.OnClientEvent:Connect(function(cookieId)
                 0, 1, 0
             )
             if cardElapsed >= PER_CARD_TIME then
-                answer(false)  -- timeout → auto TOSS
+                answer(false)
             end
         end
         if totalElapsed >= totalTime then finalize() end

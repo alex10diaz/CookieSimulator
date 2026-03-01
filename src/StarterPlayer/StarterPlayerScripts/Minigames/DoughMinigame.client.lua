@@ -1,8 +1,6 @@
--- src/StarterPlayer/StarterPlayerScripts/Minigames/DoughMinigame.client.lua
--- Redesigned: three sequential sub-games
---   1. Weigh  — hold button to fill bar, release within green zone (0-34 pts)
---   2. Form   — growing circle, press STOP at the right size  (0-33 pts)
---   3. Tray   — click 6 cookie spots on a 2×3 tray             (0-33 pts)
+-- DoughMinigame.client.lua (redesigned)
+-- Three sub-games: Weigh -> Form -> Tray
+-- Weigh: 0-34 pts, Form: 0-33 pts, Tray: 0-33 pts
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,20 +13,13 @@ local resultRemote  = RemoteManager.Get("DoughMinigameResult")
 
 local player = Players.LocalPlayer
 
--- Sub-game timing
-local WEIGH_MAX_TIME  = 10   -- seconds total for weigh phase
-local FORM_FILL_TIME  = 4    -- seconds for circle to grow to max
-local TRAY_TIME       = 6    -- seconds to click all spots
-
--- Weigh green zone (fraction of bar)
+local WEIGH_MAX_TIME  = 10
+local FORM_FILL_TIME  = 4
+local TRAY_TIME       = 6
 local WEIGH_ZONE_MIN  = 0.55
 local WEIGH_ZONE_MAX  = 0.75
-
--- Form green zone (fraction of max size)
 local FORM_ZONE_MIN   = 0.45
 local FORM_ZONE_MAX   = 0.65
-
--- Score weights
 local WEIGH_MAX_PTS   = 34
 local FORM_MAX_PTS    = 33
 local TRAY_MAX_PTS    = 33
@@ -63,7 +54,7 @@ startRemote.OnClientEvent:Connect(function()
     titleLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
     titleLbl.TextScaled             = true
     titleLbl.Font                   = Enum.Font.GothamBold
-    titleLbl.Text                   = "DOUGH — Step 1/3: Weigh"
+    titleLbl.Text                   = "DOUGH -- Step 1/3: Weigh"
     titleLbl.Parent                 = bg
 
     local subLbl = Instance.new("TextLabel")
@@ -73,10 +64,9 @@ startRemote.OnClientEvent:Connect(function()
     subLbl.TextColor3             = Color3.fromRGB(180, 180, 180)
     subLbl.TextScaled             = true
     subLbl.Font                   = Enum.Font.Gotham
-    subLbl.Text                   = "Hold button — release in the green zone"
+    subLbl.Text                   = "Hold button -- release in the green zone"
     subLbl.Parent                 = bg
 
-    -- Content area (swapped per phase)
     local content = Instance.new("Frame")
     content.Size             = UDim2.new(1, -20, 0, 340)
     content.Position         = UDim2.new(0, 10, 0, 74)
@@ -84,7 +74,6 @@ startRemote.OnClientEvent:Connect(function()
     content.BorderSizePixel  = 0
     content.Parent           = bg
 
-    -- Timer bar (shared)
     local timerBar = Instance.new("Frame")
     timerBar.Size             = UDim2.new(1, -20, 0, 8)
     timerBar.Position         = UDim2.new(0, 10, 1, -20)
@@ -98,7 +87,6 @@ startRemote.OnClientEvent:Connect(function()
     timerFill.Parent           = timerBar
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
-    -- Accumulated score
     local totalScore = 0
     local finished   = false
     local phaseConn
@@ -113,16 +101,13 @@ startRemote.OnClientEvent:Connect(function()
         resultRemote:FireServer(math.clamp(totalScore, 0, 100))
     end
 
-    -- ============================================================
     -- PHASE 3: TRAY
-    -- ============================================================
     local function startTray(prevScore)
         totalScore = prevScore
         content:ClearAllChildren()
-        titleLbl.Text = "DOUGH — Step 3/3: Tray"
+        titleLbl.Text = "DOUGH -- Step 3/3: Tray"
         subLbl.Text   = "Click all 6 spots!"
 
-        -- 2×3 tray grid
         local trayFrame = Instance.new("Frame")
         trayFrame.Size             = UDim2.new(0, 280, 0, 200)
         trayFrame.Position         = UDim2.new(0.5, -140, 0.5, -100)
@@ -135,9 +120,8 @@ startRemote.OnClientEvent:Connect(function()
         local SPOT_W, SPOT_H = 60, 60
         local PAD_X = (280 - COLS * SPOT_W) / (COLS + 1)
         local PAD_Y = (200 - ROWS * SPOT_H) / (ROWS + 1)
-
         local spotsClicked = 0
-        local spots = {}
+
         for row = 1, ROWS do
             for col = 1, COLS do
                 local spot = Instance.new("TextButton")
@@ -155,12 +139,13 @@ startRemote.OnClientEvent:Connect(function()
                 spot.AutoButtonColor  = false
                 spot.Parent           = trayFrame
                 Instance.new("UICorner", spot).CornerRadius = UDim.new(1, 0)
-                table.insert(spots, spot)
 
+                local alreadyClicked = false
                 spot.MouseButton1Click:Connect(function()
-                    if finished or spot.BackgroundColor3 == Color3.fromRGB(80, 200, 80) then return end
+                    if finished or alreadyClicked then return end
+                    alreadyClicked = true
                     spot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-                    spot.Text = "✓"
+                    spot.Text = "v"
                     spotsClicked = spotsClicked + 1
                     if spotsClicked >= COLS * ROWS then
                         totalScore = prevScore + TRAY_MAX_PTS
@@ -183,16 +168,13 @@ startRemote.OnClientEvent:Connect(function()
         end)
     end
 
-    -- ============================================================
     -- PHASE 2: FORM
-    -- ============================================================
     local function startForm(prevScore)
         content:ClearAllChildren()
-        titleLbl.Text = "DOUGH — Step 2/3: Form"
-        subLbl.Text   = "Press STOP when the circle is in the green zone!"
+        titleLbl.Text = "DOUGH -- Step 2/3: Form"
+        subLbl.Text   = "Press STOP when circle is in the green zone!"
 
-        local BAR_SIZE = 200  -- max circle diameter (px)
-
+        local BAR_SIZE = 200
         local areaFrame = Instance.new("Frame")
         areaFrame.Size             = UDim2.new(0, BAR_SIZE + 60, 0, BAR_SIZE + 60)
         areaFrame.Position         = UDim2.new(0.5, -(BAR_SIZE + 60) / 2, 0.5, -(BAR_SIZE + 60) / 2)
@@ -200,13 +182,12 @@ startRemote.OnClientEvent:Connect(function()
         areaFrame.BorderSizePixel  = 0
         areaFrame.Parent           = content
 
-        -- Green zone ring: shows the target size range
-        local zoneMin = math.floor(BAR_SIZE * FORM_ZONE_MIN)
         local zoneMax = math.floor(BAR_SIZE * FORM_ZONE_MAX)
-        local zoneMid = (zoneMin + zoneMax) / 2
+        local zoneMin = math.floor(BAR_SIZE * FORM_ZONE_MIN)
+
         local zoneOuter = Instance.new("Frame")
         zoneOuter.Size             = UDim2.new(0, zoneMax, 0, zoneMax)
-        zoneOuter.Position         = UDim2.new(0.5, -zoneMax / 2, 0.5, -zoneMax / 2)
+        zoneOuter.Position         = UDim2.new(0.5, -zoneMax/2, 0.5, -zoneMax/2)
         zoneOuter.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
         zoneOuter.BackgroundTransparency = 0.4
         zoneOuter.BorderSizePixel  = 0
@@ -216,14 +197,13 @@ startRemote.OnClientEvent:Connect(function()
 
         local zoneInner = Instance.new("Frame")
         zoneInner.Size             = UDim2.new(0, zoneMin, 0, zoneMin)
-        zoneInner.Position         = UDim2.new(0.5, -zoneMin / 2, 0.5, -zoneMin / 2)
+        zoneInner.Position         = UDim2.new(0.5, -zoneMin/2, 0.5, -zoneMin/2)
         zoneInner.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         zoneInner.BorderSizePixel  = 0
         zoneInner.ZIndex           = 2
         zoneInner.Parent           = areaFrame
         Instance.new("UICorner", zoneInner).CornerRadius = UDim.new(1, 0)
 
-        -- Growing circle (starts small, expands over FORM_FILL_TIME)
         local growCircle = Instance.new("Frame")
         growCircle.Size             = UDim2.new(0, 0, 0, 0)
         growCircle.AnchorPoint      = Vector2.new(0.5, 0.5)
@@ -250,8 +230,9 @@ startRemote.OnClientEvent:Connect(function()
         local stopped = false
 
         local function calcFormScore(frac)
-            local dist = math.abs(frac - (FORM_ZONE_MIN + FORM_ZONE_MAX) / 2)
+            local center   = (FORM_ZONE_MIN + FORM_ZONE_MAX) / 2
             local halfZone = (FORM_ZONE_MAX - FORM_ZONE_MIN) / 2
+            local dist     = math.abs(frac - center)
             if dist <= halfZone then
                 return math.floor(FORM_MAX_PTS * (1 - dist / halfZone * 0.3))
             elseif dist <= halfZone + 0.15 then
@@ -264,8 +245,7 @@ startRemote.OnClientEvent:Connect(function()
         stopBtn.MouseButton1Click:Connect(function()
             if stopped then return end
             stopped = true
-            local frac = math.clamp(elapsed / FORM_FILL_TIME, 0, 1)
-            local pts  = calcFormScore(frac)
+            local pts = calcFormScore(math.clamp(elapsed / FORM_FILL_TIME, 0, 1))
             task.delay(0.3, function() startTray(prevScore + pts) end)
         end)
 
@@ -274,12 +254,8 @@ startRemote.OnClientEvent:Connect(function()
             if stopped then phaseConn:Disconnect() return end
             elapsed = elapsed + dt
             local frac = math.clamp(elapsed / FORM_FILL_TIME, 0, 1)
-            timerFill.Size = UDim2.new(math.clamp(1 - elapsed / FORM_FILL_TIME, 0, 1), 0, 1, 0)
-
-            local sz = math.floor(frac * BAR_SIZE)
-            growCircle.Size = UDim2.new(0, sz, 0, sz)
-
-            -- Auto-end if circle maxed out (poor score)
+            timerFill.Size = UDim2.new(1 - frac, 0, 1, 0)
+            growCircle.Size = UDim2.new(0, math.floor(frac * BAR_SIZE), 0, math.floor(frac * BAR_SIZE))
             if frac >= 1 then
                 stopped = true
                 phaseConn:Disconnect()
@@ -288,11 +264,9 @@ startRemote.OnClientEvent:Connect(function()
         end)
     end
 
-    -- ============================================================
     -- PHASE 1: WEIGH
-    -- ============================================================
     do
-        local BAR_H   = 260   -- px, vertical bar height
+        local BAR_H = 260
         local barTrack = Instance.new("Frame")
         barTrack.Size             = UDim2.new(0, 60, 0, BAR_H)
         barTrack.Position         = UDim2.new(0.5, -30, 0.5, -BAR_H / 2)
@@ -302,12 +276,11 @@ startRemote.OnClientEvent:Connect(function()
         barTrack.Parent           = content
         Instance.new("UICorner", barTrack).CornerRadius = UDim.new(0, 8)
 
-        -- Green zone (anchored from bottom)
-        local zoneH  = math.floor(BAR_H * (WEIGH_ZONE_MAX - WEIGH_ZONE_MIN))
-        local zoneY  = math.floor(BAR_H * (1 - WEIGH_ZONE_MAX))
+        local zoneH = math.floor(BAR_H * (WEIGH_ZONE_MAX - WEIGH_ZONE_MIN))
+        local zoneY = math.floor(BAR_H * (1 - WEIGH_ZONE_MAX))
         local zoneFrame = Instance.new("Frame")
-        zoneFrame.Size             = UDim2.new(1, 6, 0, zoneH)
-        zoneFrame.Position         = UDim2.new(-3/60, -3, 0, zoneY)
+        zoneFrame.Size             = UDim2.new(1, 8, 0, zoneH)
+        zoneFrame.Position         = UDim2.new(0, -4, 0, zoneY)
         zoneFrame.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
         zoneFrame.BackgroundTransparency = 0.35
         zoneFrame.BorderSizePixel  = 0
@@ -315,7 +288,6 @@ startRemote.OnClientEvent:Connect(function()
         zoneFrame.Parent           = barTrack
         Instance.new("UICorner", zoneFrame).CornerRadius = UDim.new(0, 4)
 
-        -- Fill (grows from bottom)
         local fillFrame = Instance.new("Frame")
         fillFrame.Size             = UDim2.new(1, 0, 0, 0)
         fillFrame.AnchorPoint      = Vector2.new(0, 1)
@@ -325,7 +297,6 @@ startRemote.OnClientEvent:Connect(function()
         fillFrame.Parent           = barTrack
         Instance.new("UICorner", fillFrame).CornerRadius = UDim.new(0, 8)
 
-        -- Hold button
         local holdBtn = Instance.new("TextButton")
         holdBtn.Size             = UDim2.new(0, 130, 0, 50)
         holdBtn.Position         = UDim2.new(0.5, -65, 1, -55)
@@ -338,32 +309,37 @@ startRemote.OnClientEvent:Connect(function()
         holdBtn.Parent           = content
         Instance.new("UICorner", holdBtn).CornerRadius = UDim.new(0, 10)
 
-        -- Side labels
-        local function sideLabel(text, yPos, col)
-            local lbl = Instance.new("TextLabel")
-            lbl.Size                   = UDim2.new(0, 50, 0, 24)
-            lbl.Position               = UDim2.new(0.5, 38, 0.5, yPos - BAR_H / 2)
-            lbl.BackgroundTransparency = 1
-            lbl.TextColor3             = col
-            lbl.TextScaled             = true
-            lbl.Font                   = Enum.Font.GothamBold
-            lbl.Text                   = text
-            lbl.Parent                 = content
-        end
-        sideLabel("HEAVY", -BAR_H / 2 + 10, Color3.fromRGB(255, 100, 50))
-        sideLabel("LIGHT",  BAR_H / 2 - 20, Color3.fromRGB(100, 180, 255))
+        local lbl1 = Instance.new("TextLabel")
+        lbl1.Size = UDim2.new(0, 55, 0, 22)
+        lbl1.Position = UDim2.new(0.5, 38, 0.5, -BAR_H/2 + 4)
+        lbl1.BackgroundTransparency = 1
+        lbl1.TextColor3 = Color3.fromRGB(255, 100, 50)
+        lbl1.TextScaled = true
+        lbl1.Font = Enum.Font.GothamBold
+        lbl1.Text = "HEAVY"
+        lbl1.Parent = content
 
-        local fillFrac    = 0
-        local isHolding   = false
-        local weighDone   = false
-        local elapsed     = 0
-        local FILL_RATE   = 1 / 3   -- fills bar in 3 seconds of holding
+        local lbl2 = Instance.new("TextLabel")
+        lbl2.Size = UDim2.new(0, 55, 0, 22)
+        lbl2.Position = UDim2.new(0.5, 38, 0.5, BAR_H/2 - 26)
+        lbl2.BackgroundTransparency = 1
+        lbl2.TextColor3 = Color3.fromRGB(100, 180, 255)
+        lbl2.TextScaled = true
+        lbl2.Font = Enum.Font.GothamBold
+        lbl2.Text = "LIGHT"
+        lbl2.Parent = content
+
+        local fillFrac  = 0
+        local isHolding = false
+        local weighDone = false
+        local elapsed   = 0
+        local FILL_RATE = 1 / 3
 
         local function calcWeighScore(frac)
             if frac >= WEIGH_ZONE_MIN and frac <= WEIGH_ZONE_MAX then
-                local center  = (WEIGH_ZONE_MIN + WEIGH_ZONE_MAX) / 2
-                local halfZ   = (WEIGH_ZONE_MAX - WEIGH_ZONE_MIN) / 2
-                local dist    = math.abs(frac - center)
+                local center = (WEIGH_ZONE_MIN + WEIGH_ZONE_MAX) / 2
+                local halfZ  = (WEIGH_ZONE_MAX - WEIGH_ZONE_MIN) / 2
+                local dist   = math.abs(frac - center)
                 return math.floor(WEIGH_MAX_PTS * (1 - dist / halfZ * 0.25))
             else
                 local nearest = frac < WEIGH_ZONE_MIN and WEIGH_ZONE_MIN or WEIGH_ZONE_MAX
@@ -386,7 +362,7 @@ startRemote.OnClientEvent:Connect(function()
                 isHolding = false
                 weighDone = true
                 local pts = calcWeighScore(fillFrac)
-                holdBtn.BackgroundColor3 = pts >= math.floor(WEIGH_MAX_PTS * 0.5)
+                holdBtn.BackgroundColor3 = pts >= 17
                     and Color3.fromRGB(80, 200, 80)
                     or  Color3.fromRGB(200, 80, 80)
                 task.delay(0.4, function() startForm(pts) end)
@@ -402,7 +378,6 @@ startRemote.OnClientEvent:Connect(function()
             if isHolding and not weighDone then
                 fillFrac = math.clamp(fillFrac + FILL_RATE * dt, 0, 1)
                 fillFrame.Size = UDim2.new(1, 0, fillFrac, 0)
-                -- Auto-release if overfilled
                 if fillFrac >= 1 then
                     isHolding = false
                     weighDone = true
@@ -414,8 +389,7 @@ startRemote.OnClientEvent:Connect(function()
             if elapsed >= WEIGH_MAX_TIME and not weighDone then
                 weighDone = true
                 phaseConn:Disconnect()
-                local pts = calcWeighScore(fillFrac)
-                startForm(pts)
+                startForm(calcWeighScore(fillFrac))
             end
         end)
     end
