@@ -27,6 +27,8 @@ end
 
 local function broadcast(state, timeRemaining)
     currentState = state
+    -- Expose state server-wide via Workspace attribute (other scripts read this)
+    game:GetService("Workspace"):SetAttribute("GameState", state)
     stateChangedRemote:FireAllClients(state, timeRemaining or 0)
     print("[GameStateManager] → " .. state .. " (" .. (timeRemaining or 0) .. "s)")
     fireListeners(state)
