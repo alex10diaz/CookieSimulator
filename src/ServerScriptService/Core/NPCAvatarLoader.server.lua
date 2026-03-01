@@ -38,7 +38,7 @@ local function cloneHeadAccessories(srcHead, dstHead)
     end
 end
 
-local function buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder)
+local function buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder, template)
     -- Get HumanoidDescription
     local ok, desc = pcall(function()
         return Players:CreateHumanoidDescriptionFromUserId(userId)
@@ -49,12 +49,6 @@ local function buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder)
     end
 
     -- Clone R6AvatarTemplate
-    local template = ServerStorage:FindFirstChild("R6AvatarTemplate")
-    if not template then
-        warn("[NPCAvatarLoader] R6AvatarTemplate not found in ServerStorage")
-        return false
-    end
-
     local avatar = template:Clone()
     avatar.Name  = "NPCAvatar_" .. slot
 
@@ -95,6 +89,9 @@ local function buildAvatarPool(firstPlayer)
     -- Get NPCTemplate head for copying accessories
     local tmpl     = ServerStorage:FindFirstChild("NPCTemplate")
     local tmplHead = tmpl and tmpl:FindFirstChild("Head") or nil
+    if not tmplHead then
+        warn("[NPCAvatarLoader] NPCTemplate or its Head is missing — avatars will lack PatienceGui/OrderPrompt/FaceGui")
+    end
 
     -- Collect friend IDs
     local friendIds = {}
@@ -122,24 +119,30 @@ local function buildAvatarPool(firstPlayer)
     print(string.format("[NPCAvatarLoader] Found %d friends", #friendIds))
 
     -- Pad with fallback IDs until we have POOL_SIZE candidates
-    local candidates = {}
-    for _, id in ipairs(friendIds) do
-        table.insert(candidates, id)
-    end
+    local candidates = table.clone(friendIds)
     for _, id in ipairs(FALLBACK_USER_IDS) do
         if #candidates >= POOL_SIZE then break end
         table.insert(candidates, id)
+    end
+
+    -- Look up R6AvatarTemplate once (fail fast if missing)
+    local template = ServerStorage:FindFirstChild("R6AvatarTemplate")
+    if not template then
+        warn("[NPCAvatarLoader] R6AvatarTemplate not found in ServerStorage — aborting pool build")
+        return
     end
 
     -- Build each avatar
     local built = 0
     for slot, userId in ipairs(candidates) do
         if slot > POOL_SIZE then break end
-        local success = buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder)
+        local success = buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder, template)
         if success then built += 1 end
     end
 
-    Workspace:SetAttribute("NPCAvatarsReady", true)
+    if built > 0 then
+        Workspace:SetAttribute("NPCAvatarsReady", true)
+    end
     print(string.format("[NPCAvatarLoader] Pool ready: %d/%d avatars built", built, POOL_SIZE))
 end
 
