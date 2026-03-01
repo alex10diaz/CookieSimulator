@@ -214,6 +214,7 @@ function OrderManager.RecordOvenScore(player, score, batchId)
             cookieId   = entry.cookieId,
             needsFrost = true,
             snapshot   = snapshot,
+            quantity   = 6,
         })
         print(string.format("[OrderManager] Batch #%d baked → needs frost (snapshot %d%%)", batchId, snapshot))
     else
@@ -223,6 +224,7 @@ function OrderManager.RecordOvenScore(player, score, batchId)
             cookieId   = entry.cookieId,
             needsFrost = false,
             snapshot   = snapshot,
+            quantity   = 6,
         })
         print(string.format("[OrderManager] Batch #%d baked → warmers directly (snapshot %d%%)", batchId, snapshot))
     end
@@ -274,6 +276,7 @@ function OrderManager.RecordFrostScore(playerName, batchId, score, snapshot, coo
         needsFrost = false,
         snapshot   = snapshot,
         frostScore = score,
+        quantity   = 6,
     })
     notify("WarmersUpdated", OrderManager.GetWarmerState())
 end
@@ -431,7 +434,7 @@ function OrderManager.GetWarmerCountsByType()
     for _, entry in ipairs(warmers) do
         if not entry.needsFrost then
             local id = entry.cookieId or "unknown"
-            counts[id] = (counts[id] or 0) + 1
+            counts[id] = (counts[id] or 0) + (entry.quantity or 1)
         end
     end
     return counts
