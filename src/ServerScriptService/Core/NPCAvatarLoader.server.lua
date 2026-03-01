@@ -114,9 +114,10 @@ local function buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder, 
 
     local desc = appearanceInfoToHumanoidDescription(info)
 
-    -- Clone R6AvatarTemplate
+    -- Clone R6AvatarTemplate; parent FIRST — ApplyDescription requires DataModel presence
     local avatar = template:Clone()
-    avatar.Name  = "NPCAvatar_" .. slot
+    avatar.Name   = "NPCAvatar_" .. slot
+    avatar.Parent = avatarFolder
 
     -- Apply description (face, colors, clothing, accessories)
     local humanoid = avatar:FindFirstChildOfClass("Humanoid")
@@ -137,7 +138,6 @@ local function buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder, 
         cloneHeadAccessories(tmplHead, avatarHead)
     end
 
-    avatar.Parent = avatarFolder
     print(string.format("[NPCAvatarLoader] Slot %d built (userId=%d)", slot, userId))
     return true
 end
