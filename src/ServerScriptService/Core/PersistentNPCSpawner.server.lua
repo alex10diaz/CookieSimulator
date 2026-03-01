@@ -34,6 +34,8 @@ local PACK_SIZES           = { 1, 4, 6 }
 -- Production: change to { "Open" } so NPCs only arrive when the store is open.
 local SPAWN_STATES = { "Lobby", "PreOpen", "Open" }  -- TESTING: remove "Lobby" for production
 
+math.randomseed(tick())  -- Seed RNG so VIP rolls aren't identical each run
+
 local NPC_NAMES = {
     "Alex", "Sam", "Jordan", "Riley", "Morgan", "Casey", "Taylor",
     "Jamie", "Quinn", "Drew", "Avery", "Skylar", "Rowan", "Blake",
