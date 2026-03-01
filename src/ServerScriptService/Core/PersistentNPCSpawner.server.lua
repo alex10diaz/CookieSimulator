@@ -501,7 +501,7 @@ end)
 
 -- ─── SPAWN LOOP ───────────────────────────────────────────────────────────────
 task.spawn(function()
-    -- Wait for avatar pool before first spawn (timeout 30s → falls back to NPCTemplate)
+    -- Wait for avatar pool before first spawn (timeout 30s, then falls back to NPCTemplate)
     local waited = 0
     while not Workspace:GetAttribute("NPCAvatarsReady") and waited < 30 do
         task.wait(1)
@@ -512,11 +512,8 @@ task.spawn(function()
     else
         warn("[NPCController] Avatar pool timed out — spawning with fallback template")
     end
-
     while true do
-        if isSpawnAllowed() then
-            spawnNPC()
-        end
+        if isSpawnAllowed() then spawnNPC() end
         task.wait(SPAWN_INTERVAL)
     end
 end)
