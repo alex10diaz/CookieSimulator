@@ -8,8 +8,9 @@ local Workspace          = game:GetService("Workspace")
 
 local NPCSpawner = {}
 
-local TEMPLATE_NAME = "NPCTemplate"
-local NPC_FOLDER    = "NPCs"
+local TEMPLATE_NAME       = "NPCTemplate"
+local NPC_FOLDER          = "NPCs"
+local VIP_LABEL_OFFSET    = Vector3.new(0, 2.5, 0)  -- studs above head for VIP BillboardGui
 
 -- ─── CreateNPC ────────────────────────────────────────────────────────────────
 -- config: { name, isVIP, spawnCFrame }
@@ -43,11 +44,11 @@ function NPCSpawner.CreateNPC(config)
     -- VIP: gold BillboardGui label above head (avatar appearance is fixed, can't recolor parts)
     if config.isVIP then
         local head = npc:FindFirstChild("Head")
-        if head and not head:FindFirstChild("VIPGui") then
+        if head then
             local bb           = Instance.new("BillboardGui")
             bb.Name            = "VIPGui"
             bb.Size            = UDim2.new(0, 60, 0, 24)
-            bb.StudsOffset     = Vector3.new(0, 2.5, 0)
+            bb.StudsOffset     = VIP_LABEL_OFFSET
             bb.AlwaysOnTop     = false
             bb.Parent          = head
 
