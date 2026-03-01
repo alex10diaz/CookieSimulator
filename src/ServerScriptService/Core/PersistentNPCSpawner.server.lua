@@ -18,15 +18,15 @@ local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitF
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
 local MAX_QUEUE_SIZE       = 3
-local SPAWN_INTERVAL       = 30      -- seconds between spawn checks
+local SPAWN_INTERVAL       = 8    -- TESTING: set to 30 for production
 local BASE_PATIENCE        = 120     -- seconds at 1 player
 local PATIENCE_PER_PLAYER  = 20      -- extra seconds per additional player
 local VIP_CHANCE           = 0.10
 local PACK_SIZES           = { 1, 4, 6 }
 
--- TESTING: includes PreOpen so NPCs spawn during test runs.
+-- TESTING: includes Lobby so NPCs spawn immediately in any state.
 -- Production: change to { "Open" } so NPCs only arrive when the store is open.
-local SPAWN_STATES = { "PreOpen", "Open" }
+local SPAWN_STATES = { "Lobby", "PreOpen", "Open" }  -- TESTING: remove "Lobby" for production
 
 local NPC_NAMES = {
     "Alex", "Sam", "Jordan", "Riley", "Morgan", "Casey", "Taylor",
@@ -493,7 +493,7 @@ end)
 
 -- ─── SPAWN LOOP ───────────────────────────────────────────────────────────────
 task.spawn(function()
-    task.wait(5)  -- wait for map and GameStateManager to initialise
+    task.wait(2)  -- TESTING: reduced from 5; restore for production
     while true do
         if isSpawnAllowed() then
             spawnNPC()
