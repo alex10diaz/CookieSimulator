@@ -24,15 +24,13 @@ local PlayerDataManager = {
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
 local MAX_QUEUE_SIZE       = 3
-local SPAWN_INTERVAL       = 8    -- TESTING: set to 30 for production
+local SPAWN_INTERVAL       = 30   -- seconds between NPC spawn attempts
 local BASE_PATIENCE        = 120     -- seconds at 1 player
 local PATIENCE_PER_PLAYER  = 20      -- extra seconds per additional player
 local VIP_CHANCE           = 0.10
 local PACK_SIZES           = { 1, 4, 6 }
 
--- TESTING: includes Lobby so NPCs spawn immediately in any state.
--- Production: change to { "Open" } so NPCs only arrive when the store is open.
-local SPAWN_STATES = { "Lobby", "PreOpen", "Open" }  -- TESTING: remove "Lobby" for production
+local SPAWN_STATES = { "Open" }  -- NPCs only arrive when the store is open
 
 math.randomseed(tick())  -- Seed RNG so VIP rolls aren't identical each run
 
