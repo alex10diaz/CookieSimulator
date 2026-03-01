@@ -366,12 +366,22 @@ end
 -- ============================================================
 -- NPC ORDER QUEUE
 -- ============================================================
-function OrderManager.AddNPCOrder(npcName, cookieId)
+-- extras: optional { packSize, price, isVIP, npcId }
+function OrderManager.AddNPCOrder(npcName, cookieId, extras)
     local id = nextOrder
     nextOrder += 1
-    local order = { orderId = id, npcName = npcName, cookieId = cookieId }
+    local order = {
+        orderId  = id,
+        npcName  = npcName,
+        cookieId = cookieId,
+        packSize = extras and extras.packSize or 1,
+        price    = extras and extras.price    or 0,
+        isVIP    = extras and extras.isVIP    or false,
+        npcId    = extras and extras.npcId    or nil,
+    }
     table.insert(npcOrders, order)
-    print(string.format("[OrderManager] NPC order #%d: %s wants %s", id, npcName, cookieId))
+    print(string.format("[OrderManager] NPC order #%d: %s wants %dx %s (price=%d)",
+        id, npcName, order.packSize, cookieId, order.price))
     notify("NPCOrderAdded", order)
     return order
 end

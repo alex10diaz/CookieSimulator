@@ -19,9 +19,20 @@ local playerGui = player:WaitForChild("PlayerGui")
 local carriedBoxId = nil
 
 -- ─── Carrying indicator UI ────────────────────────────────────────────────────
-local function showCarryIndicator(boxId)
+local COOKIE_DISPLAY = {
+    pink_sugar           = "Pink Sugar",
+    chocolate_chip       = "Choc Chip",
+    birthday_cake        = "Birthday Cake",
+    cookies_and_cream    = "Cookies & Cream",
+    snickerdoodle        = "Snickerdoodle",
+    lemon_blackraspberry = "Lemon Berry",
+}
+
+local function showCarryIndicator(box)
     local existing = playerGui:FindFirstChild("CarryIndicator")
     if existing then existing:Destroy() end
+
+    local cookieName = COOKIE_DISPLAY[box.cookieId] or (box.cookieId or "cookie")
 
     local sg = Instance.new("ScreenGui")
     sg.Name         = "CarryIndicator"
@@ -29,20 +40,17 @@ local function showCarryIndicator(boxId)
     sg.Parent       = playerGui
 
     local label = Instance.new("TextLabel")
-    label.Size              = UDim2.new(0, 280, 0, 44)
-    label.Position          = UDim2.new(0.5, -140, 0.85, 0)
-    label.BackgroundColor3  = Color3.fromRGB(60, 120, 200)
+    label.Size               = UDim2.new(0, 320, 0, 44)
+    label.Position           = UDim2.new(0.5, -160, 0.85, 0)
+    label.BackgroundColor3   = Color3.fromRGB(60, 120, 200)
     label.BackgroundTransparency = 0.1
-    label.TextColor3        = Color3.fromRGB(255, 255, 255)
-    label.TextScaled        = true
-    label.Font              = Enum.Font.GothamBold
-    label.Text              = "Carrying box #" .. boxId .. " — deliver to customer!"
-    label.BorderSizePixel   = 0
-    label.Parent            = sg
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = label
+    label.TextColor3         = Color3.fromRGB(255, 255, 255)
+    label.TextScaled         = true
+    label.Font               = Enum.Font.GothamBold
+    label.Text               = cookieName .. " box — walk to customer!"
+    label.BorderSizePixel    = 0
+    label.Parent             = sg
+    Instance.new("UICorner", label).CornerRadius = UDim.new(0, 8)
 end
 
 local function clearCarryIndicator()
@@ -54,8 +62,8 @@ end
 boxCreated.OnClientEvent:Connect(function(box)
     if box and box.carrier == player.Name then
         carriedBoxId = box.boxId
-        showCarryIndicator(box.boxId)
-        print("[DeliveryClient] Carrying box #" .. box.boxId)
+        showCarryIndicator(box)
+        print("[DeliveryClient] Carrying box #" .. box.boxId .. " (" .. tostring(box.cookieId) .. ")")
     end
 end)
 
