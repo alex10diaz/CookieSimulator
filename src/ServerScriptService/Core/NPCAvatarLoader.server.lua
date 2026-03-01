@@ -38,15 +38,81 @@ local function cloneHeadAccessories(srcHead, dstHead)
     end
 end
 
+-- Maps GetCharacterAppearanceInfoAsync asset type IDs to HumanoidDescription properties.
+-- Body mesh parts (27-31) are intentionally skipped — they are R15/R6 specific meshes
+-- that conflict with our plain R6AvatarTemplate parts.
+local SINGLE_ID_PROPS = {
+    [17] = "Head",          -- Head mesh
+    [18] = "Face",          -- Face decal
+    [11] = "Shirt",         -- Shirt
+    [12] = "Pants",         -- Pants
+    [64] = "GraphicTShirt", -- Graphic t-shirt
+}
+local ACCESSORY_PROPS = {
+    [8]  = "HatAccessory",
+    [41] = "HairAccessory",
+    [42] = "FaceAccessory",
+    [43] = "NeckAccessory",
+    [44] = "ShouldersAccessory",
+    [45] = "FrontAccessory",
+    [46] = "BackAccessory",
+    [47] = "WaistAccessory",
+}
+
+-- Converts the table returned by GetCharacterAppearanceInfoAsync into a HumanoidDescription.
+local function appearanceInfoToHumanoidDescription(info)
+    local desc = Instance.new("HumanoidDescription")
+
+    -- Body colors
+    local c = info.bodyColor3s
+    if c then
+        if c.headColor3     then desc.HeadColor     = c.headColor3     end
+        if c.torsoColor3    then desc.TorsoColor    = c.torsoColor3    end
+        if c.leftArmColor3  then desc.LeftArmColor  = c.leftArmColor3  end
+        if c.rightArmColor3 then desc.RightArmColor = c.rightArmColor3 end
+        if c.leftLegColor3  then desc.LeftLegColor  = c.leftLegColor3  end
+        if c.rightLegColor3 then desc.RightLegColor = c.rightLegColor3 end
+    end
+
+    -- Assets — map each to the correct HumanoidDescription property
+    local accessoryLists = {}  -- propName → { "id1", "id2", ... }
+    for _, asset in ipairs(info.assets or {}) do
+        local typeId = asset.assetType and asset.assetType.id
+        if typeId then
+            local singleProp = SINGLE_ID_PROPS[typeId]
+            if singleProp then
+                desc[singleProp] = asset.id
+            else
+                local listProp = ACCESSORY_PROPS[typeId]
+                if listProp then
+                    if not accessoryLists[listProp] then
+                        accessoryLists[listProp] = {}
+                    end
+                    table.insert(accessoryLists[listProp], tostring(asset.id))
+                end
+            end
+        end
+    end
+
+    -- Write accessory lists as comma-separated strings
+    for prop, ids in pairs(accessoryLists) do
+        desc[prop] = table.concat(ids, ",")
+    end
+
+    return desc
+end
+
 local function buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder, template)
-    -- Get HumanoidDescription
-    local ok, desc = pcall(function()
-        return Players:CreateHumanoidDescriptionFromUserId(userId)
+    -- GetCharacterAppearanceInfoAsync is the confirmed-working server API
+    local ok, info = pcall(function()
+        return Players:GetCharacterAppearanceInfoAsync(userId)
     end)
-    if not ok or not desc then
-        warn(string.format("[NPCAvatarLoader] Failed to get description for userId %d: %s", userId, tostring(desc)))
+    if not ok or not info then
+        warn(string.format("[NPCAvatarLoader] Failed to get appearance for userId %d: %s", userId, tostring(info)))
         return false
     end
+
+    local desc = appearanceInfoToHumanoidDescription(info)
 
     -- Clone R6AvatarTemplate
     local avatar = template:Clone()
@@ -63,6 +129,7 @@ local function buildAvatarFromDescription(slot, userId, tmplHead, avatarFolder, 
             -- Still usable as a plain grey R6 — don't abort
         end
     end
+    desc:Destroy()  -- applied, no longer needed
 
     -- Copy PatienceGui + OrderPrompt + FaceGui from NPCTemplate head
     local avatarHead = avatar:FindFirstChild("Head")
