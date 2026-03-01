@@ -319,6 +319,7 @@ function OrderManager.CreateBox(player, batchId, dressScore, warmerEntry)
         quality  = finalQuality,
         carrier  = player.Name,
         status   = "ready",
+        cookieId = warmerEntry and warmerEntry.cookieId or nil,
     }
 
     boxes[id] = box
