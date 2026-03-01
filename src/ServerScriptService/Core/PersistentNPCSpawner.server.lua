@@ -24,6 +24,10 @@ local PATIENCE_PER_PLAYER  = 20      -- extra seconds per additional player
 local VIP_CHANCE           = 0.10
 local PACK_SIZES           = { 1, 4, 6 }
 
+-- TESTING: includes PreOpen so NPCs spawn during test runs.
+-- Production: change to { "Open" } so NPCs only arrive when the store is open.
+local SPAWN_STATES = { "PreOpen", "Open" }
+
 local NPC_NAMES = {
     "Alex", "Sam", "Jordan", "Riley", "Morgan", "Casey", "Taylor",
     "Jamie", "Quinn", "Drew", "Avery", "Skylar", "Rowan", "Blake",
@@ -102,6 +106,42 @@ end
 
 local function pickRandomName()
     return NPC_NAMES[math.random(1, #NPC_NAMES)]
+end
+
+-- Returns true if the current game state allows NPC spawning.
+local function isSpawnAllowed()
+    local state = Workspace:GetAttribute("GameState") or "Lobby"
+    for _, s in ipairs(SPAWN_STATES) do
+        if state == s then return true end
+    end
+    return false
+end
+
+-- Rotates the NPC to face the nearest POS station model.
+local POS_FOLDER = Workspace:WaitForChild("POS", 10)
+local function faceClosestPOS(npcModel)
+    if not POS_FOLDER then return end
+    local hrp = npcModel:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local npcPos     = hrp.Position
+    local bestTarget = nil
+    local bestDist   = math.huge
+    for _, child in ipairs(POS_FOLDER:GetChildren()) do
+        if child:IsA("Model") and child.Name ~= "DisplayBox" then
+            local cf, _ = child:GetBoundingBox()
+            local dist  = (cf.Position - npcPos).Magnitude
+            if dist < bestDist then
+                bestDist   = dist
+                bestTarget = cf.Position
+            end
+        end
+    end
+    if bestTarget then
+        local dir = Vector3.new(bestTarget.X - npcPos.X, 0, bestTarget.Z - npcPos.Z)
+        if dir.Magnitude > 0.1 then
+            hrp.CFrame = CFrame.new(npcPos, npcPos + dir)
+        end
+    end
 end
 
 -- ─── TABLET DISPLAY ───────────────────────────────────────────────────────────
@@ -387,6 +427,9 @@ local function spawnNPC()
             d.state      = "waiting_in_queue"
             d.cancelMove = nil
 
+            -- Turn to face the nearest POS station
+            faceClosestPOS(model)
+
             -- Connect order prompt once
             if not d.promptConnected then
                 d.promptConnected = true
@@ -450,15 +493,19 @@ end)
 
 -- ─── SPAWN LOOP ───────────────────────────────────────────────────────────────
 task.spawn(function()
-    task.wait(5)  -- wait for map to load
+    task.wait(5)  -- wait for map and GameStateManager to initialise
     while true do
-        spawnNPC()
+        if isSpawnAllowed() then
+            spawnNPC()
+        end
         task.wait(SPAWN_INTERVAL)
     end
 end)
 
 -- Stagger second NPC so there are usually 2 in queue
-task.delay(15, spawnNPC)
+task.delay(15, function()
+    if isSpawnAllowed() then spawnNPC() end
+end)
 
 -- ─── CLEANUP ON PLAYER REMOVE ─────────────────────────────────────────────────
 Players.PlayerRemoving:Connect(function(player)
