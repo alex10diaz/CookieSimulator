@@ -29,7 +29,7 @@ local TEST_PRICE    = 60            -- baseCoins shown in the earnings card
 local TEST_IS_VIP   = false         -- set true to test gold VIP card
 
 -- Spawn position: 3 units in front of the POS tablet (adjust in Studio if needed)
-local SPAWN_CF = CFrame.new(26, 3, 10)
+local SPAWN_CF = CFrame.new(27.95, 3, 13.8)  -- QueueSpot3, in front of the POS Tablet
 
 -- ─── BUILD NPC ────────────────────────────────────────────────────────────────
 local npc
