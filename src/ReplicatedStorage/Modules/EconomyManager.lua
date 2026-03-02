@@ -64,7 +64,7 @@ function EconomyManager.CalculateStars(correctness, speedRatio, doneness, mixQua
     local raw = (correctness           * 0.35)
               + (speedRatio            * 0.30)
               + (d                     * 0.20)
-              + ((mixQuality / 100)    * 0.10)
+              + (((mixQuality or 0) / 100) * 0.10)
               + ((decorScore or 1.0)   * 0.05)
 
     return math.clamp(math.floor(raw * 5) + 1, 1, 5)
