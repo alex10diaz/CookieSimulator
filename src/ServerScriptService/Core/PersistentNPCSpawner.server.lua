@@ -52,8 +52,10 @@ local ORDER_DISPLAY = TABLET_PART and TABLET_PART:FindFirstChild("OrderDisplay")
 local DISPLAY_FRAME = ORDER_DISPLAY and ORDER_DISPLAY:FindFirstChildOfClass("Frame")
 
 -- Remotes
-local deliveryResult = RemoteManager.Get("DeliveryResult")
-local hudUpdate      = RemoteManager.Get("HUDUpdate")
+local deliveryResult           = RemoteManager.Get("DeliveryResult")
+local hudUpdate                = RemoteManager.Get("HUDUpdate")
+local startOrderCutsceneRemote = RemoteManager.Get("StartOrderCutscene")
+local confirmOrderRemote       = RemoteManager.Get("ConfirmNPCOrder")
 
 -- ─── STATE ────────────────────────────────────────────────────────────────────
 local npcs        = {}  -- npcId -> npc data
@@ -186,6 +188,7 @@ takeOrder = function(player, npcId)
     local packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
     local price    = calcPrice(cookie.id, packSize)
 
+    -- Store order data — confirmed in Step 2 (confirmOrder)
     data.order = {
         cookieId   = cookie.id,
         cookieName = cookie.name,
@@ -194,27 +197,10 @@ takeOrder = function(player, npcId)
         isVIP      = data.isVIP,
         orderId    = nil,
     }
-    data.state = "ordered"
+    data.state = "cutscene_pending"
     NPCSpawner.SetPromptEnabled(data.model, false)
 
-    -- Register with OrderManager (extras passed through)
-    local order = OrderManager.AddNPCOrder(data.name, cookie.id, {
-        packSize = packSize,
-        price    = price,
-        isVIP    = data.isVIP,
-        npcId    = npcId,
-    })
-    data.order.orderId = order.orderId
-
-    updateTabletDisplay({
-        cookieId = cookie.id,
-        packSize = packSize,
-        price    = price,
-        isVIP    = data.isVIP,
-        status   = "In kitchen...",
-    })
-
-    -- Remove from queue then shift others forward
+    -- Advance queue now so next NPC can move up
     for i, id in ipairs(npcQueue) do
         if id == npcId then
             table.remove(npcQueue, i)
@@ -223,20 +209,19 @@ takeOrder = function(player, npcId)
     end
     advanceQueue()
 
-    -- Walk to a waiting area spot
-    local spot = getFreeWaitSpot()
-    if spot then
-        data.waitSpot = spot.Name
-        data.state    = "walking_to_seat"
-        data.cancelMove = NPCSpawner.MoveTo(data.model, spot.Position + Vector3.new(0, 2, 0), function()
-            if npcs[npcId] then data.state = "seated" end
-        end)
-    else
-        data.state = "seated"
-    end
+    -- Fire cutscene to this player
+    startOrderCutsceneRemote:FireClient(player, {
+        npcId      = npcId,
+        npcName    = data.name,
+        cookieId   = cookie.id,
+        cookieName = cookie.name,
+        packSize   = packSize,
+        baseCoins  = price,
+        isVIP      = data.isVIP,
+    })
 
-    print(string.format("[NPCController] %s ordered %dx %s | price=%d | orderId=%s",
-        data.name, packSize, cookie.id, price, tostring(data.order.orderId)))
+    print(string.format("[NPCController] Cutscene fired to %s for NPC %s (%s x%d)",
+        player.Name, data.name, cookie.id, packSize))
 end
 
 -- ─── NPC LEAVE ────────────────────────────────────────────────────────────────
