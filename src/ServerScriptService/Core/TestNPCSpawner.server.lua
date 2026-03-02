@@ -14,9 +14,8 @@
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage     = game:GetService("ServerStorage")
 
-local RemoteManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local RemoteManager       = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local startCutsceneRemote = RemoteManager.Get("StartOrderCutscene")
 local confirmRemote       = RemoteManager.Get("ConfirmNPCOrder")
 
@@ -28,46 +27,30 @@ local TEST_PACK     = 4
 local TEST_PRICE    = 60            -- baseCoins shown in the earnings card
 local TEST_IS_VIP   = false         -- set true to test gold VIP card
 
--- Spawn position: 3 units in front of the POS tablet (adjust in Studio if needed)
-local SPAWN_CF = CFrame.new(-0.25, 3, -4)  -- QueueSpot1, in front of the POS Tablet
+local SPAWN_CF = CFrame.new(-0.25, 3, -4)  -- QueueSpot1
 
 -- ─── BUILD NPC ────────────────────────────────────────────────────────────────
-local npc
+local npc = Instance.new("Model")
+npc.Name = "TestNPC"
 
--- Try to clone the NPCTemplate from ServerStorage first
-local template = ServerStorage:FindFirstChild("NPCTemplate")
-if template then
-    npc = template:Clone()
-    npc.Name = "TestNPC"
-    if npc.PrimaryPart then
-        npc:SetPrimaryPartCFrame(SPAWN_CF)
-    end
-else
-    -- Fallback: minimal block humanoid
-    npc = Instance.new("Model")
-    npc.Name = "TestNPC"
+local hrp = Instance.new("Part")
+hrp.Name       = "HumanoidRootPart"
+hrp.Size       = Vector3.new(2, 2, 1)
+hrp.Anchored   = true
+hrp.BrickColor = BrickColor.new("Bright blue")
+hrp.CFrame     = SPAWN_CF
+hrp.Parent     = npc
 
-    local hrp = Instance.new("Part")
-    hrp.Name             = "HumanoidRootPart"
-    hrp.Size             = Vector3.new(2, 2, 1)
-    hrp.Anchored         = true
-    hrp.BrickColor       = BrickColor.new("Bright blue")
-    hrp.CFrame           = SPAWN_CF
-    hrp.Parent           = npc
+local head = Instance.new("Part")
+head.Name      = "Head"
+head.Size      = Vector3.new(2, 1, 1)
+head.Anchored  = true
+head.BrickColor = BrickColor.new("Bright yellow")
+head.CFrame    = SPAWN_CF * CFrame.new(0, 1.5, 0)
+head.Parent    = npc
 
-    local head = Instance.new("Part")
-    head.Name    = "Head"
-    head.Size    = Vector3.new(2, 1, 1)
-    head.Anchored = true
-    head.BrickColor = BrickColor.new("Bright yellow")
-    head.CFrame  = SPAWN_CF * CFrame.new(0, 1.5, 0)
-    head.Parent  = npc
-
-    local hum = Instance.new("Humanoid")
-    hum.Parent = npc
-
-    npc.PrimaryPart = hrp
-end
+Instance.new("Humanoid").Parent = npc
+npc.PrimaryPart = hrp
 
 -- Billboard name tag
 local bb = Instance.new("BillboardGui")
