@@ -18,7 +18,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local posGui    = playerGui:WaitForChild("POSGui")
 posGui.Enabled  = false
 
-local AUTO_DISMISS_SECONDS = 15
+local AUTO_DISMISS_SECONDS = 60
 
 -- Module-level handles so stateRemote + Escape can reach the active modal's close fns.
 -- currentDismiss: fires ConfirmNPCOrder + closes (X button, Escape, auto-dismiss)
