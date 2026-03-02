@@ -15,6 +15,7 @@ local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):Wait
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local EconomyManager    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EconomyManager"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
+local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
@@ -417,6 +418,7 @@ addDeliverPrompt = function(npcId)
         local xp    = payout.xp
 
         deliveryResult:FireClient(player, stars, coins, xp)
+        SessionStats.RecordDelivery(stars, payout.coins, comboStreak)
         hudUpdate:FireClient(player,
             profile and profile.coins or 0,
             profile and profile.xp    or 0,

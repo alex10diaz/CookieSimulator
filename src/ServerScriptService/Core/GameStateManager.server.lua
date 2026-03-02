@@ -3,6 +3,8 @@ local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local ServerScriptService = game:GetService("ServerScriptService")
+local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local PREOPEN_FIRST     = 5 * 60   -- 5 minutes first day
@@ -47,17 +49,13 @@ local function runPhase(duration, stateName)
 end
 
 local function runCycle(isFirstDay)
+    SessionStats.Reset()
     runPhase(isFirstDay and PREOPEN_FIRST or PREOPEN_REPEAT, "PreOpen")
     runPhase(OPEN_DURATION, "Open")
 
     -- End of day
     broadcast("EndOfDay", SUMMARY_DURATION)
-    summaryRemote:FireAllClients({
-        orders   = 0,
-        coins    = 0,
-        combo    = 0,
-        avgStars = 3,
-    })
+    summaryRemote:FireAllClients(SessionStats.GetSummary())
     task.wait(SUMMARY_DURATION)
 
     runCycle(false)
