@@ -75,6 +75,7 @@ prompt.ActionText              = "Take Order"
 prompt.ObjectText              = TEST_NPC_NAME
 prompt.KeyboardKeyCode         = Enum.KeyCode.E
 prompt.MaxActivationDistance   = 25
+prompt.RequiresLineOfSight     = false
 prompt.Parent                  = npc.PrimaryPart
 
 npc.Parent = workspace
