@@ -1,154 +1,170 @@
 -- src/StarterGui/POSGui/POSClient.client.lua
-local Players                = game:GetService("Players")
-local ReplicatedStorage      = game:GetService("ReplicatedStorage")
-local UserInputService       = game:GetService("UserInputService")
-local ProximityPromptService = game:GetService("ProximityPromptService")
+-- Handles the POS order cutscene modal.
+-- Triggered by StartOrderCutscene (server → client) when player presses E on NPC.
+-- Fires ConfirmNPCOrder (client → server) when player dismisses or 5s passes.
 
-local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local OrderManager   = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService  = game:GetService("UserInputService")
 
-local acceptRemote   = RemoteManager.Get("AcceptOrder")
-local acceptedEvent  = RemoteManager.Get("OrderAccepted")
+local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+
 local stateRemote    = RemoteManager.Get("GameStateChanged")
+local cutsceneRemote = RemoteManager.Get("StartOrderCutscene")
+local confirmRemote  = RemoteManager.Get("ConfirmNPCOrder")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local posGui    = playerGui:WaitForChild("POSGui")
+posGui.Enabled  = false
 
--- ─── Build UI ─────────────────────────────────────────────────────────────────
-local bg = posGui:FindFirstChild("Background")
-if not bg then
-    bg = Instance.new("Frame")
-    bg.Name              = "Background"
-    bg.Size              = UDim2.new(0, 360, 0, 480)
-    bg.Position          = UDim2.new(0.5, -180, 0.5, -240)
-    bg.BackgroundColor3  = Color3.fromRGB(20, 20, 20)
-    bg.BackgroundTransparency = 0.1
-    bg.BorderSizePixel   = 0
-    bg.Parent            = posGui
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 12)
-    c.Parent = bg
+-- ─── BUILD CUTSCENE MODAL ─────────────────────────────────────────────────────
+local function showOrderCutscene(payload)
+    -- Destroy any existing modal first
+    local existing = posGui:FindFirstChild("OrderModal")
+    if existing then existing:Destroy() end
 
-    local title = Instance.new("TextLabel")
-    title.Name              = "Title"
-    title.Size              = UDim2.new(1, 0, 0, 50)
-    title.BackgroundTransparency = 1
-    title.TextColor3        = Color3.fromRGB(255, 255, 255)
-    title.TextScaled        = true
-    title.Font              = Enum.Font.GothamBold
-    title.Text              = "POS — Order Queue"
-    title.Parent            = bg
-end
+    posGui.Enabled = true
 
-local orderList = bg:FindFirstChild("OrderList")
-if not orderList then
-    orderList = Instance.new("ScrollingFrame")
-    orderList.Name              = "OrderList"
-    orderList.Size              = UDim2.new(1, -20, 1, -60)
-    orderList.Position          = UDim2.new(0, 10, 0, 55)
-    orderList.BackgroundTransparency = 1
-    orderList.ScrollBarThickness = 4
-    orderList.CanvasSize        = UDim2.new(0, 0, 0, 0)
-    orderList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    orderList.Parent            = bg
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 6)
-    layout.Parent  = orderList
-end
+    -- ── Backdrop ──
+    local modal = Instance.new("Frame")
+    modal.Name                    = "OrderModal"
+    modal.Size                    = UDim2.new(0, 420, 0, 290)
+    modal.Position                = UDim2.new(0.5, -210, 0.5, -145)
+    modal.BackgroundColor3        = Color3.fromRGB(18, 18, 18)
+    modal.BackgroundTransparency  = 0.08
+    modal.BorderSizePixel         = 0
+    modal.Parent                  = posGui
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 14)
+    corner.Parent       = modal
 
--- ─── State ────────────────────────────────────────────────────────────────────
-local isOpen = false
-
--- ─── Order Tickets ────────────────────────────────────────────────────────────
-local function buildOrderTicket(orderId, orderData, parent)
-    local frame = Instance.new("Frame")
-    frame.Name              = "Order_" .. orderId
-    frame.Size              = UDim2.new(1, -10, 0, 80)
-    frame.BackgroundColor3  = orderData.vipFlag
-                              and Color3.fromRGB(255, 215, 0)
-                              or  Color3.fromRGB(240, 240, 240)
-    frame.BorderSizePixel   = 0
-    frame.Parent            = parent
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 8)
-    c.Parent = frame
-
-    local label = Instance.new("TextLabel")
-    label.Size              = UDim2.new(0.65, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3        = Color3.fromRGB(30, 30, 30)
-    label.TextXAlignment    = Enum.TextXAlignment.Left
-    label.TextScaled        = true
-    label.Font              = Enum.Font.Gotham
-    label.Text              = string.format("  %s  x%d%s",
-        orderData.cookieId or "?",
-        orderData.quantity or 1,
-        orderData.vipFlag and "  [VIP]" or "")
-    label.Parent            = frame
-
-    local btn = Instance.new("TextButton")
-    btn.Size                = UDim2.new(0.3, -5, 0.6, 0)
-    btn.Position            = UDim2.new(0.68, 0, 0.2, 0)
-    btn.BackgroundColor3    = Color3.fromRGB(80, 180, 100)
-    btn.TextColor3          = Color3.fromRGB(255, 255, 255)
-    btn.TextScaled          = true
-    btn.Font                = Enum.Font.GothamBold
-    btn.Text                = "Accept"
-    btn.BorderSizePixel     = 0
-    btn.Parent              = frame
+    -- ── Speech bubble ──
+    local bubble = Instance.new("TextLabel")
+    bubble.Name                   = "SpeechBubble"
+    bubble.Size                   = UDim2.new(1, -20, 0, 90)
+    bubble.Position               = UDim2.new(0, 10, 0, 14)
+    bubble.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+    bubble.BackgroundTransparency = 0.05
+    bubble.TextColor3             = Color3.fromRGB(20, 20, 20)
+    bubble.TextScaled             = true
+    bubble.Font                   = Enum.Font.Gotham
+    bubble.Text                   = string.format(
+        '"%s says: I\'d like %d\xC3\x97 %s, please!"',
+        payload.npcName, payload.packSize, payload.cookieName)
+    bubble.TextWrapped            = true
+    bubble.Parent                 = modal
     local bc = Instance.new("UICorner")
-    bc.CornerRadius = UDim.new(0, 6)
-    bc.Parent = btn
+    bc.CornerRadius = UDim.new(0, 8)
+    bc.Parent       = bubble
 
-    btn.MouseButton1Click:Connect(function()
-        acceptRemote:FireServer(orderId)
-        frame:Destroy()
+    -- ── Earnings card ──
+    local earningsLines = {
+        string.format("Base:  %d coins", payload.baseCoins),
+    }
+    if payload.isVIP then
+        table.insert(earningsLines, "VIP Bonus:  \xC3\x97 1.75")
+        table.insert(earningsLines, string.format(
+            "Potential:  %d coins", math.floor(payload.baseCoins * 1.75)))
+    end
+
+    local earnings = Instance.new("TextLabel")
+    earnings.Name                   = "EarningsCard"
+    earnings.Size                   = UDim2.new(1, -20, 0, 100)
+    earnings.Position               = UDim2.new(0, 10, 0, 114)
+    earnings.BackgroundColor3       = payload.isVIP
+        and Color3.fromRGB(255, 200, 0)
+        or  Color3.fromRGB(50, 50, 50)
+    earnings.BackgroundTransparency = 0.1
+    earnings.TextColor3             = payload.isVIP
+        and Color3.fromRGB(20, 20, 20)
+        or  Color3.fromRGB(255, 255, 255)
+    earnings.TextScaled             = true
+    earnings.Font                   = Enum.Font.GothamBold
+    earnings.Text                   = table.concat(earningsLines, "\n")
+    earnings.TextWrapped            = true
+    earnings.Parent                 = modal
+    local ec = Instance.new("UICorner")
+    ec.CornerRadius = UDim.new(0, 8)
+    ec.Parent       = earnings
+
+    -- ── Countdown label ──
+    local countdown = Instance.new("TextLabel")
+    countdown.Name                   = "Countdown"
+    countdown.Size                   = UDim2.new(1, -80, 0, 26)
+    countdown.Position               = UDim2.new(0, 10, 1, -34)
+    countdown.BackgroundTransparency = 1
+    countdown.TextColor3             = Color3.fromRGB(140, 140, 140)
+    countdown.TextXAlignment         = Enum.TextXAlignment.Left
+    countdown.TextScaled             = true
+    countdown.Font                   = Enum.Font.Gotham
+    countdown.Text                   = "Auto-dismissing in 5..."
+    countdown.Parent                 = modal
+
+    -- ── X button ──
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Name              = "CloseBtn"
+    closeBtn.Size              = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position          = UDim2.new(1, -38, 0, 8)
+    closeBtn.BackgroundColor3  = Color3.fromRGB(200, 55, 55)
+    closeBtn.TextColor3        = Color3.fromRGB(255, 255, 255)
+    closeBtn.Font              = Enum.Font.GothamBold
+    closeBtn.TextScaled        = true
+    closeBtn.Text              = "X"
+    closeBtn.BorderSizePixel   = 0
+    closeBtn.Parent            = modal
+    local cc = Instance.new("UICorner")
+    cc.CornerRadius = UDim.new(0, 6)
+    cc.Parent       = closeBtn
+
+    -- ── Dismiss (fires once only) ──
+    local dismissed = false
+    local function dismiss()
+        if dismissed then return end
+        dismissed = true
+        confirmRemote:FireServer(payload.npcId)
+        modal:Destroy()
+        posGui.Enabled = false
+    end
+
+    closeBtn.MouseButton1Click:Connect(dismiss)
+
+    -- ── 5-second auto-dismiss ──
+    task.spawn(function()
+        for i = 4, 0, -1 do
+            task.wait(1)
+            if dismissed then return end
+            countdown.Text = i > 0
+                and ("Auto-dismissing in " .. i .. "...")
+                or  "Dismissing..."
+        end
+        dismiss()
     end)
 end
 
-local function refreshPOS()
-    for _, c in ipairs(orderList:GetChildren()) do
-        if c:IsA("Frame") then c:Destroy() end
-    end
-    local orders = OrderManager.GetNPCOrders()
-    for _, data in ipairs(orders) do
-        buildOrderTicket(data.orderId, data, orderList)
-    end
-end
-
-local function openPOS()
-    if not isOpen then return end
-    posGui.Enabled = true
-    refreshPOS()
-end
-
-local function closePOS()
-    posGui.Enabled = false
-end
-
--- ─── Interactions ─────────────────────────────────────────────────────────────
-ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer)
-    if triggeringPlayer ~= player then return end
-    if prompt.Name ~= "POSPrompt" then return end
-    if posGui.Enabled then closePOS() else openPOS() end
-end)
-
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
-    if input.KeyCode == Enum.KeyCode.Escape and posGui.Enabled then
-        closePOS()
-    end
+-- ─── REMOTE LISTENERS ─────────────────────────────────────────────────────────
+cutsceneRemote.OnClientEvent:Connect(function(payload)
+    showOrderCutscene(payload)
 end)
 
 stateRemote.OnClientEvent:Connect(function(state)
-    isOpen = (state == "Open")
-    if not isOpen then closePOS() end
+    if state ~= "Open" then
+        local modal = posGui:FindFirstChild("OrderModal")
+        if modal then modal:Destroy() end
+        posGui.Enabled = false
+    end
 end)
 
-acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
-    print("[POSClient] Order accepted: " .. tostring(orderId))
-    closePOS()
+-- Escape key closes modal
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.Escape then
+        local modal = posGui:FindFirstChild("OrderModal")
+        if modal then
+            local btn = modal:FindFirstChild("CloseBtn")
+            if btn then btn.MouseButton1Click:Fire() end
+        end
+    end
 end)
 
 print("[POSClient] Ready.")
