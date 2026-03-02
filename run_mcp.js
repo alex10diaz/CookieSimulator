@@ -19,6 +19,12 @@ for _, name in ipairs(names) do
 end
 `;
 
+const verifyCode = `
+local ge = game:GetService("ReplicatedStorage").GameEvents
+print("StartOrderCutscene:", ge:FindFirstChild("StartOrderCutscene") ~= nil)
+print("ConfirmNPCOrder:", ge:FindFirstChild("ConfirmNPCOrder") ~= nil)
+`;
+
 const proc = spawn(mcpExe, ['--stdio'], {
   stdio: ['pipe', 'pipe', 'pipe']
 });
@@ -26,7 +32,6 @@ const proc = spawn(mcpExe, ['--stdio'], {
 let outputBuffer = '';
 proc.stdout.on('data', (d) => {
   outputBuffer += d.toString();
-  console.log('STDOUT:', d.toString().trim());
 });
 proc.stderr.on('data', (d) => {
   console.log('STDERR:', d.toString().trim());
@@ -34,41 +39,65 @@ proc.stderr.on('data', (d) => {
 proc.on('error', (err) => console.log('ERROR:', err.message));
 proc.on('exit', (code) => console.log('Process exited:', code));
 
-// MCP protocol: send initialize first
-const initMsg = JSON.stringify({
-  jsonrpc: '2.0',
-  id: 1,
-  method: 'initialize',
+function sendMessage(msg) {
+  proc.stdin.write(JSON.stringify(msg) + '\n');
+}
+
+function parseResponses() {
+  return outputBuffer.split('\n').filter(l => l.trim()).map(l => {
+    try { return JSON.parse(l); } catch(e) { return null; }
+  }).filter(Boolean);
+}
+
+// Step 1: Initialize
+sendMessage({
+  jsonrpc: '2.0', id: 1, method: 'initialize',
   params: {
     protocolVersion: '2024-11-05',
     capabilities: {},
     clientInfo: { name: 'gsd-agent', version: '1.0' }
   }
-}) + '\n';
-
-proc.stdin.write(initMsg);
+});
 
 setTimeout(() => {
-  // Send initialized notification
-  const notif = JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n';
-  proc.stdin.write(notif);
+  // Step 2: Initialized notification
+  sendMessage({ jsonrpc: '2.0', method: 'notifications/initialized' });
 
-  // Then call run_code
-  const callMsg = JSON.stringify({
-    jsonrpc: '2.0',
-    id: 2,
-    method: 'tools/call',
+  // Step 3: Call run_code with luaCode (tool name = run_code, param = command)
+  sendMessage({
+    jsonrpc: '2.0', id: 10, method: 'tools/call',
     params: {
       name: 'run_code',
-      arguments: { code: luaCode }
+      arguments: { command: luaCode }
     }
-  }) + '\n';
-  proc.stdin.write(callMsg);
+  });
 
   setTimeout(() => {
-    console.log('--- Final output buffer ---');
-    console.log(outputBuffer);
-    proc.kill();
-    process.exit(0);
-  }, 6000);
+    const responses = parseResponses();
+    const createResp = responses.find(r => r.id === 10);
+    if (createResp) {
+      console.log('--- CREATE RESPONSE ---');
+      console.log(JSON.stringify(createResp.result || createResp.error, null, 2));
+    }
+
+    // Step 4: Verify both exist
+    sendMessage({
+      jsonrpc: '2.0', id: 11, method: 'tools/call',
+      params: {
+        name: 'run_code',
+        arguments: { command: verifyCode }
+      }
+    });
+
+    setTimeout(() => {
+      const responses2 = parseResponses();
+      const verifyResp = responses2.find(r => r.id === 11);
+      if (verifyResp) {
+        console.log('--- VERIFY RESPONSE ---');
+        console.log(JSON.stringify(verifyResp.result || verifyResp.error, null, 2));
+      }
+      proc.kill();
+      process.exit(0);
+    }, 8000);
+  }, 2000);
 }, 1000);
