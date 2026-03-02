@@ -197,7 +197,9 @@ takeOrder = function(player, npcId)
         isVIP      = data.isVIP,
         orderId    = nil,
     }
-    data.state = "cutscene_pending"
+    data.state            = "cutscene_pending"
+    data.triggeringPlayer = player  -- track who triggered so PlayerRemoving confirms the right player
+    data.cancelMove       = nil     -- NPC is stationary at slot 1; clear any stale handle
     NPCSpawner.SetPromptEnabled(data.model, false)
 
     -- Advance queue now so next NPC can move up
@@ -235,6 +237,7 @@ local function confirmOrder(player, npcId)
         warn("[NPCController] confirmOrder: unexpected state:", data.state)
         return
     end
+    data.triggeringPlayer = nil  -- clear now that cutscene is resolved
 
     -- Register with OrderManager
     local order = OrderManager.AddNPCOrder(data.name, data.order.cookieId, {
@@ -279,6 +282,7 @@ local function confirmOrder(player, npcId)
 end
 
 confirmOrderRemote.OnServerEvent:Connect(function(player, npcId)
+    if type(npcId) ~= "number" then return end
     confirmOrder(player, npcId)
 end)
 
@@ -566,14 +570,20 @@ end)
 
 -- ─── CLEANUP ON PLAYER REMOVE ─────────────────────────────────────────────────
 Players.PlayerRemoving:Connect(function(player)
+    -- Collect keys first to avoid undefined behavior when mutating during pairs()
+    local boxesToRemove = {}
     for cookieId, pending in pairs(pendingBoxes) do
         if pending.carrier == player.Name then
-            pendingBoxes[cookieId] = nil
+            table.insert(boxesToRemove, cookieId)
         end
     end
-    -- Auto-confirm any NPC stuck in cutscene_pending if player disconnects
+    for _, cookieId in ipairs(boxesToRemove) do
+        pendingBoxes[cookieId] = nil
+    end
+
+    -- Auto-confirm any NPC this player triggered that is stuck in cutscene_pending
     for npcId, data in pairs(npcs) do
-        if data.state == "cutscene_pending" then
+        if data.state == "cutscene_pending" and data.triggeringPlayer == player then
             confirmOrder(player, npcId)
         end
     end
