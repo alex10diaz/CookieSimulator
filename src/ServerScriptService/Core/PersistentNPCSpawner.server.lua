@@ -384,15 +384,37 @@ addDeliverPrompt = function(npcId)
 
         pendingBoxes[d.order.cookieId] = nil
 
-        local qMult = 0.5 + (quality / 100) * 1.0
-        local coins  = math.floor(d.order.price * qMult)
-        if d.isVIP then coins = math.floor(coins * 1.75) end
-        local stars  = math.floor(1 + (quality / 100) * 4)
-        local xp     = math.floor(coins * 0.3)
+        -- Stars from quality (0-100 weighted aggregate → 1-5 stars)
+        local stars = math.clamp(math.floor(1 + (quality / 100) * 4), 1, 5)
 
-        PlayerDataManager.AddCoins(player, coins)
-        PlayerDataManager.AddXP(player, xp)
+        -- Combo: increment on ≥3 stars, reset below
+        local comboStreak
+        if stars >= 3 then
+            comboStreak = PlayerDataManager.IncrementCombo(player)
+        else
+            PlayerDataManager.ResetCombo(player)
+            comboStreak = 0
+        end
+
+        -- Full payout via EconomyManager
+        -- timeRemaining=0, totalTime=1 → speedMult=1.0 (no timer tracking in M4)
+        local payout = EconomyManager.CalculatePayout(
+            d.order.cookieId,
+            d.order.packSize,
+            stars,
+            0,            -- timeRemaining (not tracked in M4)
+            1,            -- totalTime
+            comboStreak,
+            d.isVIP
+        )
+
+        PlayerDataManager.RecordOrderComplete(player, stars == 5)
+        PlayerDataManager.AddCoins(player, payout.coins)
+        PlayerDataManager.AddXP(player, payout.xp)
         local profile = PlayerDataManager.GetData(player)
+
+        local coins = payout.coins
+        local xp    = payout.xp
 
         deliveryResult:FireClient(player, stars, coins, xp)
         hudUpdate:FireClient(player,
