@@ -391,7 +391,7 @@ addDeliverPrompt = function(npcId)
 
         local qMult = 0.5 + (quality / 100) * 1.0
         local coins  = math.floor(d.order.price * qMult)
-        if d.isVIP then coins = math.floor(coins * 1.5) end
+        if d.isVIP then coins = math.floor(coins * 1.75) end
         local stars  = math.floor(1 + (quality / 100) * 4)
         local xp     = math.floor(coins * 0.3)
 

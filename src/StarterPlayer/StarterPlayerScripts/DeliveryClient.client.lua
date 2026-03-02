@@ -73,16 +73,7 @@ deliveryResult.OnClientEvent:Connect(function()
     clearCarryIndicator()
 end)
 
--- ─── ProximityPrompt: NPC delivery trigger ────────────────────────────────────
-ProximityPromptService.PromptTriggered:Connect(function(prompt, triggeringPlayer)
-    if triggeringPlayer ~= player then return end
-    if prompt.Name ~= "DeliveryPrompt" then return end
-    if not carriedBoxId then
-        print("[DeliveryClient] No box to deliver")
-        return
-    end
-    deliverRemote:FireServer(carriedBoxId)
-    print("[DeliveryClient] Fired DeliverBox for box #" .. carriedBoxId)
-end)
+-- Delivery trigger is handled server-side via ProximityPrompt in PersistentNPCSpawner.
+-- No client-side remote fire needed.
 
 print("[DeliveryClient] Ready.")
