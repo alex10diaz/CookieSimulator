@@ -172,7 +172,7 @@ cutsceneRemote.OnClientEvent:Connect(function(payload)
 end)
 
 stateRemote.OnClientEvent:Connect(function(state)
-    if state ~= "Open" then
+    if state == "EndOfDay" or state == "Lobby" then
         if currentForceClose then currentForceClose() end
         posGui.Enabled = false
     end
