@@ -17,7 +17,7 @@ local sg = Instance.new("ScreenGui")
 sg.Name         = "TutorialGui"
 sg.ResetOnSpawn = false
 sg.Enabled      = false
-sg.ZIndex       = 10
+sg.DisplayOrder = 10
 sg.Parent       = playerGui
 
 local panel = Instance.new("Frame")
