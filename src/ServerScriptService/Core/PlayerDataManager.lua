@@ -49,6 +49,14 @@ local function mergeDefaults(saved)
     return p
 end
 
+local function deepCopy(t)
+    local copy = {}
+    for k, v in pairs(t) do
+        copy[k] = type(v) == "table" and deepCopy(v) or v
+    end
+    return copy
+end
+
 -- ── DATASTORE ──────────────────────────────────────────────────
 local function loadProfile(userId)
     local key = "Player_" .. userId
@@ -67,15 +75,10 @@ local function saveProfile(userId)
     local profile = profiles[userId]
     if not profile then return end
     local key = "Player_" .. userId
-    local toSave = {}
-    for k, v in pairs(profile) do
-        if type(v) ~= "function" then
-            toSave[k] = v
-        end
-    end
+    local toSave = deepCopy(profile)
     -- math.huge is not JSON-safe; replace with 0
     if toSave.stats and toSave.stats.fastestOrderTime == math.huge then
-        toSave.stats = { fastestOrderTime = 0 }
+        toSave.stats.fastestOrderTime = 0
     end
     local ok, err = pcall(function()
         playerStore:SetAsync(key, toSave)
