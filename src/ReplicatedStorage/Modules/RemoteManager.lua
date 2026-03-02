@@ -63,6 +63,7 @@ local REMOTES = {
     "DeliveryResult",
     "EndOfDaySummary",
     "TutorialComplete",
+    "TutorialStep",
 }
 
 -- Server creates all remotes; client waits for server-created ones.
