@@ -13,13 +13,8 @@ local NPCSpawner        = require(ReplicatedStorage:WaitForChild("Modules"):Wait
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
--- PlayerDataManager is a Script (not a ModuleScript) — cannot be required.
--- Coin/XP persistence wired in M4. Stubs used here for M3.
-local PlayerDataManager = {
-    AddCoins = function() end,
-    AddXP    = function() end,
-    GetData  = function() return nil end,
-}
+local EconomyManager    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EconomyManager"))
+local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
