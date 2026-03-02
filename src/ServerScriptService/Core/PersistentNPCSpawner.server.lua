@@ -224,6 +224,64 @@ takeOrder = function(player, npcId)
         player.Name, data.name, cookie.id, packSize))
 end
 
+-- ─── CONFIRM ORDER (called when client dismisses cutscene) ────────────────────
+local function confirmOrder(player, npcId)
+    local data = npcs[npcId]
+    if not data then
+        warn("[NPCController] confirmOrder: npcId not found:", npcId)
+        return
+    end
+    if data.state ~= "cutscene_pending" then
+        warn("[NPCController] confirmOrder: unexpected state:", data.state)
+        return
+    end
+
+    -- Register with OrderManager
+    local order = OrderManager.AddNPCOrder(data.name, data.order.cookieId, {
+        packSize = data.order.packSize,
+        price    = data.order.price,
+        isVIP    = data.order.isVIP,
+        npcId    = npcId,
+    })
+    data.order.orderId = order.orderId
+    data.state = "ordered"
+
+    -- Update 3D tablet display
+    updateTabletDisplay({
+        cookieId = data.order.cookieId,
+        packSize = data.order.packSize,
+        price    = data.order.price,
+        isVIP    = data.order.isVIP,
+        status   = "In kitchen...",
+    })
+
+    -- Update player's HUD active order label
+    pcall(function()
+        hudUpdate:FireClient(player, nil, nil,
+            data.order.cookieName .. " ×" .. data.order.packSize)
+    end)
+
+    -- Walk to a waiting area spot
+    local spot = getFreeWaitSpot()
+    if spot then
+        data.waitSpot   = spot.Name
+        data.state      = "walking_to_seat"
+        data.cancelMove = NPCSpawner.MoveTo(data.model, spot.Position + Vector3.new(0, 2, 0), function()
+            if npcs[npcId] then data.state = "seated" end
+        end)
+    else
+        data.state = "seated"
+    end
+
+    print(string.format("[NPCController] Order confirmed: %s %dx %s | price=%d | orderId=%s",
+        data.name, data.order.packSize, data.order.cookieId,
+        data.order.price, tostring(data.order.orderId)))
+end
+
+confirmOrderRemote.OnServerEvent:Connect(function(player, npcId)
+    confirmOrder(player, npcId)
+end)
+
 -- ─── NPC LEAVE ────────────────────────────────────────────────────────────────
 npcLeave = function(npcId, reason)
     local data = npcs[npcId]
@@ -511,6 +569,12 @@ Players.PlayerRemoving:Connect(function(player)
     for cookieId, pending in pairs(pendingBoxes) do
         if pending.carrier == player.Name then
             pendingBoxes[cookieId] = nil
+        end
+    end
+    -- Auto-confirm any NPC stuck in cutscene_pending if player disconnects
+    for npcId, data in pairs(npcs) do
+        if data.state == "cutscene_pending" then
+            confirmOrder(player, npcId)
         end
     end
 end)
