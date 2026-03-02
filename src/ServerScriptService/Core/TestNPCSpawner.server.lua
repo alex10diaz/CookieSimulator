@@ -25,7 +25,7 @@ local TEST_NPC_NAME = "Test Customer"
 local TEST_COOKIE   = { id = "chocolate_chip", name = "Chocolate Chip" }
 local TEST_PACK     = 4
 local TEST_PRICE    = 60            -- baseCoins shown in the earnings card
-local TEST_IS_VIP   = false         -- set true to test gold VIP card
+local TEST_IS_VIP   = true          -- set true to test gold VIP card
 
 local SPAWN_CF = CFrame.new(-0.25, 3, -4)  -- QueueSpot1
 
