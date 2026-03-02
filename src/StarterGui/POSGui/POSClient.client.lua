@@ -18,11 +18,18 @@ local playerGui = player:WaitForChild("PlayerGui")
 local posGui    = playerGui:WaitForChild("POSGui")
 posGui.Enabled  = false
 
+local AUTO_DISMISS_SECONDS = 5
+
+-- Module-level handles so stateRemote + Escape can reach the active modal's close fns.
+-- currentDismiss: fires ConfirmNPCOrder + closes (X button, Escape, auto-dismiss)
+-- currentForceClose: closes silently without firing (game-state change)
+local currentDismiss    = nil
+local currentForceClose = nil
+
 -- ─── BUILD CUTSCENE MODAL ─────────────────────────────────────────────────────
 local function showOrderCutscene(payload)
-    -- Destroy any existing modal first
-    local existing = posGui:FindFirstChild("OrderModal")
-    if existing then existing:Destroy() end
+    -- Destroy any existing modal first (also arms the old forceClose → safe)
+    if currentForceClose then currentForceClose() end
 
     posGui.Enabled = true
 
@@ -98,7 +105,7 @@ local function showOrderCutscene(payload)
     countdown.TextXAlignment         = Enum.TextXAlignment.Left
     countdown.TextScaled             = true
     countdown.Font                   = Enum.Font.Gotham
-    countdown.Text                   = "Auto-dismissing in 5..."
+    countdown.Text                   = "Auto-dismissing in " .. AUTO_DISMISS_SECONDS .. "..."
     countdown.Parent                 = modal
 
     -- ── X button ──
@@ -117,21 +124,38 @@ local function showOrderCutscene(payload)
     cc.CornerRadius = UDim.new(0, 6)
     cc.Parent       = closeBtn
 
-    -- ── Dismiss (fires once only) ──
+    -- ── Dismiss helpers ──────────────────────────────────────────────────────
     local dismissed = false
+
+    -- User-initiated close: fires ConfirmNPCOrder so server starts the order.
     local function dismiss()
         if dismissed then return end
         dismissed = true
+        currentDismiss    = nil
+        currentForceClose = nil
         confirmRemote:FireServer(payload.npcId)
         modal:Destroy()
         posGui.Enabled = false
     end
 
+    -- Game-state-change close: modal goes away but server already knows; no fire.
+    local function forceClose()
+        if dismissed then return end
+        dismissed = true
+        currentDismiss    = nil
+        currentForceClose = nil
+        modal:Destroy()
+        posGui.Enabled = false
+    end
+
+    currentDismiss    = dismiss
+    currentForceClose = forceClose
+
     closeBtn.MouseButton1Click:Connect(dismiss)
 
     -- ── 5-second auto-dismiss ──
     task.spawn(function()
-        for i = 4, 0, -1 do
+        for i = AUTO_DISMISS_SECONDS - 1, 0, -1 do
             task.wait(1)
             if dismissed then return end
             countdown.Text = i > 0
@@ -149,21 +173,16 @@ end)
 
 stateRemote.OnClientEvent:Connect(function(state)
     if state ~= "Open" then
-        local modal = posGui:FindFirstChild("OrderModal")
-        if modal then modal:Destroy() end
+        if currentForceClose then currentForceClose() end
         posGui.Enabled = false
     end
 end)
 
--- Escape key closes modal
+-- Escape key: calls dismiss() directly via module-level ref (no :Fire() needed)
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if input.KeyCode == Enum.KeyCode.Escape then
-        local modal = posGui:FindFirstChild("OrderModal")
-        if modal then
-            local btn = modal:FindFirstChild("CloseBtn")
-            if btn then btn.MouseButton1Click:Fire() end
-        end
+        if currentDismiss then currentDismiss() end
     end
 end)
 
