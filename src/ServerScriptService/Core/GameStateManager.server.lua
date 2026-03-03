@@ -7,7 +7,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
-local PREOPEN_FIRST     = 5 * 60   -- 5 minutes first day
+local PREOPEN_FIRST     = 7 * 60 + 30  -- 7:30 first day — gives tutorial players ~5 min of real PreOpen
 local PREOPEN_REPEAT    = 3 * 60   -- 3 minutes subsequent days
 local OPEN_DURATION     = 15 * 60  -- 15 minutes
 local SUMMARY_DURATION  = 30       -- 30 seconds end-of-day
