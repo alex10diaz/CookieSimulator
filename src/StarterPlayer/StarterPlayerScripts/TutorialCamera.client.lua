@@ -38,6 +38,12 @@ local TARGET_PARTS = {
 local FADE_TIME  = 0.4
 local GLIDE_TIME = 2.0
 
+-- Camera/spawn offset constants (tunable in one place)
+local SPAWN_OFFSET_FROM_TARGET = Vector3.new(0,  0,  6)  -- character stands in front of station
+local CAM_WIDE_OFFSET          = Vector3.new(0, 15, 20)  -- initial wide shot (above + behind)
+local CAM_FOCUS_OFFSET         = Vector3.new(0,  6, 10)  -- glide destination (closer push-in)
+local GAMESPAWN_HEIGHT_OFFSET  = Vector3.new(0,  3,  0)  -- GameSpawn arrival height
+
 -- ─── Helpers ─────────────────────────────────────────────────────────────────
 local function getPosition(obj)
 	if not obj then return Vector3.new(0, 5, 0) end
@@ -85,17 +91,17 @@ local function performTransition(targetKey)
 	fadeOut()
 
 	-- 2. Teleport character to stand in front of station
-	hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 0, 6), targetPos)
+	hrp.CFrame = CFrame.new(targetPos + SPAWN_OFFSET_FROM_TARGET, targetPos)
 
 	-- 3. Camera starts wide (above and behind station)
 	camera.CameraType = Enum.CameraType.Scriptable
-	camera.CFrame = CFrame.new(targetPos + Vector3.new(0, 15, 20), targetPos)
+	camera.CFrame = CFrame.new(targetPos + CAM_WIDE_OFFSET, targetPos)
 
 	-- 4. Screen fades in — player sees the wide camera framing the station
 	fadeIn()
 
 	-- 5. Camera glides smoothly to a closer focus position (cinematic push-in)
-	local focusCFrame = CFrame.new(targetPos + Vector3.new(0, 6, 10), targetPos)
+	local focusCFrame = CFrame.new(targetPos + CAM_FOCUS_OFFSET, targetPos)
 	local glide = TweenService:Create(camera,
 		TweenInfo.new(GLIDE_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
 		{ CFrame = focusCFrame }
@@ -128,7 +134,7 @@ local function spawnAtGameSpawn()
 
 	-- Fade black -> teleport -> camera Custom -> fade in
 	fadeOut()
-	hrp.CFrame = CFrame.new(spawnPos + Vector3.new(0, 3, 0))
+	hrp.CFrame = CFrame.new(spawnPos + GAMESPAWN_HEIGHT_OFFSET)
 	camera.CameraType = Enum.CameraType.Custom
 	fadeIn()
 	print("[TutorialCamera] -> GameSpawn (tutorial complete)")
