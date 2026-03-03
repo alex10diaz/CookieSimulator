@@ -64,6 +64,8 @@ local REMOTES = {
     "EndOfDaySummary",
     "TutorialComplete",
     "TutorialStep",
+    "ReplayTutorial",
+    "StartGame",
 }
 
 -- Server creates all remotes; client waits for server-created ones.
