@@ -22,16 +22,18 @@ end
 
 -- ─── Camera Target Mapping ────────────────────────────────────────────────────
 -- Maps the `target` string from TutorialStep payload → a Part or Model in workspace.
--- Each value is the Part/Model the camera should frame and the character spawn offset from.
+-- Uses WaitForChild on folder containers to handle client replication timing.
+local function w(parent, name) return parent:WaitForChild(name, 10) end
+
 local TARGET_PARTS = {
-	POS             = workspace.POS.Tablet,
-	Mixer           = workspace.Mixers["Mixer 1"],
-	DoughTable      = workspace.DoughCamera,
-	FridgePinkSugar = workspace.Fridges.fridge_pink_sugar,
-	Oven            = workspace.Ovens.Oven1,
-	FrostTable      = workspace.Store["Frost Table"],
-	DressTable      = workspace.Dress["Dress Table"],
-	WaitingArea     = workspace.WaitingArea.Spot1,
+	POS             = w(w(workspace, "POS"), "Tablet"),
+	Mixer           = w(workspace, "Mixers"):FindFirstChild("Mixer 1"),
+	DoughTable      = workspace:FindFirstChild("DoughCamera"),
+	FridgePinkSugar = w(workspace, "Fridges"):FindFirstChild("fridge_pink_sugar"),
+	Oven            = w(workspace, "Ovens"):FindFirstChild("Oven1"),
+	FrostTable      = w(workspace, "Store"):FindFirstChild("Frost Table"),
+	DressTable      = w(workspace, "Dress"):FindFirstChild("Dress Table"),
+	WaitingArea     = w(workspace, "WaitingArea"):FindFirstChild("Spot1"),
 	GameSpawn       = workspace:FindFirstChild("GameSpawn"),
 }
 
