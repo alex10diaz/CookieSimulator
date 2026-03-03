@@ -134,8 +134,13 @@ end)
 
 -- ─── Replay Tutorial button (Final Menu) ─────────────────────────────────────
 replayRemote.OnServerEvent:Connect(function(player)
+	-- Guard: only valid from the Final Menu (step 10).
+	-- Prevents returning players or mid-tutorial players from being re-entered via a bad client fire.
+	local session = activeTutorials[player.UserId]
+	if not session or session.step ~= 10 then return end
+
 	-- Reset to step 1 without saving completion — player must press Start Day to save
-	activeTutorials[player.UserId] = { step = 1 }
+	session.step = 1
 	sendStep(player, 1)
 	print("[TutorialController] " .. player.Name .. " replaying tutorial from step 1")
 end)
