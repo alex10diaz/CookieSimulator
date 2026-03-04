@@ -23,7 +23,10 @@ end
 -- ─── Camera Target Mapping ────────────────────────────────────────────────────
 -- Maps the `target` string from TutorialStep payload → a Part or Model in workspace.
 -- Uses WaitForChild on folder containers to handle client replication timing.
-local function w(parent, name) return parent:WaitForChild(name, 10) end
+local function w(parent, name)
+	if not parent then warn("[TutorialCamera] w() called with nil parent, looking for: " .. tostring(name)); return nil end
+	return parent:WaitForChild(name, 10)
+end
 
 local TARGET_PARTS = {
 	POS             = w(w(workspace, "POS"), "Tablet"),
