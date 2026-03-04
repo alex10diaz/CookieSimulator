@@ -103,19 +103,21 @@ local function performTransition(targetKey)
 
 	local stationPos = getPosition(targetObj)
 
-	-- Look up spawn marker. When a marker exists the camera focuses ON the marker
-	-- (where the player will stand), not the distant station object.
-	-- spawnPos is offset slightly from the marker so CFrame.new(spawn, target) is non-degenerate.
+	-- Look up spawn marker. When a marker exists:
+	--   • Camera focuses ON the marker (where the player stands)
+	--   • Player spawns exactly AT the marker, facing the real station
+	-- When no marker: camera focuses on station, player offset from it.
+	-- Always using stationPos as the CFrame look-at keeps it non-degenerate.
 	local markerName = SPAWN_MARKER_NAMES[targetKey]
 	local marker     = markerName and workspace:FindFirstChild(markerName)
 	local targetPos  = marker and marker.Position or stationPos
-	local spawnPos   = marker and (marker.Position + SPAWN_OFFSET_FROM_TARGET) or (stationPos + SPAWN_OFFSET_FROM_TARGET)
+	local spawnPos   = marker and marker.Position or (stationPos + SPAWN_OFFSET_FROM_TARGET)
 
 	-- 1. Screen goes black
 	fadeOut()
 
-	-- 2. Teleport character to the spawn position
-	hrp.CFrame = CFrame.new(spawnPos, targetPos)
+	-- 2. Teleport character — spawn at marker (or station offset), always face station
+	hrp.CFrame = CFrame.new(spawnPos, stationPos)
 
 	-- 3. Camera starts wide (above and behind station)
 	camera.CameraType = Enum.CameraType.Scriptable
