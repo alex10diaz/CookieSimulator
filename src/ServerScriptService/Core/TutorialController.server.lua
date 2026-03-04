@@ -30,6 +30,9 @@ local dressResultRemote     = RemoteManager.Get("DressMinigameResult")
 local activeTutorials = {}
 local TOTAL_STEPS = 9
 
+-- Step 1 randomly picks from these display POS machines in workspace.POS
+local POS_DISPLAY_TARGETS = { "POSDisplay1", "POSDisplay2", "POSDisplay3" }
+
 local STEPS = {
 	[1] = { msg = "Head to the POS and accept a customer order!",           target = "POS",             forceCookieId = nil          },
 	[2] = { msg = "Go to a Mixer and press E to start mixing!",             target = "Mixer",           forceCookieId = "pink_sugar" },
@@ -55,11 +58,13 @@ local function sendStep(player, step)
 			warn("[TutorialController] sendStep: invalid step " .. tostring(step))
 			return
 		end
+		local session = activeTutorials[player.UserId]
+		local target = (step == 1 and session and session.posTarget) or data.target
 		payload = {
 			step          = step,
 			total         = TOTAL_STEPS,
 			msg           = data.msg,
-			target        = data.target,
+			target        = target,
 			forceCookieId = data.forceCookieId,
 		}
 	end
@@ -99,9 +104,17 @@ local function handlePlayerJoin(player)
 		return
 	end
 
-	activeTutorials[player.UserId] = { step = 1 }
+	local chosen = POS_DISPLAY_TARGETS[math.random(1, #POS_DISPLAY_TARGETS)]
+	activeTutorials[player.UserId] = { step = 1, posTarget = chosen }
 	player:SetAttribute("InTutorial", true)
 	sendStep(player, 1)
+
+	-- Signal TestNPCSpawner which display POS was chosen
+	task.spawn(function()
+		local evts = ServerStorage:WaitForChild("Events", 10)
+		local posChosenEvt = evts and evts:FindFirstChild("TutorialPOSChosen")
+		if posChosenEvt then posChosenEvt:Fire(player, chosen) end
+	end)
 end
 
 Players.PlayerAdded:Connect(function(player)
