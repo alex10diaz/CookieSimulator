@@ -5,16 +5,18 @@
 local SessionStats = {}
 
 local data = {
-    orders     = 0,
-    coins      = 0,
-    totalStars = 0,
-    peakCombo  = 0,
+    orders       = 0,
+    coins        = 0,
+    cookiesBaked = 0,
+    totalStars   = 0,
+    peakCombo    = 0,
 }
 
-function SessionStats.RecordDelivery(stars, coins, comboStreak)
-    data.orders     += 1
-    data.coins      += (coins or 0)
-    data.totalStars += (stars or 0)
+function SessionStats.RecordDelivery(stars, coins, comboStreak, cookieCount)
+    data.orders       += 1
+    data.coins        += (coins or 0)
+    data.cookiesBaked += (cookieCount or 1)
+    data.totalStars   += (stars or 0)
     if (comboStreak or 0) > data.peakCombo then
         data.peakCombo = comboStreak
     end
@@ -25,18 +27,20 @@ function SessionStats.GetSummary()
         and math.floor((data.totalStars / data.orders) * 10 + 0.5) / 10
         or  0
     return {
-        orders   = data.orders,
-        coins    = data.coins,
-        combo    = data.peakCombo,
-        avgStars = avgStars,
+        orders       = data.orders,
+        coins        = data.coins,
+        cookiesBaked = data.cookiesBaked,
+        combo        = data.peakCombo,
+        avgStars     = avgStars,
     }
 end
 
 function SessionStats.Reset()
-    data.orders     = 0
-    data.coins      = 0
-    data.totalStars = 0
-    data.peakCombo  = 0
+    data.orders       = 0
+    data.coins        = 0
+    data.cookiesBaked = 0
+    data.totalStars   = 0
+    data.peakCombo    = 0
 end
 
 return SessionStats

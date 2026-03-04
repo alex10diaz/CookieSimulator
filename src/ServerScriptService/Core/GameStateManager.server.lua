@@ -9,7 +9,7 @@ local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChi
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local PREOPEN_FIRST     = 7 * 60 + 30  -- 7:30 first day — gives tutorial players ~5 min of real PreOpen
 local PREOPEN_REPEAT    = 3 * 60   -- 3 minutes subsequent days
-local OPEN_DURATION     = 15 * 60  -- 15 minutes
+local OPEN_DURATION     = 10 * 60  -- 10 minutes (M6)
 local SUMMARY_DURATION  = 30       -- 30 seconds end-of-day
 
 -- ─── State ────────────────────────────────────────────────────────────────────
