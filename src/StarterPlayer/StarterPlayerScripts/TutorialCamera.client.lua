@@ -55,6 +55,7 @@ local SPAWN_MARKER_NAMES = {
 	FrostTable      = "TutorialFrostTableSpawn",
 	DressTable      = "TutorialDressTableSpawn",
 	WaitingArea     = "TutorialDeliverySpawn",   -- player delivers from here; NPC is at TutorialWaitingAreaSpawn
+	FOS             = "TutorialPOSSpawn",        -- reuse POS marker; NPC spawns on far side via TestNPCSpawner
 }
 
 local FADE_TIME  = 0.4
