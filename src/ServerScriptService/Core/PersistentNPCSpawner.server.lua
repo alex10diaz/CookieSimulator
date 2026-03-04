@@ -419,7 +419,7 @@ addDeliverPrompt = function(npcId)
         local xp    = payout.xp
 
         deliveryResult:FireClient(player, stars, coins, xp)
-        SessionStats.RecordDelivery(stars, payout.coins, comboStreak)
+        SessionStats.RecordDelivery(stars, payout.coins, comboStreak, d.order.packSize or 1)
         hudUpdate:FireClient(player,
             profile and profile.coins or 0,
             profile and profile.xp    or 0,
