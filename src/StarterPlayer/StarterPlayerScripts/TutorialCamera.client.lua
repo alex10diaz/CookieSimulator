@@ -38,6 +38,10 @@ local TARGET_PARTS = {
 	DressTable      = w(workspace, "Dress") and w(workspace, "Dress"):FindFirstChild("Dress Table"),
 	WaitingArea     = w(workspace, "WaitingArea") and w(workspace, "WaitingArea"):FindFirstChild("Spot1"),
 	GameSpawn       = workspace:FindFirstChild("GameSpawn"),
+	-- Display POS machines (random step-1 targets)
+	POSDisplay1     = w(workspace, "POS") and w(workspace, "POS"):FindFirstChild("POS 1 "),
+	POSDisplay2     = w(workspace, "POS") and w(workspace, "POS"):FindFirstChild("POS 2"),
+	POSDisplay3     = w(workspace, "POS") and w(workspace, "POS"):FindFirstChild("POS "),
 }
 
 -- Tutorial spawn marker names — one green Part per station, user positions them in Studio
