@@ -25,12 +25,9 @@ local depositDoughRemote    = RemoteManager.Get("DepositDough")
 local ovenResultRemote      = RemoteManager.Get("OvenMinigameResult")
 local frostResultRemote     = RemoteManager.Get("FrostMinigameResult")
 local dressResultRemote     = RemoteManager.Get("DressMinigameResult")
-local deliveryRemote        = RemoteManager.Get("DeliveryResult")
 
 -- ─── State ───────────────────────────────────────────────────────────────────
--- activeTutorials[userId] = { step = N }  (nil = not in tutorial)
 local activeTutorials = {}
-
 local TOTAL_STEPS = 9
 
 local STEPS = {
@@ -48,7 +45,6 @@ local STEPS = {
 -- ─── Helpers ─────────────────────────────────────────────────────────────────
 local function sendStep(player, step)
 	local payload
-
 	if step == 0 then
 		payload = { step = 0, total = TOTAL_STEPS, msg = "", isReturn = false }
 	elseif step == 10 then
@@ -67,7 +63,6 @@ local function sendStep(player, step)
 			forceCookieId = data.forceCookieId,
 		}
 	end
-
 	tutorialStepRemote:FireClient(player, payload)
 	print(string.format("[TutorialController] %s -> step %s", player.Name, tostring(step)))
 end
@@ -91,21 +86,19 @@ end
 
 -- ─── Player Join ─────────────────────────────────────────────────────────────
 local function handlePlayerJoin(player)
-	task.wait(3)  -- allow PlayerDataManager to finish loading profile
+	task.wait(3)
 	if not player or not player.Parent then return end
 
 	local data = PlayerDataManager.GetData(player)
 	if not data then return end
 
 	if data.tutorialCompleted then
-		-- Returning player: no tutorial, just teleport to GameSpawn via step=0 with isReturn=true
 		local payload = { step = 0, total = TOTAL_STEPS, msg = "", isReturn = true }
 		tutorialStepRemote:FireClient(player, payload)
 		print("[TutorialController] " .. player.Name .. " returning player -> GameSpawn")
 		return
 	end
 
-	-- First-time player: start tutorial at step 1
 	activeTutorials[player.UserId] = { step = 1 }
 	player:SetAttribute("InTutorial", true)
 	sendStep(player, 1)
@@ -119,22 +112,19 @@ Players.PlayerRemoving:Connect(function(player)
 	activeTutorials[player.UserId] = nil
 end)
 
--- Handle players already in-game when this script loads (Studio testing)
 for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(handlePlayerJoin, player)
 end
 
--- ─── Skip button ─────────────────────────────────────────────────────────────
+-- ─── Skip / Start Day / Replay ───────────────────────────────────────────────
 tutorialDoneRemote.OnServerEvent:Connect(function(player)
 	completeTutorial(player)
 end)
 
--- ─── Start Day button (Final Menu) ───────────────────────────────────────────
 startGameRemote.OnServerEvent:Connect(function(player)
 	completeTutorial(player)
 end)
 
--- ─── Replay Tutorial button (Final Menu) ─────────────────────────────────────
 replayRemote.OnServerEvent:Connect(function(player)
 	local session = activeTutorials[player.UserId]
 	if not session or session.step ~= 10 then return end
@@ -144,8 +134,6 @@ replayRemote.OnServerEvent:Connect(function(player)
 end)
 
 -- ─── Station Advance Gates ────────────────────────────────────────────────────
--- makeGate(expectedStep): returns an OnServerEvent handler that only advances
--- the player if they are currently on the expected tutorial step.
 local function makeGate(expectedStep)
 	return function(player, ...)
 		local session = activeTutorials[player.UserId]
@@ -158,30 +146,24 @@ end
 confirmNPCOrderRemote.OnServerEvent:Connect(makeGate(1))
 mixResultRemote.OnServerEvent:Connect(makeGate(2))
 
--- Step 3: dough minigame complete → auto-advance through step 4 (fridge deposit)
--- Step 4 has no player action — dough is deposited automatically during the dough minigame.
--- So we immediately advance 3→4 (camera swings to fridge), then 2.5s later advance 4→5.
+-- Step 3: dough complete → skip step 4 (auto-deposit) → jump to step 5 (pull from fridge)
+-- Skipping step 4 prevents the fridge camera transition from playing twice.
 doughResultRemote.OnServerEvent:Connect(function(player, ...)
 	local session = activeTutorials[player.UserId]
 	if not session or session.step ~= 3 then return end
-	advance(player)  -- step 3→4: camera swings to fridge
-	task.delay(2.5, function()
-		local s = activeTutorials[player.UserId]
-		if s and s.step == 4 then
-			advance(player)  -- step 4→5: auto, dough is already in fridge
-		end
-	end)
+	session.step = 5
+	sendStep(player, 5)
 end)
 
--- Step 4 gate kept for safety, but will not fire in normal flow (auto-advanced above)
+-- Step 4 kept for safety but will not fire in normal tutorial flow (skipped above)
 depositDoughRemote.OnServerEvent:Connect(makeGate(4))
 
--- Step 5 gate: FridgePulled BindableEvent (fired by MinigameServer after successful fridge pull)
--- Cannot use PullFromFridgeResult.OnServerEvent — that remote is server→client only.
+-- Step 5 gate: FridgePulled BindableEvent (fired by MinigameServer after fridge pull)
+-- PullFromFridgeResult is server→client only — OnServerEvent would never fire.
 task.spawn(function()
 	local evts = ServerStorage:WaitForChild("Events", 10)
 	local fe   = evts and evts:WaitForChild("FridgePulled", 10)
-	if not fe then warn("[TutorialController] FridgePulled event not found") return end
+	if not fe then warn("[TutorialController] FridgePulled event not found"); return end
 	fe.Event:Connect(function(player)
 		local session = activeTutorials[player.UserId]
 		if session and session.step == 5 then
@@ -194,6 +176,20 @@ end)
 ovenResultRemote.OnServerEvent:Connect(makeGate(6))
 frostResultRemote.OnServerEvent:Connect(makeGate(7))
 dressResultRemote.OnServerEvent:Connect(makeGate(8))
-deliveryRemote.OnServerEvent:Connect(makeGate(9))
+
+-- Step 9 gate: TutorialDelivered BindableEvent (fired by TestNPCSpawner after delivery)
+-- DeliveryResult is server→client only — OnServerEvent would never fire here.
+task.spawn(function()
+	local evts = ServerStorage:WaitForChild("Events", 10)
+	local fe   = evts and evts:WaitForChild("TutorialDelivered", 10)
+	if not fe then warn("[TutorialController] TutorialDelivered BindableEvent not found"); return end
+	fe.Event:Connect(function(player)
+		local session = activeTutorials[player.UserId]
+		if session and session.step == 9 then
+			advance(player)  -- 9→10: Final Menu
+		end
+	end)
+	print("[TutorialController] TutorialDelivered gate wired for step 9")
+end)
 
 print("[TutorialController] Ready — 9-step cinematic tutorial active.")
