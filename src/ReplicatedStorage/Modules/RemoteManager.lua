@@ -66,6 +66,13 @@ local REMOTES = {
     "TutorialStep",
     "ReplayTutorial",
     "StartGame",
+    -- M6: Meta systems
+    "RushHour",
+    "LeaderboardUpdate",
+    "PurchaseItem",
+    "PurchaseResult",
+    "SlotSelect",
+    "SlotSelectResult",
 }
 
 -- Server creates all remotes; client waits for server-created ones.
