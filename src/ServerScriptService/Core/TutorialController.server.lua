@@ -104,7 +104,7 @@ local function handlePlayerJoin(player)
 		return
 	end
 
-	local chosen = POS_DISPLAY_TARGETS[math.random(1, #POS_DISPLAY_TARGETS)]
+	local chosen = POS_STEP1_TARGET
 	activeTutorials[player.UserId] = { step = 1, posTarget = chosen }
 	player:SetAttribute("InTutorial", true)
 	sendStep(player, 1)
