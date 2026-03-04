@@ -38,7 +38,9 @@ local TARGET_PARTS = {
 }
 
 -- Tutorial spawn marker names — one green Part per station, user positions them in Studio
--- If a marker exists, character teleports there. Camera always looks at the station itself.
+-- When a marker exists: camera focuses on the marker area (where player stands),
+-- and character is offset slightly from the marker facing toward it.
+-- When no marker: camera focuses on the station, character spawns offset from station.
 local SPAWN_MARKER_NAMES = {
 	POS             = "TutorialPOSSpawn",
 	Mixer           = "TutorialMixerSpawn",
@@ -47,7 +49,7 @@ local SPAWN_MARKER_NAMES = {
 	Oven            = "TutorialOvenSpawn",
 	FrostTable      = "TutorialFrostTableSpawn",
 	DressTable      = "TutorialDressTableSpawn",
-	WaitingArea     = "TutorialWaitingAreaSpawn",
+	WaitingArea     = "TutorialDeliverySpawn",   -- player delivers from here; NPC is at TutorialWaitingAreaSpawn
 }
 
 local FADE_TIME  = 0.4
@@ -99,13 +101,15 @@ local function performTransition(targetKey)
 	local hrp = getHRP()
 	if not hrp then return end
 
-	local targetPos = getPosition(targetObj)
+	local stationPos = getPosition(targetObj)
 
-	-- Look up spawn marker for this step. Camera always looks at the station (targetPos).
-	-- Character spawns at the marker so the user can position them exactly in Studio.
+	-- Look up spawn marker. When a marker exists the camera focuses ON the marker
+	-- (where the player will stand), not the distant station object.
+	-- spawnPos is offset slightly from the marker so CFrame.new(spawn, target) is non-degenerate.
 	local markerName = SPAWN_MARKER_NAMES[targetKey]
 	local marker     = markerName and workspace:FindFirstChild(markerName)
-	local spawnPos   = marker and marker.Position or (targetPos + SPAWN_OFFSET_FROM_TARGET)
+	local targetPos  = marker and marker.Position or stationPos
+	local spawnPos   = marker and (marker.Position + SPAWN_OFFSET_FROM_TARGET) or (stationPos + SPAWN_OFFSET_FROM_TARGET)
 
 	-- 1. Screen goes black
 	fadeOut()
