@@ -102,18 +102,30 @@ end)
 -- ============================================================
 local function endSession(player, stationName, score)
     local session = activeSessions[player]
-    if not session or session.station ~= stationName then
-        warn("[MinigameServer] Session mismatch for " .. player.Name)
+    if not session then
+        warn("[AntiExploit] " .. player.Name .. " fired " .. stationName .. " result with no active session")
+        return
+    end
+    if session.station ~= stationName then
+        warn("[AntiExploit] " .. player.Name .. " station mismatch (expected=" .. session.station .. " got=" .. stationName .. ")")
+        return
+    end
+    if type(score) ~= "number" then
+        warn("[AntiExploit] " .. player.Name .. " sent non-number score: " .. tostring(score))
         return
     end
 
     local batchId = session.batchId
     activeSessions[player] = nil
-    score = math.clamp(score or 0, 0, 100)
+    score = math.clamp(score, 0, 100)
 
     print(string.format("[MinigameServer] %s | %s | score: %d%%", player.Name, stationName, score))
 
     if stationName == "mix" then
+        if not session.cookieId then
+            warn("[AntiExploit] " .. player.Name .. " mix session missing server-assigned cookieId")
+            return
+        end
         OrderManager.RecordStationScore(player, "mix", score, batchId)
 
     elseif stationName == "dough" then
