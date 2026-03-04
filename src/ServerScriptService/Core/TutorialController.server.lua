@@ -7,6 +7,7 @@
 local Players             = game:GetService("Players")
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage       = game:GetService("ServerStorage")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
@@ -18,14 +19,13 @@ local replayRemote       = RemoteManager.Get("ReplayTutorial")
 
 -- Station result remotes (advance gates)
 local confirmNPCOrderRemote = RemoteManager.Get("ConfirmNPCOrder")
-local mixResultRemote     = RemoteManager.Get("MixMinigameResult")
-local doughResultRemote   = RemoteManager.Get("DoughMinigameResult")
-local depositDoughRemote  = RemoteManager.Get("DepositDough")
-local pullFridgeRemote    = RemoteManager.Get("PullFromFridgeResult")
-local ovenResultRemote    = RemoteManager.Get("OvenMinigameResult")
-local frostResultRemote   = RemoteManager.Get("FrostMinigameResult")
-local dressResultRemote   = RemoteManager.Get("DressMinigameResult")
-local deliveryRemote      = RemoteManager.Get("DeliveryResult")
+local mixResultRemote       = RemoteManager.Get("MixMinigameResult")
+local doughResultRemote     = RemoteManager.Get("DoughMinigameResult")
+local depositDoughRemote    = RemoteManager.Get("DepositDough")
+local ovenResultRemote      = RemoteManager.Get("OvenMinigameResult")
+local frostResultRemote     = RemoteManager.Get("FrostMinigameResult")
+local dressResultRemote     = RemoteManager.Get("DressMinigameResult")
+local deliveryRemote        = RemoteManager.Get("DeliveryResult")
 
 -- ─── State ───────────────────────────────────────────────────────────────────
 -- activeTutorials[userId] = { step = N }  (nil = not in tutorial)
@@ -136,12 +136,8 @@ end)
 
 -- ─── Replay Tutorial button (Final Menu) ─────────────────────────────────────
 replayRemote.OnServerEvent:Connect(function(player)
-	-- Guard: only valid from the Final Menu (step 10).
-	-- Prevents returning players or mid-tutorial players from being re-entered via a bad client fire.
 	local session = activeTutorials[player.UserId]
 	if not session or session.step ~= 10 then return end
-
-	-- Reset to step 1 without saving completion — player must press Start Day to save
 	session.step = 1
 	sendStep(player, 1)
 	print("[TutorialController] " .. player.Name .. " replaying tutorial from step 1")
@@ -161,9 +157,40 @@ end
 
 confirmNPCOrderRemote.OnServerEvent:Connect(makeGate(1))
 mixResultRemote.OnServerEvent:Connect(makeGate(2))
-doughResultRemote.OnServerEvent:Connect(makeGate(3))
+
+-- Step 3: dough minigame complete → auto-advance through step 4 (fridge deposit)
+-- Step 4 has no player action — dough is deposited automatically during the dough minigame.
+-- So we immediately advance 3→4 (camera swings to fridge), then 2.5s later advance 4→5.
+doughResultRemote.OnServerEvent:Connect(function(player, ...)
+	local session = activeTutorials[player.UserId]
+	if not session or session.step ~= 3 then return end
+	advance(player)  -- step 3→4: camera swings to fridge
+	task.delay(2.5, function()
+		local s = activeTutorials[player.UserId]
+		if s and s.step == 4 then
+			advance(player)  -- step 4→5: auto, dough is already in fridge
+		end
+	end)
+end)
+
+-- Step 4 gate kept for safety, but will not fire in normal flow (auto-advanced above)
 depositDoughRemote.OnServerEvent:Connect(makeGate(4))
-pullFridgeRemote.OnServerEvent:Connect(makeGate(5))
+
+-- Step 5 gate: FridgePulled BindableEvent (fired by MinigameServer after successful fridge pull)
+-- Cannot use PullFromFridgeResult.OnServerEvent — that remote is server→client only.
+task.spawn(function()
+	local evts = ServerStorage:WaitForChild("Events", 10)
+	local fe   = evts and evts:WaitForChild("FridgePulled", 10)
+	if not fe then warn("[TutorialController] FridgePulled event not found") return end
+	fe.Event:Connect(function(player)
+		local session = activeTutorials[player.UserId]
+		if session and session.step == 5 then
+			advance(player)
+		end
+	end)
+	print("[TutorialController] FridgePulled gate wired for step 5")
+end)
+
 ovenResultRemote.OnServerEvent:Connect(makeGate(6))
 frostResultRemote.OnServerEvent:Connect(makeGate(7))
 dressResultRemote.OnServerEvent:Connect(makeGate(8))
