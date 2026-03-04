@@ -109,7 +109,7 @@ local function performTransition(targetKey)
 	-- When no marker: camera focuses on station, player offset from it.
 	-- Always using stationPos as the CFrame look-at keeps it non-degenerate.
 	local markerName = SPAWN_MARKER_NAMES[targetKey]
-	local marker     = markerName and workspace:FindFirstChild(markerName)
+	local marker     = markerName and workspace:WaitForChild(markerName, 5)
 	local targetPos  = marker and marker.Position or stationPos
 	local spawnPos   = marker and marker.Position or (stationPos + SPAWN_OFFSET_FROM_TARGET)
 
