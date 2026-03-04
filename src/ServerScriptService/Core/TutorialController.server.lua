@@ -83,6 +83,7 @@ local function completeTutorial(player)
 	local userId = player.UserId
 	if not activeTutorials[userId] then return end
 	activeTutorials[userId] = nil
+	player:SetAttribute("InTutorial", false)
 	PlayerDataManager.SetTutorialCompleted(player)
 	sendStep(player, 0)
 	print("[TutorialController] " .. player.Name .. " tutorial COMPLETE — saved to DataStore")
@@ -106,6 +107,7 @@ local function handlePlayerJoin(player)
 
 	-- First-time player: start tutorial at step 1
 	activeTutorials[player.UserId] = { step = 1 }
+	player:SetAttribute("InTutorial", true)
 	sendStep(player, 1)
 end
 

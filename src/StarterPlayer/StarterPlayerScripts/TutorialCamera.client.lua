@@ -89,16 +89,12 @@ local function performTransition(targetKey)
 
 	local targetPos = getPosition(targetObj)
 
-	-- For POS step: if TutorialPOSSpawn marker exists, use it for spawn AND camera target
+	-- For POS step: use TutorialPOSSpawn as character spawn, keep Tablet as camera look target
+	-- NOTE: do NOT set targetPos = marker.Position — that makes CFrame.new(pos, pos) degenerate
 	local spawnPos
 	if targetKey == "POS" then
 		local marker = workspace:FindFirstChild("TutorialPOSSpawn")
-		if marker then
-			spawnPos  = marker.Position
-			targetPos = marker.Position  -- camera looks at marker, not the Tablet
-		else
-			spawnPos = targetPos + SPAWN_OFFSET_FROM_TARGET
-		end
+		spawnPos = marker and marker.Position or (targetPos + SPAWN_OFFSET_FROM_TARGET)
 	else
 		spawnPos = targetPos + SPAWN_OFFSET_FROM_TARGET
 	end

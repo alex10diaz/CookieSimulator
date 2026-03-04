@@ -180,7 +180,8 @@ takeOrder = function(player, npcId)
     if data.state ~= "waiting_in_queue" then return end
     if data.queueSlot ~= 1 then return end
 
-    local cookie   = CookieData.GetRandom()
+    -- Force pink_sugar during tutorial so the order matches what the player will bake
+    local cookie = player:GetAttribute("InTutorial") and CookieData.GetById("pink_sugar") or CookieData.GetRandom()
     local packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
     local price    = calcPrice(cookie.id, packSize)
 
