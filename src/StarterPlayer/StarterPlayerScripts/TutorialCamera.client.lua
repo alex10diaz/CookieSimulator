@@ -37,14 +37,26 @@ local TARGET_PARTS = {
 	GameSpawn       = workspace:FindFirstChild("GameSpawn"),
 }
 
+-- Tutorial spawn marker names — one green Part per station, user positions them in Studio
+-- If a marker exists, character teleports there. Camera always looks at the station itself.
+local SPAWN_MARKER_NAMES = {
+	POS             = "TutorialPOSSpawn",
+	Mixer           = "TutorialMixerSpawn",
+	DoughTable      = "TutorialDoughTableSpawn",
+	FridgePinkSugar = "TutorialFridgePinkSugarSpawn",
+	Oven            = "TutorialOvenSpawn",
+	FrostTable      = "TutorialFrostTableSpawn",
+	DressTable      = "TutorialDressTableSpawn",
+	WaitingArea     = "TutorialWaitingAreaSpawn",
+}
+
 local FADE_TIME  = 0.4
 local GLIDE_TIME = 2.0
 
--- Camera/spawn offset constants (tunable in one place)
-local SPAWN_OFFSET_FROM_TARGET = Vector3.new(0,  0,  6)  -- character stands in front of station
-local CAM_WIDE_OFFSET          = Vector3.new(0, 15, 20)  -- initial wide shot (above + behind)
-local CAM_FOCUS_OFFSET         = Vector3.new(0,  6, 10)  -- glide destination (closer push-in)
-local GAMESPAWN_HEIGHT_OFFSET  = Vector3.new(0,  3,  0)  -- GameSpawn arrival height
+local SPAWN_OFFSET_FROM_TARGET = Vector3.new(0,  0,  6)  -- fallback if no marker placed
+local CAM_WIDE_OFFSET          = Vector3.new(0, 15, 20)
+local CAM_FOCUS_OFFSET         = Vector3.new(0,  6, 10)
+local GAMESPAWN_HEIGHT_OFFSET  = Vector3.new(0,  3,  0)
 
 -- ─── Helpers ─────────────────────────────────────────────────────────────────
 local function getPosition(obj)
@@ -89,15 +101,11 @@ local function performTransition(targetKey)
 
 	local targetPos = getPosition(targetObj)
 
-	-- For POS step: use TutorialPOSSpawn as character spawn, keep Tablet as camera look target
-	-- NOTE: do NOT set targetPos = marker.Position — that makes CFrame.new(pos, pos) degenerate
-	local spawnPos
-	if targetKey == "POS" then
-		local marker = workspace:FindFirstChild("TutorialPOSSpawn")
-		spawnPos = marker and marker.Position or (targetPos + SPAWN_OFFSET_FROM_TARGET)
-	else
-		spawnPos = targetPos + SPAWN_OFFSET_FROM_TARGET
-	end
+	-- Look up spawn marker for this step. Camera always looks at the station (targetPos).
+	-- Character spawns at the marker so the user can position them exactly in Studio.
+	local markerName = SPAWN_MARKER_NAMES[targetKey]
+	local marker     = markerName and workspace:FindFirstChild(markerName)
+	local spawnPos   = marker and marker.Position or (targetPos + SPAWN_OFFSET_FROM_TARGET)
 
 	-- 1. Screen goes black
 	fadeOut()
