@@ -17,7 +17,7 @@ local startGameRemote    = RemoteManager.Get("StartGame")
 local replayRemote       = RemoteManager.Get("ReplayTutorial")
 
 -- Station result remotes (advance gates)
-local orderAcceptedRemote = RemoteManager.Get("OrderAccepted")
+local confirmNPCOrderRemote = RemoteManager.Get("ConfirmNPCOrder")
 local mixResultRemote     = RemoteManager.Get("MixMinigameResult")
 local doughResultRemote   = RemoteManager.Get("DoughMinigameResult")
 local depositDoughRemote  = RemoteManager.Get("DepositDough")
@@ -157,7 +157,7 @@ local function makeGate(expectedStep)
 	end
 end
 
-orderAcceptedRemote.OnServerEvent:Connect(makeGate(1))
+confirmNPCOrderRemote.OnServerEvent:Connect(makeGate(1))
 mixResultRemote.OnServerEvent:Connect(makeGate(2))
 doughResultRemote.OnServerEvent:Connect(makeGate(3))
 depositDoughRemote.OnServerEvent:Connect(makeGate(4))

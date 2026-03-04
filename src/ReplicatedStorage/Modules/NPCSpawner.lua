@@ -95,8 +95,8 @@ function NPCSpawner.MoveTo(npcModel, targetPos, onArrived)
     end
 
     local path = PathfindingService:CreatePath({
-        AgentHeight   = 5,
-        AgentRadius   = 2,
+        AgentHeight   = 4,
+        AgentRadius   = 1,
         AgentCanJump  = false,
         AgentCanClimb = false,
     })

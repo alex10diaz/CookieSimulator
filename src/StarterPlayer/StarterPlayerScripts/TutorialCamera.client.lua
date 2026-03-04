@@ -89,11 +89,25 @@ local function performTransition(targetKey)
 
 	local targetPos = getPosition(targetObj)
 
+	-- For POS step: if TutorialPOSSpawn marker exists, use it for spawn AND camera target
+	local spawnPos
+	if targetKey == "POS" then
+		local marker = workspace:FindFirstChild("TutorialPOSSpawn")
+		if marker then
+			spawnPos  = marker.Position
+			targetPos = marker.Position  -- camera looks at marker, not the Tablet
+		else
+			spawnPos = targetPos + SPAWN_OFFSET_FROM_TARGET
+		end
+	else
+		spawnPos = targetPos + SPAWN_OFFSET_FROM_TARGET
+	end
+
 	-- 1. Screen goes black
 	fadeOut()
 
-	-- 2. Teleport character to stand in front of station
-	hrp.CFrame = CFrame.new(targetPos + SPAWN_OFFSET_FROM_TARGET, targetPos)
+	-- 2. Teleport character to the spawn position
+	hrp.CFrame = CFrame.new(spawnPos, targetPos)
 
 	-- 3. Camera starts wide (above and behind station)
 	camera.CameraType = Enum.CameraType.Scriptable
