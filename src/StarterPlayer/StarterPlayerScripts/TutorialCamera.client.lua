@@ -30,13 +30,13 @@ end
 
 local TARGET_PARTS = {
 	POS             = w(w(workspace, "POS"), "Tablet"),
-	Mixer           = w(workspace, "Mixers"):FindFirstChild("Mixer 1"),
+	Mixer           = w(workspace, "Mixers") and w(workspace, "Mixers"):FindFirstChild("Mixer 1"),
 	DoughTable      = workspace:FindFirstChild("DoughCamera"),
-	FridgePinkSugar = w(workspace, "Fridges"):FindFirstChild("fridge_pink_sugar"),
-	Oven            = w(workspace, "Ovens"):FindFirstChild("Oven1"),
-	FrostTable      = w(workspace, "Store"):FindFirstChild("Frost Table"),
-	DressTable      = w(workspace, "Dress"):FindFirstChild("Dress Table"),
-	WaitingArea     = w(workspace, "WaitingArea"):FindFirstChild("Spot1"),
+	FridgePinkSugar = w(workspace, "Fridges") and w(workspace, "Fridges"):FindFirstChild("fridge_pink_sugar"),
+	Oven            = w(workspace, "Ovens") and w(workspace, "Ovens"):FindFirstChild("Oven1"),
+	FrostTable      = w(workspace, "Store") and w(workspace, "Store"):FindFirstChild("Frost Table"),
+	DressTable      = w(workspace, "Dress") and w(workspace, "Dress"):FindFirstChild("Dress Table"),
+	WaitingArea     = w(workspace, "WaitingArea") and w(workspace, "WaitingArea"):FindFirstChild("Spot1"),
 	GameSpawn       = workspace:FindFirstChild("GameSpawn"),
 }
 
