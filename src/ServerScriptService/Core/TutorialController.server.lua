@@ -30,8 +30,8 @@ local dressResultRemote     = RemoteManager.Get("DressMinigameResult")
 local activeTutorials = {}
 local TOTAL_STEPS = 9
 
--- Step 1 randomly picks from these display POS machines in workspace.POS
-local POS_DISPLAY_TARGETS = { "POSDisplay1", "POSDisplay2", "POSDisplay3" }
+-- Step 1 always targets the FOS display machine in workspace.POS
+local POS_STEP1_TARGET = "FOS"
 
 local STEPS = {
 	[1] = { msg = "Head to the POS and accept a customer order!",           target = "POS",             forceCookieId = nil          },
