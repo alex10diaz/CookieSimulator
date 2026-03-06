@@ -277,10 +277,10 @@ local function hireWorker(player, stationId)
 	workers[stationId] = { rig = rig, proxy = proxy, active = true }
 	task.spawn(runWorkerLoop, stationId, rig, proxy)
 
-	local prompt = hirePrompts[stationId]
-	if prompt then
-		prompt.ActionText = "Dismiss " .. workerName
-		prompt.ObjectText = "AI Worker"
+	local promptEntry = hirePrompts[stationId]
+	if promptEntry then
+		promptEntry.prompt.ActionText = "Dismiss " .. workerName
+		promptEntry.prompt.ObjectText = "AI Worker"
 	end
 
 	print(string.format("[StaffManager] %s hired %s at %s (-%d coins)", player.Name, workerName, stationId, HIRE_COST))
@@ -297,11 +297,11 @@ local function dismissWorker(stationId)
 	workers[stationId] = nil
 	workerCount = math.max(0, workerCount - 1)
 
-	local prompt = hirePrompts[stationId]
+	local promptEntry = hirePrompts[stationId]
 	local stationDef = STATIONS[stationId]
-	if prompt and stationDef then
-		prompt.ActionText = "Hire Baker (50🪙)"
-		prompt.ObjectText = stationDef.label .. " Station"
+	if promptEntry and stationDef then
+		promptEntry.prompt.ActionText = "Hire Baker (50🪙)"
+		promptEntry.prompt.ObjectText = stationDef.label .. " Station"
 	end
 	print("[StaffManager] Dismissed worker at", stationId)
 end
@@ -317,6 +317,7 @@ end
 -- ── TASK 4: HIRE PROMPTS + GAMESTATE WIRING ──────────────────────────────────
 
 local function spawnHirePrompts()
+	if next(hirePrompts) ~= nil then return end  -- guard against double-call
 	for stationId, stationDef in pairs(STATIONS) do
 		local anchor = Instance.new("Part")
 		anchor.Name         = "HireAnchor_" .. stationId
@@ -335,10 +336,8 @@ local function spawnHirePrompts()
 		prompt.RequiresLineOfSight   = false
 		prompt.Parent                = anchor
 
-		hirePrompts[stationId] = prompt
-
 		local capturedId = stationId
-		prompt.Triggered:Connect(function(player)
+		local conn = prompt.Triggered:Connect(function(player)
 			local entry = workers[capturedId]
 			if entry and entry.active then
 				dismissWorker(capturedId)
@@ -346,13 +345,15 @@ local function spawnHirePrompts()
 				hireWorker(player, capturedId)
 			end
 		end)
+		hirePrompts[stationId] = { prompt = prompt, conn = conn }
 	end
 	print("[StaffManager] Hire prompts spawned for PreOpen")
 end
 
 local function destroyHirePrompts()
-	for stationId, prompt in pairs(hirePrompts) do
-		local anchor = prompt.Parent
+	for _, entry in pairs(hirePrompts) do
+		entry.conn:Disconnect()
+		local anchor = entry.prompt.Parent
 		if anchor and anchor.Parent then
 			anchor:Destroy()
 		end
