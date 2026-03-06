@@ -358,7 +358,7 @@ startRemote.OnClientEvent:Connect(function()
 
         UserInputService.InputEnded:Connect(function(input)
             if weighDone or finished then return end
-            if input.UserInputType == Enum.UserInputType.MouseButton1 and isHolding then
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and isHolding then
                 isHolding = false
                 weighDone = true
                 local pts = calcWeighScore(fillFrac)
