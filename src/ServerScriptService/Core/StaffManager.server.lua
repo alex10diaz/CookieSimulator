@@ -39,22 +39,16 @@ local function makeProxy(workerName)
 end
 
 -- applyBakerUniform(rig)
--- Applies baker shirt + pants via HumanoidDescription.
--- Wrapped in pcall — fails silently if rig lacks a full character setup.
+-- Applies baker shirt + pants via Shirt/Pants instances with ShirtTemplate/PantsTemplate.
+-- This matches how StarterCharacter clothing works — ShirtTemplate is the texture asset ID.
 local function applyBakerUniform(rig)
-	local ok, err = pcall(function()
-		local hum = rig:FindFirstChildOfClass("Humanoid")
-		if not hum then return end
+	local shirt = Instance.new("Shirt")
+	shirt.ShirtTemplate = SHIRT_TEMPLATE
+	shirt.Parent = rig
 
-		local desc = Instance.new("HumanoidDescription")
-		desc.Shirt = SHIRT_ASSET_ID
-		desc.Pants = PANTS_ASSET_ID
-		hum:ApplyDescription(desc)
-	end)
-
-	if not ok then
-		warn("[StaffManager] applyBakerUniform failed:", err)
-	end
+	local pants = Instance.new("Pants")
+	pants.PantsTemplate = PANTS_TEMPLATE
+	pants.Parent = rig
 end
 
 -- spawnWorkerRig(workerName, spawnCF)
