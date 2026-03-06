@@ -213,5 +213,25 @@ OrderManager.On("BoxCreated", function(box)
         box.boxId, TEST_NPC_NAME))
 end)
 
+-- Remove NPC immediately for returning players (tutorial already done)
+local function checkReturningPlayer(player)
+    task.wait(4)  -- wait for PlayerDataManager to load profile
+    if not player or not player.Parent then return end
+    local data = PlayerDataManager.GetData(player)
+    if data and data.tutorialCompleted then
+        if npc and npc.Parent then
+            npc:Destroy()
+            print("[TestNPC] NPC removed — returning player")
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    task.spawn(checkReturningPlayer, player)
+end)
+for _, player in ipairs(Players:GetPlayers()) do
+    task.spawn(checkReturningPlayer, player)
+end
+
 print("[TestNPCSpawner] Test NPC spawned at", tostring(SPAWN_CF.Position),
     "— press E to trigger cutscene.")
