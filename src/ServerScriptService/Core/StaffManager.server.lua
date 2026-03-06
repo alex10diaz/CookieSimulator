@@ -192,6 +192,14 @@ local STATIONS = {
 		label   = "Baking",
 		spawnCF = getTutorialSpawnCF("TutorialOvenSpawn",       CFrame.new(-2, 8, -85)),
 		work = function(proxy)
+			-- Pre-check: any fridge has stock before polling each one
+			local fridgeState = OrderManager.GetFridgeState()
+			local anyStock = false
+			for _, count in pairs(fridgeState) do
+				if count > 0 then anyStock = true; break end
+			end
+			if not anyStock then return false end
+
 			local fridges = workspace:FindFirstChild("Fridges")
 			if not fridges then return false end
 			local batchId
@@ -212,6 +220,8 @@ local STATIONS = {
 		label   = "Frosting",
 		spawnCF = getTutorialSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36)),
 		work = function(proxy)
+			local forFrost = OrderManager.GetWarmerCount()
+			if forFrost == 0 then return false end
 			local entry = OrderManager.TakeFromWarmers(true)
 			if not entry then return false end
 			task.wait(8)
@@ -226,6 +236,8 @@ local STATIONS = {
 		label   = "Packing",
 		spawnCF = getTutorialSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32)),
 		work = function(proxy)
+			local _, forDress = OrderManager.GetWarmerCount()
+			if forDress == 0 then return false end
 			local entry = OrderManager.TakeFromWarmers(false)
 			if not entry then return false end
 			task.wait(6)
