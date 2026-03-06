@@ -177,8 +177,8 @@ local STATIONS = {
 			local batch = OrderManager.GetBatchAtStage("dough")
 			if not batch then return false end
 			task.wait(6)
-			OrderManager.RecordStationScore(proxy, "dough", WORKER_QUALITY, batch.batchId)
-			return true
+			local ok = OrderManager.RecordStationScore(proxy, "dough", WORKER_QUALITY, batch.batchId)
+			return ok == true
 		end,
 	},
 	oven = {
