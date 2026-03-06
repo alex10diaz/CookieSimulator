@@ -17,11 +17,11 @@ local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitF
 
 -- ── CONFIG ───────────────────────────────────────────────────────────────────
 
-local HIRE_COST      = 50
-local WORKER_QUALITY = 75
-local MAX_WORKERS    = 5
-local SHIRT_ASSET_ID = 76531325740097  -- numeric, baker shirt
-local PANTS_ASSET_ID = 98693082132232  -- numeric, baker pants
+local HIRE_COST       = 50
+local WORKER_QUALITY  = 75
+local MAX_WORKERS     = 5
+local SHIRT_TEMPLATE  = "rbxassetid://76531325740097"  -- ShirtTemplate from StarterCharacter
+local PANTS_TEMPLATE  = "rbxassetid://98693082132232"  -- PantsTemplate from StarterCharacter
 
 -- ── STATE ────────────────────────────────────────────────────────────────────
 
