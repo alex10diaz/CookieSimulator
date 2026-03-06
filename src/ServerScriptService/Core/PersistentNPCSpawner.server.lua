@@ -373,7 +373,7 @@ addDeliverPrompt = function(npcId)
             return
         end
 
-        if pending.carrier ~= player.Name then
+        if pending.carrier and pending.carrier ~= player.Name then
             warn("[NPCController] Wrong carrier:", player.Name, "vs", pending.carrier)
             return
         end
