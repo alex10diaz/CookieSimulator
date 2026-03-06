@@ -153,10 +153,17 @@ end
 
 local POLL_INTERVAL = 2
 
+-- Read spawn positions from Tutorial Spawns folder (same spots used for tutorial cinematics)
+local function getTutorialSpawnCF(partName, fallback)
+	local folder = workspace:FindFirstChild("Tutorial Spawns")
+	local part   = folder and folder:FindFirstChild(partName)
+	return part and part.CFrame or fallback
+end
+
 local STATIONS = {
 	mix = {
 		label   = "Mixing",
-		spawnCF = CFrame.new(18, 5, -17),
+		spawnCF = getTutorialSpawnCF("TutorialMixerSpawn",     CFrame.new(18, 5, -17)),
 		work = function(proxy)
 			local orders = OrderManager.GetNPCOrders and OrderManager.GetNPCOrders() or {}
 			local cookieId = "chocolate_chip"
@@ -172,7 +179,7 @@ local STATIONS = {
 	},
 	dough = {
 		label   = "Shaping",
-		spawnCF = CFrame.new(0, 5, -34),
+		spawnCF = getTutorialSpawnCF("TutorialDoughTableSpawn", CFrame.new(0, 5, -34)),
 		work = function(proxy)
 			local batch = OrderManager.GetBatchAtStage("dough")
 			if not batch then return false end
@@ -183,7 +190,7 @@ local STATIONS = {
 	},
 	oven = {
 		label   = "Baking",
-		spawnCF = CFrame.new(-2, 8, -85),
+		spawnCF = getTutorialSpawnCF("TutorialOvenSpawn",       CFrame.new(-2, 8, -85)),
 		work = function(proxy)
 			local fridges = workspace:FindFirstChild("Fridges")
 			if not fridges then return false end
@@ -203,7 +210,7 @@ local STATIONS = {
 	},
 	frost = {
 		label   = "Frosting",
-		spawnCF = CFrame.new(20, 6, -36),
+		spawnCF = getTutorialSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36)),
 		work = function(proxy)
 			local entry = OrderManager.TakeFromWarmers(true)
 			if not entry then return false end
@@ -217,7 +224,7 @@ local STATIONS = {
 	},
 	dress = {
 		label   = "Packing",
-		spawnCF = CFrame.new(-27, 5, -32),
+		spawnCF = getTutorialSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32)),
 		work = function(proxy)
 			local entry = OrderManager.TakeFromWarmers(false)
 			if not entry then return false end
@@ -374,5 +381,14 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
 end)
 
 -- ── INIT ─────────────────────────────────────────────────────────────────────
+
+-- TEMP: 500 debug coins on join — remove before launch
+Players.PlayerAdded:Connect(function(player)
+	task.wait(5)  -- wait for PlayerDataManager to load profile
+	if player and player.Parent then
+		PlayerDataManager.AddCoins(player, 500)
+		print("[StaffManager] TEMP: gave", player.Name, "500 test coins")
+	end
+end)
 
 print("[StaffManager] Loaded")
