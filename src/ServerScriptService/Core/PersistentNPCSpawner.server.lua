@@ -542,9 +542,11 @@ OrderManager.On("BoxCreated", function(box)
         if data.state == "seated" and data.order and data.order.cookieId == box.cookieId then
             data.state         = "walking_to_counter"
             data.assignedBoxId = box.boxId
+            -- If box was made by an AI worker (not a real player), any player can deliver
+            local isRealPlayer = Players:FindFirstChild(box.carrier) ~= nil
             pendingBoxes[box.cookieId] = {
                 boxId   = box.boxId,
-                carrier = box.carrier,
+                carrier = isRealPlayer and box.carrier or nil,
                 npcId   = npcId,
             }
 
