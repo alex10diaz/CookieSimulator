@@ -267,6 +267,22 @@ local function clearStagedBoxes()
 	stagedBoxes = {}
 end
 
+-- setWarmersEnabled(enabled)
+-- Enables or disables all WarmerPrompts in Workspace.Warmers.
+-- Called false during PreOpen (no customers), true when Open.
+local function setWarmersEnabled(enabled)
+	local warmersFolder = workspace:FindFirstChild("Warmers")
+	if not warmersFolder then return end
+	for _, warmer in ipairs(warmersFolder:GetChildren()) do
+		local shell  = warmer:FindFirstChild("Shell")
+		local prompt = shell and shell:FindFirstChild("WarmerPrompt")
+		if prompt then
+			prompt.Enabled = enabled
+		end
+	end
+	print("[StaffManager] WarmerPrompts", enabled and "enabled" or "disabled")
+end
+
 -- ── TASK 2: STATIONS + runWorkerLoop ─────────────────────────────────────────
 
 local POLL_INTERVAL = 2
@@ -338,6 +354,7 @@ local STATIONS = {
 		label   = "Frosting",
 		spawnCF = getTutorialSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36)),
 		work = function(proxy)
+			if workspace:GetAttribute("GameState") ~= "Open" then return false end
 			local forFrost = OrderManager.GetWarmerCount()
 			if forFrost == 0 then return false end
 			local entry = OrderManager.TakeFromWarmers(true)
@@ -354,6 +371,7 @@ local STATIONS = {
 		label   = "Packing",
 		spawnCF = getTutorialSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32)),
 		work = function(proxy)
+			if workspace:GetAttribute("GameState") ~= "Open" then return false end
 			local _, forDress = OrderManager.GetWarmerCount()
 			if forDress == 0 then return false end
 			local entry = OrderManager.TakeFromWarmers(false)
@@ -505,9 +523,13 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
 	local state = workspace:GetAttribute("GameState")
 	if state == "PreOpen" then
 		spawnHirePrompts()
+		setWarmersEnabled(false)
+	elseif state == "Open" then
+		setWarmersEnabled(true)
 	elseif state == "EndOfDay" or state == "Lobby" then
 		destroyHirePrompts()
 		dismissAllWorkers()
+		setWarmersEnabled(false)
 	end
 end)
 
@@ -521,6 +543,7 @@ end)
 -- ── INIT ─────────────────────────────────────────────────────────────────────
 
 createStagingTable()
+setWarmersEnabled(false)  -- disabled until GameState == "Open"
 
 -- TEMP: 500 debug coins on join — remove before launch
 Players.PlayerAdded:Connect(function(player)
