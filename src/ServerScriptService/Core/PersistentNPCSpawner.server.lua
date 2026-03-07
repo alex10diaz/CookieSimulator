@@ -316,9 +316,10 @@ npcLeave = function(npcId, reason)
 
     npcs[npcId] = nil
 
-    task.delay(1.5, function()
-        NPCSpawner.Remove(data.model)
-    end)
+    local exitModel = data.model
+    local exitPos   = SPAWN_PART and (SPAWN_PART.Position + Vector3.new(0, 2, 0)) or Vector3.new(0, 2, 28)
+    NPCSpawner.MoveTo(exitModel, exitPos, function() NPCSpawner.Remove(exitModel) end)
+    task.delay(15, function() if exitModel and exitModel.Parent then exitModel:Destroy() end end)
 
     advanceQueue()
     print(string.format("[NPCController] %s left (%s)", data.name, reason or "unknown"))
