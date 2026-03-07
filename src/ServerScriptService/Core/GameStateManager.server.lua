@@ -7,8 +7,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
-local PREOPEN_FIRST     = 7 * 60 + 30  -- 7:30 first day — gives tutorial players ~5 min of real PreOpen
-local PREOPEN_REPEAT    = 3 * 60   -- 3 minutes subsequent days
+local DEV_SKIP_PREOPEN  = true     -- DEV: set false for production
+local PREOPEN_DURATION  = 5 * 60  -- 5 min PreOpen for all cycles
 local OPEN_DURATION     = 10 * 60  -- 10 minutes (M6)
 local SUMMARY_DURATION  = 30       -- 30 seconds end-of-day
 
@@ -48,9 +48,11 @@ local function runPhase(duration, stateName)
     end
 end
 
-local function runCycle(isFirstDay)
+local function runCycle()
     SessionStats.Reset()
-    runPhase(isFirstDay and PREOPEN_FIRST or PREOPEN_REPEAT, "PreOpen")
+    if not DEV_SKIP_PREOPEN then
+        runPhase(PREOPEN_DURATION, "PreOpen")
+    end
     runPhase(OPEN_DURATION, "Open")
 
     -- End of day
@@ -58,7 +60,7 @@ local function runCycle(isFirstDay)
     summaryRemote:FireAllClients(SessionStats.GetSummary())
     task.wait(SUMMARY_DURATION)
 
-    runCycle(false)
+    runCycle()
 end
 
 -- ─── Public API ───────────────────────────────────────────────────────────────
@@ -84,7 +86,7 @@ local function startWhenReady()
         Players.PlayerAdded:Wait()
     end
     task.wait(2) -- brief settle for all systems to load
-    task.spawn(runCycle, true)
+    task.spawn(runCycle)
 end
 
 task.spawn(startWhenReady)

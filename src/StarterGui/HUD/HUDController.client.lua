@@ -68,6 +68,15 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     timerLbl.BackgroundColor3 = state == "Open"
         and Color3.fromRGB(60, 140, 60)
         or  Color3.fromRGB(30, 30, 30)
+    -- Hide PreOpen countdown while player is in tutorial
+    timerLbl.Visible = not (state == "PreOpen" and player:GetAttribute("InTutorial"))
+end)
+
+-- Restore timer when tutorial ends
+player:GetAttributeChangedSignal("InTutorial"):Connect(function()
+    if not player:GetAttribute("InTutorial") then
+        timerLbl.Visible = true
+    end
 end)
 
 hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
