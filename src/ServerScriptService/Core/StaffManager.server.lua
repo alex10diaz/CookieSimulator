@@ -396,6 +396,9 @@ local STATIONS = {
 		spawnCF = getTutorialSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32)),
 		work = function(proxy)
 			if workspace:GetAttribute("GameState") ~= "Open" then return false end
+			-- Only pack if an NPC has actually placed an order (prevents over-production)
+			local orders = OrderManager.GetNPCOrders()
+			if #orders == 0 then return false end
 			local _, forDress = OrderManager.GetWarmerCount()
 			if forDress == 0 then return false end
 			local entry = OrderManager.TakeFromWarmers(false)

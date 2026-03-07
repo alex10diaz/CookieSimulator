@@ -362,7 +362,7 @@ addDeliverPrompt = function(npcId)
     pp.Name                  = "DeliverPrompt"
     pp.ActionText            = "Deliver Box"
     pp.ObjectText            = data.name
-    pp.MaxActivationDistance = 8
+    pp.MaxActivationDistance = 12
     pp.HoldDuration          = 0
     pp.Parent                = head
 
