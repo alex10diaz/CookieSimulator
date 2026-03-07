@@ -21,6 +21,7 @@ local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitF
 local MAX_NPCS_IN_SCENE    = 6
 local MAX_QUEUE_SIZE       = 3
 local SPAWN_INTERVAL       = 30   -- seconds between NPC spawn attempts
+local RUSH_SPAWN_INTERVAL  = 10   -- spawn interval during Rush Hour
 local BASE_PATIENCE        = 120     -- seconds at 1 player
 local PATIENCE_PER_PLAYER  = 20      -- extra seconds per additional player
 local VIP_CHANCE           = 0.10
@@ -54,6 +55,8 @@ local startOrderCutsceneRemote = RemoteManager.Get("StartOrderCutscene")
 local confirmOrderRemote       = RemoteManager.Get("ConfirmNPCOrder")
 
 -- ─── STATE ────────────────────────────────────────────────────────────────────
+local rushHourActive = false  -- set by RushHourStart/End BindableEvents
+
 local npcs        = {}  -- npcId -> npc data
 local npcQueue    = {}  -- ordered list: npcIds currently in the POS queue
 local pendingBoxes = {} -- cookieId -> { boxId, carrier, npcId }
@@ -410,6 +413,10 @@ addDeliverPrompt = function(npcId)
             d.isVIP
         )
 
+        if rushHourActive then
+            payout.coins = math.floor(payout.coins * 1.5)
+        end
+
         PlayerDataManager.RecordOrderComplete(player, stars == 5)
         PlayerDataManager.AddCoins(player, payout.coins)
         PlayerDataManager.AddXP(player, payout.xp)
@@ -581,7 +588,7 @@ task.spawn(function()
     end
     while true do
         if isSpawnAllowed() then spawnNPC() end
-        task.wait(SPAWN_INTERVAL)
+        task.wait(rushHourActive and RUSH_SPAWN_INTERVAL or SPAWN_INTERVAL)
     end
 end)
 
@@ -610,5 +617,14 @@ Players.PlayerRemoving:Connect(function(player)
         end
     end
 end)
+
+-- Wire Rush Hour BindableEvents
+local ssEvents = game:GetService("ServerStorage"):FindFirstChild("Events")
+if ssEvents then
+    local rushStartBE = ssEvents:FindFirstChild("RushHourStart")
+    local rushEndBE   = ssEvents:FindFirstChild("RushHourEnd")
+    if rushStartBE then rushStartBE.Event:Connect(function() rushHourActive = true  end) end
+    if rushEndBE   then rushEndBE.Event:Connect(function()   rushHourActive = false end) end
+end
 
 print("[NPCController] Ready")
