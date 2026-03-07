@@ -13,6 +13,7 @@ local ServerStorage       = game:GetService("ServerStorage")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
 -- ── CONFIG ───────────────────────────────────────────────────────────────────
@@ -25,9 +26,11 @@ local PANTS_TEMPLATE  = "rbxassetid://98693082132232"  -- PantsTemplate from Sta
 
 -- ── STATE ────────────────────────────────────────────────────────────────────
 
-local workers     = {}  -- workers[stationId] = { rig, proxy, active }
-local hirePrompts = {}  -- hirePrompts[stationId] = ProximityPrompt
-local workerCount = 0
+local workers      = {}  -- workers[stationId] = { rig, proxy, active }
+local hirePrompts  = {}  -- hirePrompts[stationId] = { prompt, conn }
+local workerCount  = 0
+local stagedBoxes  = {}  -- boxId -> Part (box sitting on Dress Table 2)
+local stagingTable = nil -- the Dress Table 2 surface Part
 
 -- ── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -147,6 +150,121 @@ local function setStatus(rig, text, color)
 
 	label.Text       = text
 	label.TextColor3 = color or Color3.fromRGB(180, 180, 180)
+end
+
+-- ── DRESS TABLE 2 — ORDER STAGING ────────────────────────────────────────────
+
+-- createStagingTable()
+-- Spawns a flat "Dress Table 2" surface in the workspace at runtime.
+-- Player can reposition this Part in Studio to their preferred spot.
+local function createStagingTable()
+	local part = Instance.new("Part")
+	part.Name          = "DressTable2"
+	part.Size          = Vector3.new(4, 0.3, 2)
+	part.CFrame        = CFrame.new(-15, 4.15, -33)
+	part.Anchored      = true
+	part.CanCollide    = true
+	part.BrickColor    = BrickColor.new("Pastel Blue")
+	part.Material      = Enum.Material.SmoothPlastic
+	part.TopSurface    = Enum.SurfaceType.Smooth
+	part.BottomSurface = Enum.SurfaceType.Smooth
+	part.Parent        = workspace
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size        = UDim2.new(0, 140, 0, 28)
+	billboard.StudsOffset = Vector3.new(0, 1, 0)
+	billboard.AlwaysOnTop = false
+	billboard.Parent      = part
+
+	local lbl = Instance.new("TextLabel")
+	lbl.Size                 = UDim2.new(1, 0, 1, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text                 = "Ready Orders"
+	lbl.TextColor3           = Color3.fromRGB(60, 60, 60)
+	lbl.Font                 = Enum.Font.GothamBold
+	lbl.TextScaled           = true
+	lbl.Parent               = billboard
+
+	stagingTable = part
+end
+
+-- spawnStagedBox(box)
+-- Places a labeled box Part on DressTable2 with a pickup ProximityPrompt.
+local function spawnStagedBox(box)
+	if not stagingTable or not stagingTable.Parent then return end
+
+	local cookie = CookieData.GetById(box.cookieId)
+	local label  = cookie and cookie.name or "Cookie Order"
+
+	-- Offset each box so they don't stack (up to 4 across)
+	local idx = 0
+	for _ in pairs(stagedBoxes) do idx += 1 end
+	local offsetX = (idx % 4) * 1.1 - 1.65
+
+	local boxPart = Instance.new("Part")
+	boxPart.Name          = "StagedBox_" .. box.boxId
+	boxPart.Size          = Vector3.new(0.9, 0.5, 0.9)
+	boxPart.CFrame        = stagingTable.CFrame * CFrame.new(offsetX, 0.4, 0)
+	boxPart.Anchored      = true
+	boxPart.CanCollide    = false
+	boxPart.BrickColor    = BrickColor.new("Hot pink")
+	boxPart.Material      = Enum.Material.SmoothPlastic
+	boxPart.TopSurface    = Enum.SurfaceType.Smooth
+	boxPart.BottomSurface = Enum.SurfaceType.Smooth
+	boxPart.Parent        = workspace
+
+	-- Label BillboardGui
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size        = UDim2.new(0, 130, 0, 40)
+	billboard.StudsOffset = Vector3.new(0, 1.2, 0)
+	billboard.AlwaysOnTop = false
+	billboard.Parent      = boxPart
+
+	local bg = Instance.new("Frame")
+	bg.Size                 = UDim2.new(1, 0, 1, 0)
+	bg.BackgroundColor3     = Color3.fromRGB(40, 40, 40)
+	bg.BackgroundTransparency = 0.2
+	bg.BorderSizePixel      = 0
+	bg.Parent               = billboard
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size                 = UDim2.new(1, 0, 1, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Text                 = label
+	textLabel.TextColor3           = Color3.new(1, 1, 1)
+	textLabel.Font                 = Enum.Font.GothamBold
+	textLabel.TextScaled           = true
+	textLabel.Parent               = bg
+
+	-- Pickup ProximityPrompt
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText            = "Pick Up"
+	prompt.ObjectText            = label
+	prompt.MaxActivationDistance = 6
+	prompt.RequiresLineOfSight   = false
+	prompt.Parent                = boxPart
+
+	stagedBoxes[box.boxId] = boxPart
+
+	local capturedBoxId = box.boxId
+	prompt.Triggered:Connect(function(player)
+		local p = stagedBoxes[capturedBoxId]
+		if not p then return end
+		p:Destroy()
+		stagedBoxes[capturedBoxId] = nil
+		print(string.format("[StaffManager] %s picked up box #%d (%s)", player.Name, capturedBoxId, label))
+	end)
+
+	print(string.format("[StaffManager] Box #%d (%s) staged on Dress Table 2", box.boxId, label))
+end
+
+-- clearStagedBoxes()
+-- Destroys all staged box Parts (called on EndOfDay).
+local function clearStagedBoxes()
+	for _, part in pairs(stagedBoxes) do
+		if part and part.Parent then part:Destroy() end
+	end
+	stagedBoxes = {}
 end
 
 -- ── TASK 2: STATIONS + runWorkerLoop ─────────────────────────────────────────
@@ -330,6 +448,7 @@ local function dismissAllWorkers()
 		dismissWorker(stationId)
 	end
 	workerCount = 0
+	clearStagedBoxes()
 	print("[StaffManager] All workers dismissed")
 end
 
@@ -392,7 +511,16 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
 	end
 end)
 
+-- Listen for boxes created by AI workers → stage them on Dress Table 2
+OrderManager.On("BoxCreated", function(box)
+	-- Skip boxes made by real players
+	if Players:FindFirstChild(box.carrier) then return end
+	spawnStagedBox(box)
+end)
+
 -- ── INIT ─────────────────────────────────────────────────────────────────────
+
+createStagingTable()
 
 -- TEMP: 500 debug coins on join — remove before launch
 Players.PlayerAdded:Connect(function(player)
