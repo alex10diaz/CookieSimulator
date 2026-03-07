@@ -354,7 +354,6 @@ local STATIONS = {
 		label   = "Frosting",
 		spawnCF = getTutorialSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36)),
 		work = function(proxy)
-			if workspace:GetAttribute("GameState") ~= "Open" then return false end
 			local forFrost = OrderManager.GetWarmerCount()
 			if forFrost == 0 then return false end
 			local entry = OrderManager.TakeFromWarmers(true)
