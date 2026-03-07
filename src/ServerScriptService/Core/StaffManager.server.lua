@@ -155,35 +155,60 @@ end
 -- ── DRESS TABLE 2 — ORDER STAGING ────────────────────────────────────────────
 
 -- createStagingTable()
--- Spawns a flat "Dress Table 2" surface in the workspace at runtime.
--- Player can reposition this Part in Studio to their preferred spot.
+-- Uses the existing "Dough Table 2" top surface as the staging area.
+-- Falls back to a new Part if the model isn't found (so it's always moveable in Studio).
 local function createStagingTable()
-	local part = Instance.new("Part")
-	part.Name          = "DressTable2"
-	part.Size          = Vector3.new(4, 0.3, 2)
-	part.CFrame        = CFrame.new(-15, 4.15, -33)
-	part.Anchored      = true
-	part.CanCollide    = true
-	part.BrickColor    = BrickColor.new("Pastel Blue")
-	part.Material      = Enum.Material.SmoothPlastic
-	part.TopSurface    = Enum.SurfaceType.Smooth
-	part.BottomSurface = Enum.SurfaceType.Smooth
-	part.Parent        = workspace
+	-- Try to find the existing Dough Table 2 top Part (highest Y in the model)
+	local dt2 = workspace:FindFirstChild("Store") and workspace.Store:FindFirstChild("Dough Table 2")
+	local topPart = nil
+	if dt2 then
+		local highestY = -math.huge
+		for _, desc in ipairs(dt2:GetDescendants()) do
+			if desc:IsA("BasePart") and desc.Position.Y > highestY then
+				highestY = desc.Position.Y
+				topPart = desc
+			end
+		end
+	end
 
-	local billboard = Instance.new("BillboardGui")
-	billboard.Size        = UDim2.new(0, 140, 0, 28)
-	billboard.StudsOffset = Vector3.new(0, 1, 0)
-	billboard.AlwaysOnTop = false
-	billboard.Parent      = part
+	local part
+	if topPart then
+		part = topPart
+		print("[StaffManager] Using Dough Table 2 top surface for staging")
+	else
+		-- Fallback: create a moveable Part (reposition in Studio as needed)
+		part = Instance.new("Part")
+		part.Name          = "DressTable2"
+		part.Size          = Vector3.new(4, 0.3, 2)
+		part.CFrame        = CFrame.new(-15, 4.15, -33)
+		part.Anchored      = true
+		part.CanCollide    = true
+		part.BrickColor    = BrickColor.new("Pastel Blue")
+		part.Material      = Enum.Material.SmoothPlastic
+		part.TopSurface    = Enum.SurfaceType.Smooth
+		part.BottomSurface = Enum.SurfaceType.Smooth
+		part.Parent        = workspace
+		print("[StaffManager] Dough Table 2 not found — created fallback DressTable2 Part")
+	end
 
-	local lbl = Instance.new("TextLabel")
-	lbl.Size                 = UDim2.new(1, 0, 1, 0)
-	lbl.BackgroundTransparency = 1
-	lbl.Text                 = "Ready Orders"
-	lbl.TextColor3           = Color3.fromRGB(60, 60, 60)
-	lbl.Font                 = Enum.Font.GothamBold
-	lbl.TextScaled           = true
-	lbl.Parent               = billboard
+	-- Add "Ready Orders" label (only if not already present)
+	if not part:FindFirstChild("ReadyOrdersBillboard") then
+		local billboard = Instance.new("BillboardGui")
+		billboard.Name        = "ReadyOrdersBillboard"
+		billboard.Size        = UDim2.new(0, 140, 0, 28)
+		billboard.StudsOffset = Vector3.new(0, 2, 0)
+		billboard.AlwaysOnTop = false
+		billboard.Parent      = part
+
+		local lbl = Instance.new("TextLabel")
+		lbl.Size                 = UDim2.new(1, 0, 1, 0)
+		lbl.BackgroundTransparency = 1
+		lbl.Text                 = "Ready Orders"
+		lbl.TextColor3           = Color3.fromRGB(60, 60, 60)
+		lbl.Font                 = Enum.Font.GothamBold
+		lbl.TextScaled           = true
+		lbl.Parent               = billboard
+	end
 
 	stagingTable = part
 end
