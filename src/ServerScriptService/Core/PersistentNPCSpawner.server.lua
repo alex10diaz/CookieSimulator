@@ -362,8 +362,9 @@ addDeliverPrompt = function(npcId)
     pp.Name                  = "DeliverPrompt"
     pp.ActionText            = "Deliver Box"
     pp.ObjectText            = data.name
-    pp.MaxActivationDistance = 12
+    pp.MaxActivationDistance = 20
     pp.HoldDuration          = 0
+    pp.RequiresLineOfSight   = false
     pp.Parent                = head
 
     pp.Triggered:Connect(function(player)
