@@ -452,7 +452,9 @@ local function startPatienceTicker(npcId)
 
             if data.state == "waiting_in_queue" or data.state == "seated" then
                 data.patience -= 1
-                NPCSpawner.SetTimerText(data.model, formatTime(data.patience))
+                if data.state == "seated" then
+                    NPCSpawner.SetTimerText(data.model, formatTime(data.patience))
+                end
                 if data.patience <= 0 then
                     npcLeave(npcId, "patience_expired")
                     break
