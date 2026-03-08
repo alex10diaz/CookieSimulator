@@ -313,8 +313,8 @@ if warmersFolder then
     -- Also catch prompts added after startup (e.g. from MCP)
     warmersFolder.DescendantAdded:Connect(function(desc)
         if desc:IsA("ProximityPrompt") and desc.Name == "WarmerPickupPrompt" then
-            local model = desc.Parent
-            local cookieId = model:GetAttribute("CookieId")
+            local model = desc:FindFirstAncestorOfClass("Model")
+            local cookieId = model and model:GetAttribute("CookieId")
             if cookieId then hookWarmerPrompt(desc, cookieId) end
         end
     end)
