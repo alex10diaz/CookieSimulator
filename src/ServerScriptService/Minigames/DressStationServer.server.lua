@@ -249,51 +249,125 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
     end
 
     local warmerCounts = OrderManager.GetWarmerCountsByType()
-    if (warmerCounts[targetOrder.cookieId] or 0) == 0 then
-        local name = COOKIE_NAMES[targetOrder.cookieId] or targetOrder.cookieId
-        orderLocked:FireClient(player, { state = "error", message = "No " .. name .. " in warmers" })
-        activeKDS[player] = nil
-        return
+    activeKDS[player] = nil
+
+    if targetOrder.items then
+        -- ── Variety order ──────────────────────────────────────────────────────
+        -- Compute ordered unique types (first-occurrence order)
+        local seen, uniqueTypes = {}, {}
+        for _, id in ipairs(targetOrder.items) do
+            if not seen[id] then seen[id] = true; table.insert(uniqueTypes, id) end
+        end
+        -- Validate stock for every unique type
+        for _, id in ipairs(uniqueTypes) do
+            if (warmerCounts[id] or 0) == 0 then
+                orderLocked:FireClient(player, { state = "error", message = "No " .. (COOKIE_NAMES[id] or id) .. " in warmers" })
+                return
+            end
+        end
+        dressLocked[player] = {
+            orderId    = orderId,
+            isVariety  = true,
+            npcName    = targetOrder.npcName,
+            remaining  = uniqueTypes,
+            totalSteps = #uniqueTypes,
+            collected  = {},
+        }
+        local firstId = uniqueTypes[1]
+        orderLocked:FireClient(player, {
+            state      = "locked",
+            isVariety  = true,
+            cookieId   = firstId,
+            cookieName = COOKIE_NAMES[firstId] or firstId,
+            step       = 1,
+            total      = #uniqueTypes,
+        })
+        print(string.format("[DressStation] %s locked variety order #%d (%d types) — awaiting warmer pickups",
+            player.Name, orderId, #uniqueTypes))
+    else
+        -- ── Single-type order ──────────────────────────────────────────────────
+        if (warmerCounts[targetOrder.cookieId] or 0) == 0 then
+            local name = COOKIE_NAMES[targetOrder.cookieId] or targetOrder.cookieId
+            orderLocked:FireClient(player, { state = "error", message = "No " .. name .. " in warmers" })
+            return
+        end
+        dressLocked[player] = { orderId = orderId, cookieId = targetOrder.cookieId, npcName = targetOrder.npcName }
+        orderLocked:FireClient(player, {
+            state      = "locked",
+            cookieId   = targetOrder.cookieId,
+            cookieName = COOKIE_NAMES[targetOrder.cookieId] or targetOrder.cookieId,
+        })
+        print(string.format("[DressStation] %s locked order #%d (%s) — awaiting warmer pickup",
+            player.Name, orderId, targetOrder.cookieId))
     end
-
-    -- Lock order — player must now walk to the matching warmer
-    activeKDS[player]   = nil
-    dressLocked[player] = { orderId = orderId, cookieId = targetOrder.cookieId, npcName = targetOrder.npcName }
-
-    orderLocked:FireClient(player, {
-        state      = "locked",
-        cookieId   = targetOrder.cookieId,
-        cookieName = COOKIE_NAMES[targetOrder.cookieId] or targetOrder.cookieId,
-    })
-
-    print(string.format("[DressStation] %s locked order #%d (%s) — awaiting warmer pickup",
-        player.Name, orderId, targetOrder.cookieId))
 end)
 
 -- ─── Warmer Pickup Prompts ────────────────────────────────────────────────────
 local function hookWarmerPrompt(prompt, cookieId)
     prompt.Triggered:Connect(function(player)
         local lock = dressLocked[player]
-        if not lock then return end                       -- no order selected
-        if lock.cookieId ~= cookieId then return end      -- wrong warmer, silently ignore
+        if not lock then return end
 
-        local entry = OrderManager.TakeFromWarmersByType(cookieId)
-        if not entry then
-            orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
+        if lock.isVariety then
+            -- ── Variety: must visit warmers in guided order ────────────────────
+            if lock.remaining[1] ~= cookieId then return end  -- wrong warmer, ignore
+
+            local entry = OrderManager.TakeFromWarmersByType(cookieId)
+            if not entry then
+                orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
+                dressLocked[player] = nil
+                return
+            end
+
+            table.insert(lock.collected, entry)
+            table.remove(lock.remaining, 1)
+
+            if #lock.remaining > 0 then
+                -- More warmers to visit — send progress update
+                local nextId = lock.remaining[1]
+                local step   = #lock.collected + 1
+                orderLocked:FireClient(player, {
+                    state      = "progress",
+                    cookieId   = nextId,
+                    cookieName = COOKIE_NAMES[nextId] or nextId,
+                    step       = step,
+                    total      = lock.totalSteps,
+                })
+                return
+            end
+
+            -- All collected — create variety box
+            local box = OrderManager.CreateVarietyBox(player, lock.collected, DRESS_SCORE)
             dressLocked[player] = nil
-            return
-        end
-
-        local box = OrderManager.CreateBox(player, entry.batchId, DRESS_SCORE, entry)
-        dressLocked[player] = nil
-
-        if box then
-            print(string.format("[DressStation] %s picked up %s — box #%d created for %s",
-                player.Name, cookieId, box.boxId, lock.npcName))
-            orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
-            task.defer(updateTV)
+            if box then
+                print(string.format("[DressStation] %s completed variety pickup — box #%d for %s",
+                    player.Name, box.boxId, lock.npcName))
+                orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
+                task.defer(updateTV)
+            else
+                orderLocked:FireClient(player, { state = "error", message = "Failed to create box" })
+            end
         else
-            orderLocked:FireClient(player, { state = "error", message = "Failed to create box" })
+            -- ── Single-type order ──────────────────────────────────────────────
+            if lock.cookieId ~= cookieId then return end
+
+            local entry = OrderManager.TakeFromWarmersByType(cookieId)
+            if not entry then
+                orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
+                dressLocked[player] = nil
+                return
+            end
+
+            local box = OrderManager.CreateBox(player, entry.batchId, DRESS_SCORE, entry)
+            dressLocked[player] = nil
+            if box then
+                print(string.format("[DressStation] %s picked up %s — box #%d created for %s",
+                    player.Name, cookieId, box.boxId, lock.npcName))
+                orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
+                task.defer(updateTV)
+            else
+                orderLocked:FireClient(player, { state = "error", message = "Failed to create box" })
+            end
         end
     end)
 end
