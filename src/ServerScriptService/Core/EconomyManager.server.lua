@@ -1,2 +1,0 @@
--- MOVED: This file has been superseded by ReplicatedStorage/Modules/EconomyManager.lua
--- This Script is no longer parented in Studio. Safe to delete from the file system.
