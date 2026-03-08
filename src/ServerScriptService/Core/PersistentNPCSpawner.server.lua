@@ -387,17 +387,18 @@ npcLeave = function(npcId, reason)
     end
 
     -- Cancel any box made for this NPC and return cookies to warmer
-    if data.order and data.order.cookieId then
-        local pending = pendingBoxes[data.order.cookieId]
-        if pending and pending.npcId == npcId then
-            OrderManager.CancelBox(pending.boxId)
-            -- Tell the carrier to drop the box
-            if pending.carrier then
-                local carrier = Players:FindFirstChild(pending.carrier)
-                if carrier then forceDropBoxRemote:FireClient(carrier) end
-            end
-            pendingBoxes[data.order.cookieId] = nil
+    -- Search by npcId so variety boxes (keyed as "variety") are also found
+    local pendingKey, pending = nil, nil
+    for key, pb in pairs(pendingBoxes) do
+        if pb.npcId == npcId then pendingKey = key; pending = pb; break end
+    end
+    if pending then
+        OrderManager.CancelBox(pending.boxId)
+        if pending.carrier then
+            local carrier = Players:FindFirstChild(pending.carrier)
+            if carrier then forceDropBoxRemote:FireClient(carrier) end
         end
+        pendingBoxes[pendingKey] = nil
     end
 
     -- Remove this NPC's order from the KDS queue
