@@ -655,6 +655,7 @@ OrderManager.On("BoxCreated", function(box)
                 npcId   = npcId,
             }
 
+            local COUNTER_TIMEOUT = 90  -- seconds before NPC gives up at counter
             data.cancelMove = NPCSpawner.MoveTo(data.model, getCounterPos(), function()
                 local d = npcs[npcId]
                 if not d then return end
@@ -662,6 +663,14 @@ OrderManager.On("BoxCreated", function(box)
                 d.cancelMove = nil
                 addDeliverPrompt(npcId)
                 print(string.format("[NPCController] %s at counter, ready for delivery", d.name))
+
+                -- Counter timeout: leave if box not delivered in time
+                task.delay(COUNTER_TIMEOUT, function()
+                    local still = npcs[npcId]
+                    if still and still.state == "at_counter" then
+                        npcLeave(npcId, "counter_timeout")
+                    end
+                end)
             end)
 
             print(string.format("[NPCController] Calling %s to counter (box #%d, %s)",
