@@ -281,6 +281,18 @@ function OrderManager.RecordFrostScore(playerName, batchId, score, snapshot, coo
     notify("WarmersUpdated", OrderManager.GetWarmerState())
 end
 
+-- Takes a specific cookie type from dress-ready warmers (used by DressStationServer)
+function OrderManager.TakeFromWarmersByType(cookieId)
+    for i, entry in ipairs(warmers) do
+        if not entry.needsFrost and entry.cookieId == cookieId then
+            table.remove(warmers, i)
+            notify("WarmersUpdated", OrderManager.GetWarmerState())
+            return entry
+        end
+    end
+    return nil
+end
+
 function OrderManager.GetFrostPending(playerName)
     return frostPending[playerName]
 end
@@ -371,13 +383,14 @@ function OrderManager.AddNPCOrder(npcName, cookieId, extras)
     local id = nextOrder
     nextOrder += 1
     local order = {
-        orderId  = id,
-        npcName  = npcName,
-        cookieId = cookieId,
-        packSize = extras and extras.packSize or 1,
-        price    = extras and extras.price    or 0,
-        isVIP    = extras and extras.isVIP    or false,
-        npcId    = extras and extras.npcId    or nil,
+        orderId   = id,
+        npcName   = npcName,
+        cookieId  = cookieId,
+        packSize  = extras and extras.packSize or 1,
+        price     = extras and extras.price    or 0,
+        isVIP     = extras and extras.isVIP    or false,
+        npcId     = extras and extras.npcId    or nil,
+        orderedAt = tick(),
     }
     table.insert(npcOrders, order)
     print(string.format("[OrderManager] NPC order #%d: %s wants %dx %s (price=%d)",

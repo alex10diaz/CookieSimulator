@@ -47,6 +47,11 @@ local REMOTES = {
     -- NPC cutscene flow
     "StartOrderCutscene",
     "ConfirmNPCOrder",
+    -- Dress KDS
+    "DressKDSUpdate",
+    "DressLockOrder",
+    "DressOrderLocked",
+    "DressCancelOrder",
     -- Orders & state
     "BatchUpdated",
     "FridgeUpdated",
