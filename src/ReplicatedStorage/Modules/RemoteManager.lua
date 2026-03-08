@@ -44,6 +44,9 @@ local REMOTES = {
     -- Dress
     "StartDressMinigame",
     "DressMinigameResult",
+    -- NPC cutscene flow
+    "StartOrderCutscene",
+    "ConfirmNPCOrder",
     -- Orders & state
     "BatchUpdated",
     "FridgeUpdated",

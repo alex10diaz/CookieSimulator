@@ -49,18 +49,18 @@ local function runPhase(duration, stateName)
 end
 
 local function runCycle()
-    SessionStats.Reset()
-    if not DEV_SKIP_PREOPEN then
-        runPhase(PREOPEN_DURATION, "PreOpen")
+    while true do
+        SessionStats.Reset()
+        if not DEV_SKIP_PREOPEN then
+            runPhase(PREOPEN_DURATION, "PreOpen")
+        end
+        runPhase(OPEN_DURATION, "Open")
+
+        -- End of day
+        broadcast("EndOfDay", SUMMARY_DURATION)
+        summaryRemote:FireAllClients(SessionStats.GetSummary())
+        task.wait(SUMMARY_DURATION)
     end
-    runPhase(OPEN_DURATION, "Open")
-
-    -- End of day
-    broadcast("EndOfDay", SUMMARY_DURATION)
-    summaryRemote:FireAllClients(SessionStats.GetSummary())
-    task.wait(SUMMARY_DURATION)
-
-    runCycle()
 end
 
 -- ─── Public API ───────────────────────────────────────────────────────────────
