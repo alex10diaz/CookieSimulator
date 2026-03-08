@@ -299,7 +299,7 @@ end
 local function hookWarmerModel(model)
     local cookieId = model:GetAttribute("CookieId")
     if not cookieId then return end
-    for _, child in ipairs(model:GetChildren()) do
+    for _, child in ipairs(model:GetDescendants()) do
         if child:IsA("ProximityPrompt") and child.Name == "WarmerPickupPrompt" then
             hookWarmerPrompt(child, cookieId)
         end
