@@ -35,6 +35,7 @@ local MINIGAMES = {
 local activeSessions = {}
 local ovenSession    = {}       -- player -> batchId they pulled from fridge, ready for oven
 local dressPending   = {}       -- player -> warmerEntry taken for dress
+local doughLock      = {}       -- batchId -> true  (prevents two players grabbing same dough batch)
 
 -- ============================================================
 -- BROADCAST HELPERS
@@ -129,6 +130,7 @@ local function endSession(player, stationName, score)
         OrderManager.RecordStationScore(player, "mix", score, batchId)
 
     elseif stationName == "dough" then
+        doughLock[batchId] = nil
         OrderManager.RecordStationScore(player, "dough", score, batchId)
 
     elseif stationName == "oven" then
@@ -173,6 +175,11 @@ local function handleSimpleStart(player, stationName)
             warn("[MinigameServer] No batch at dough stage for " .. player.Name)
             return
         end
+        if doughLock[batch.batchId] then
+            warn("[MinigameServer] Batch #" .. batch.batchId .. " already claimed by another player")
+            return
+        end
+        doughLock[batch.batchId] = true
         batchId = batch.batchId
     elseif stationName == "frost" then
         local entry = OrderManager.TakeFromWarmers(true) -- wantsForFrost=true
@@ -320,6 +327,11 @@ for name, config in pairs(MINIGAMES) do
 end
 
 Players.PlayerRemoving:Connect(function(player)
+    -- Release any dough lock this player held
+    local session = activeSessions[player]
+    if session and session.station == "dough" and session.batchId then
+        doughLock[session.batchId] = nil
+    end
     activeSessions[player] = nil
     ovenSession[player]    = nil
     dressPending[player]   = nil
