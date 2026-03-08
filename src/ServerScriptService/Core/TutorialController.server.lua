@@ -91,11 +91,20 @@ end
 
 -- ─── Player Join ─────────────────────────────────────────────────────────────
 local function handlePlayerJoin(player)
-	task.wait(3)
-	if not player or not player.Parent then return end
+	-- Poll for PlayerDataManager to finish loading (up to 10s before giving up)
+	local data
+	local deadline = tick() + 10
+	repeat
+		task.wait(0.5)
+		if not player or not player.Parent then return end
+		data = PlayerDataManager.GetData(player)
+	until data or tick() >= deadline
 
-	local data = PlayerDataManager.GetData(player)
-	if not data then return end
+	if not player or not player.Parent then return end
+	if not data then
+		warn("[TutorialController] DataStore load timed out for " .. player.Name)
+		return
+	end
 
 	if data.tutorialCompleted then
 		local payload = { step = 0, total = TOTAL_STEPS, msg = "", isReturn = true }
