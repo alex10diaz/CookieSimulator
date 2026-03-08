@@ -11,6 +11,7 @@ local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitFor
 local boxCreated     = RemoteManager.Get("BoxCreated")
 local deliverRemote  = RemoteManager.Get("DeliverBox")
 local deliveryResult = RemoteManager.Get("DeliveryResult")
+local forceDropBox   = RemoteManager.Get("ForceDropBox")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -71,6 +72,15 @@ end)
 deliveryResult.OnClientEvent:Connect(function()
     carriedBoxId = nil
     clearCarryIndicator()
+end)
+
+-- ─── ForceDropBox: NPC left before delivery — drop carried box ───────────────
+forceDropBox.OnClientEvent:Connect(function()
+    if carriedBoxId then
+        print("[DeliveryClient] Box #" .. carriedBoxId .. " dropped — customer left")
+        carriedBoxId = nil
+        clearCarryIndicator()
+    end
 end)
 
 -- Delivery trigger is handled server-side via ProximityPrompt in PersistentNPCSpawner.

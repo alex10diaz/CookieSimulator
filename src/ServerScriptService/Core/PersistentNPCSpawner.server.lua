@@ -639,9 +639,11 @@ end
 OrderManager.On("BoxCreated", function(box)
     if not box.cookieId then return end
 
-    -- Find a seated NPC waiting for this cookie type
+    -- Find a seated NPC waiting for this box (variety or single-type match)
     for npcId, data in pairs(npcs) do
-        if data.state == "seated" and data.order and data.order.cookieId == box.cookieId then
+        local cookieMatch = not box.isVariety and data.order and data.order.cookieId == box.cookieId
+        local varietyMatch = box.isVariety and data.order and data.order.isVariety == true
+        if data.state == "seated" and (cookieMatch or varietyMatch) then
             data.state         = "walking_to_counter"
             data.assignedBoxId = box.boxId
             -- If box was made by an AI worker (not a real player), any player can deliver
@@ -688,7 +690,7 @@ task.spawn(function()
 end)
 
 -- Stagger second NPC so there are usually 2 in queue
-task.delay(15, function()
+task.delay(30, function()
     if isSpawnAllowed() then spawnNPC() end
 end)
 
