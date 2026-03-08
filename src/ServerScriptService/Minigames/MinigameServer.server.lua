@@ -217,8 +217,7 @@ local function hookPromptIfNamed(desc)
         desc.Triggered:Connect(function(player) handleSimpleStart(player, "dough") end)
     elseif desc.Name == "FrostPrompt" then
         desc.Triggered:Connect(function(player) handleSimpleStart(player, "frost") end)
-    elseif desc.Name == "DressPrompt" then
-        desc.Triggered:Connect(function(player) handleSimpleStart(player, "dress") end)
+    -- DressPrompt is handled by DressStationServer (KDS system)
     end
 end
 
