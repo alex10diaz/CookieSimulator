@@ -253,25 +253,27 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
 
     if targetOrder.items then
         -- ── Variety order ──────────────────────────────────────────────────────
-        -- Compute ordered unique types (first-occurrence order)
-        local seen, uniqueTypes = {}, {}
+        -- Compute ordered unique types (first-occurrence order) and slot counts
+        local seen, uniqueTypes, typeSlotCounts = {}, {}, {}
         for _, id in ipairs(targetOrder.items) do
             if not seen[id] then seen[id] = true; table.insert(uniqueTypes, id) end
+            typeSlotCounts[id] = (typeSlotCounts[id] or 0) + 1
         end
         -- Validate stock for every unique type
         for _, id in ipairs(uniqueTypes) do
-            if (warmerCounts[id] or 0) == 0 then
-                orderLocked:FireClient(player, { state = "error", message = "No " .. (COOKIE_NAMES[id] or id) .. " in warmers" })
+            if (warmerCounts[id] or 0) < typeSlotCounts[id] then
+                orderLocked:FireClient(player, { state = "error", message = "Not enough " .. (COOKIE_NAMES[id] or id) .. " in warmers" })
                 return
             end
         end
         dressLocked[player] = {
-            orderId    = orderId,
-            isVariety  = true,
-            npcName    = targetOrder.npcName,
-            remaining  = uniqueTypes,
-            totalSteps = #uniqueTypes,
-            collected  = {},
+            orderId        = orderId,
+            isVariety      = true,
+            npcName        = targetOrder.npcName,
+            remaining      = uniqueTypes,
+            totalSteps     = #uniqueTypes,
+            collected      = {},
+            typeSlotCounts = typeSlotCounts,
         }
         local firstId = uniqueTypes[1]
         orderLocked:FireClient(player, {
@@ -291,7 +293,7 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
             orderLocked:FireClient(player, { state = "error", message = "No " .. name .. " in warmers" })
             return
         end
-        dressLocked[player] = { orderId = orderId, cookieId = targetOrder.cookieId, npcName = targetOrder.npcName }
+        dressLocked[player] = { orderId = orderId, cookieId = targetOrder.cookieId, npcName = targetOrder.npcName, packSize = targetOrder.packSize }
         orderLocked:FireClient(player, {
             state      = "locked",
             cookieId   = targetOrder.cookieId,
@@ -312,7 +314,8 @@ local function hookWarmerPrompt(prompt, cookieId)
             -- ── Variety: must visit warmers in guided order ────────────────────
             if lock.remaining[1] ~= cookieId then return end  -- wrong warmer, ignore
 
-            local entry = OrderManager.TakeFromWarmersByType(cookieId)
+            local slotQty = lock.typeSlotCounts and lock.typeSlotCounts[cookieId] or 1
+            local entry = OrderManager.TakeFromWarmersByType(cookieId, slotQty)
             if not entry then
                 orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
                 dressLocked[player] = nil
@@ -351,7 +354,7 @@ local function hookWarmerPrompt(prompt, cookieId)
             -- ── Single-type order ──────────────────────────────────────────────
             if lock.cookieId ~= cookieId then return end
 
-            local entry = OrderManager.TakeFromWarmersByType(cookieId)
+            local entry = OrderManager.TakeFromWarmersByType(cookieId, lock.packSize or 1)
             if not entry then
                 orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
                 dressLocked[player] = nil

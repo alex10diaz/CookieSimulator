@@ -20,8 +20,8 @@ local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitF
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
 local MAX_QUEUE_SIZE       = 3
-local SPAWN_INTERVAL       = 30   -- seconds between NPC spawn attempts
-local RUSH_SPAWN_INTERVAL  = 10   -- spawn interval during Rush Hour
+local SPAWN_INTERVAL       = 60   -- seconds between NPC spawn attempts
+local RUSH_SPAWN_INTERVAL  = 20   -- spawn interval during Rush Hour
 local BASE_PATIENCE        = 120     -- seconds at 1 player
 local PATIENCE_PER_PLAYER  = 20      -- extra seconds per additional player
 local VIP_CHANCE           = 0.10
@@ -55,6 +55,7 @@ local deliveryResult           = RemoteManager.Get("DeliveryResult")
 local hudUpdate                = RemoteManager.Get("HUDUpdate")
 local startOrderCutsceneRemote = RemoteManager.Get("StartOrderCutscene")
 local confirmOrderRemote       = RemoteManager.Get("ConfirmNPCOrder")
+local forceDropBoxRemote       = RemoteManager.Get("ForceDropBox")
 
 -- ─── STATE ────────────────────────────────────────────────────────────────────
 local rushHourActive = false  -- set by RushHourStart/End BindableEvents
@@ -385,11 +386,23 @@ npcLeave = function(npcId, reason)
         end
     end
 
+    -- Cancel any box made for this NPC and return cookies to warmer
     if data.order and data.order.cookieId then
         local pending = pendingBoxes[data.order.cookieId]
         if pending and pending.npcId == npcId then
+            OrderManager.CancelBox(pending.boxId)
+            -- Tell the carrier to drop the box
+            if pending.carrier then
+                local carrier = Players:FindFirstChild(pending.carrier)
+                if carrier then forceDropBoxRemote:FireClient(carrier) end
+            end
             pendingBoxes[data.order.cookieId] = nil
         end
+    end
+
+    -- Remove this NPC's order from the KDS queue
+    if data.order and data.order.orderId then
+        OrderManager.CancelNPCOrder(data.order.orderId)
     end
 
     npcs[npcId] = nil

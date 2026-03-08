@@ -530,6 +530,48 @@ function OrderManager.CreateVarietyBox(player, entries, dressScore)
     return box
 end
 
+-- Cancel a box and return its cookies to warmers (called when NPC leaves mid-delivery)
+function OrderManager.CancelBox(boxId)
+    local box = boxes[boxId]
+    if not box then return end
+
+    if box._warmerEntry then
+        -- Single box: restore the one warmer entry
+        table.insert(warmers, 1, box._warmerEntry)
+        notify("WarmersUpdated", OrderManager.GetWarmerState())
+        if box._postOvenScores and box.batchId then
+            postOvenScores[box.batchId] = box._postOvenScores
+        end
+    elseif box._warmerEntries then
+        -- Variety box: restore all warmer entries
+        for _, entry in ipairs(box._warmerEntries) do
+            table.insert(warmers, 1, entry)
+        end
+        notify("WarmersUpdated", OrderManager.GetWarmerState())
+        if box._batchPostOvenScores then
+            for batchId, scores in pairs(box._batchPostOvenScores) do
+                postOvenScores[batchId] = scores
+            end
+        end
+    end
+
+    boxes[boxId] = nil
+    print(string.format("[OrderManager] Box #%d cancelled — cookies returned to warmer", boxId))
+end
+
+-- Remove an NPC order from the queue (called when NPC leaves before delivery)
+function OrderManager.CancelNPCOrder(orderId)
+    for i, o in ipairs(npcOrders) do
+        if o.orderId == orderId then
+            table.remove(npcOrders, i)
+            print(string.format("[OrderManager] NPC order #%d cancelled", orderId))
+            notify("NPCOrderCancelled", orderId)
+            return true
+        end
+    end
+    return false
+end
+
 -- Per-cookieId counts for dress-ready (needsFrost=false) warmer entries
 function OrderManager.GetWarmerCountsByType()
     local counts = {}
