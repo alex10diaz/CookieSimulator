@@ -282,12 +282,25 @@ function OrderManager.RecordFrostScore(playerName, batchId, score, snapshot, coo
 end
 
 -- Takes a specific cookie type from dress-ready warmers (used by DressStationServer)
-function OrderManager.TakeFromWarmersByType(cookieId)
+function OrderManager.TakeFromWarmersByType(cookieId, quantity)
+    quantity = quantity or 1
     for i, entry in ipairs(warmers) do
         if not entry.needsFrost and entry.cookieId == cookieId then
-            table.remove(warmers, i)
-            notify("WarmersUpdated", OrderManager.GetWarmerState())
-            return entry
+            local entryQty = entry.quantity or 1
+            if entryQty <= quantity then
+                -- Take the whole entry
+                table.remove(warmers, i)
+                notify("WarmersUpdated", OrderManager.GetWarmerState())
+                return entry
+            else
+                -- Partial take: deduct and return a clone
+                entry.quantity -= quantity
+                notify("WarmersUpdated", OrderManager.GetWarmerState())
+                local clone = {}
+                for k, v in pairs(entry) do clone[k] = v end
+                clone.quantity = quantity
+                return clone
+            end
         end
     end
     return nil
@@ -326,12 +339,14 @@ function OrderManager.CreateBox(player, batchId, dressScore, warmerEntry)
     nextBox += 1
 
     local box = {
-        boxId    = id,
-        batchId  = batchId,
-        quality  = finalQuality,
-        carrier  = player.Name,
-        status   = "ready",
-        cookieId = warmerEntry and warmerEntry.cookieId or nil,
+        boxId           = id,
+        batchId         = batchId,
+        quality         = finalQuality,
+        carrier         = player.Name,
+        status          = "ready",
+        cookieId        = warmerEntry and warmerEntry.cookieId or nil,
+        _warmerEntry    = warmerEntry,
+        _postOvenScores = { mix = post.mix, dough = post.dough, oven = post.oven },
     }
 
     boxes[id] = box
@@ -484,17 +499,30 @@ function OrderManager.CreateVarietyBox(player, entries, dressScore)
         dressScore            * STATION_WEIGHT.dress
     ), 0, 100)
 
+    -- Save post-oven scores before clearing, so CancelBox can restore them
+    local savedScores = {}
+    for _, entry in ipairs(entries) do
+        if postOvenScores[entry.batchId] then
+            savedScores[entry.batchId] = {
+                mix   = postOvenScores[entry.batchId].mix,
+                dough = postOvenScores[entry.batchId].dough,
+                oven  = postOvenScores[entry.batchId].oven,
+            }
+        end
+    end
     for _, entry in ipairs(entries) do postOvenScores[entry.batchId] = nil end
 
     local id = nextBox; nextBox += 1
     local box = {
-        boxId     = id,
-        batchId   = entries[1].batchId,
-        quality   = finalQuality,
-        carrier   = player.Name,
-        status    = "ready",
-        cookieId  = "variety",
-        isVariety = true,
+        boxId               = id,
+        batchId             = entries[1].batchId,
+        quality             = finalQuality,
+        carrier             = player.Name,
+        status              = "ready",
+        cookieId            = "variety",
+        isVariety           = true,
+        _warmerEntries      = entries,
+        _batchPostOvenScores = savedScores,
     }
     boxes[id] = box
     print(string.format("[OrderManager] Variety Box #%d created by %s | Quality: %d%%", id, player.Name, finalQuality))
