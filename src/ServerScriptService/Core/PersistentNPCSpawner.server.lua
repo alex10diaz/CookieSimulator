@@ -163,8 +163,12 @@ local function updateTabletDisplay(orderData)
 
     if orderData then
         local cookie = CookieData.GetById(orderData.cookieId)
-        if header    then header.Text    = orderData.isVIP and "VIP ORDER" or "CURRENT ORDER" end
-        if cookLbl   then cookLbl.Text   = (cookie and cookie.name or orderData.cookieId) .. "  x" .. orderData.packSize end
+        if header  then header.Text  = orderData.isVIP and "VIP ORDER" or "CURRENT ORDER" end
+        if cookLbl then
+            cookLbl.Text = orderData.items
+                and ("Variety Pack  ×" .. orderData.packSize)
+                or  ((cookie and cookie.name or orderData.cookieId) .. "  x" .. orderData.packSize)
+        end
         if priceLbl  then priceLbl.Text  = orderData.price .. " coins potential"            end
         if statusLbl then statusLbl.Text = orderData.status or "In kitchen..."              end
     else
@@ -286,14 +290,16 @@ takeOrder = function(player, npcId)
         npcId      = npcId,
         npcName    = data.name,
         cookieId   = cookie.id,
-        cookieName = cookie.name,
+        cookieName = data.order.cookieName,
         packSize   = packSize,
         baseCoins  = price,
         isVIP      = data.isVIP,
+        items      = varItems,
     })
 
-    print(string.format("[NPCController] Cutscene fired to %s for NPC %s (%s x%d)",
-        player.Name, data.name, cookie.id, packSize))
+    local logLabel = varItems and ("VARIETY ×" .. packSize) or (cookie.id .. " x" .. packSize)
+    print(string.format("[NPCController] Cutscene fired to %s for NPC %s (%s)",
+        player.Name, data.name, logLabel))
 end
 
 -- ─── CONFIRM ORDER (called when client dismisses cutscene) ────────────────────
@@ -315,6 +321,7 @@ local function confirmOrder(player, npcId)
         price    = data.order.price,
         isVIP    = data.order.isVIP,
         npcId    = npcId,
+        items    = data.order.items,
     })
     data.order.orderId = order.orderId
     data.state = "ordered"
@@ -331,7 +338,7 @@ local function confirmOrder(player, npcId)
     -- Update player's HUD active order label
     pcall(function()
         hudUpdate:FireClient(player, nil, nil,
-            data.order.cookieName .. " ×" .. data.order.packSize)
+            (data.order.isVariety and "Variety Pack" or data.order.cookieName) .. " ×" .. data.order.packSize)
     end)
 
     -- Walk to a waiting area spot
@@ -347,7 +354,8 @@ local function confirmOrder(player, npcId)
     end
 
     print(string.format("[NPCController] Order confirmed: %s %dx %s | price=%d | orderId=%s",
-        data.name, data.order.packSize, data.order.cookieId,
+        data.name, data.order.packSize,
+        data.order.isVariety and "VARIETY" or data.order.cookieId,
         data.order.price, tostring(data.order.orderId)))
 end
 
