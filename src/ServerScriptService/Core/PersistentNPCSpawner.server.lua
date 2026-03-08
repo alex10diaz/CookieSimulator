@@ -464,8 +464,12 @@ addDeliverPrompt = function(npcId)
         local d = npcs[npcId]
         if not d or d.state ~= "at_counter" then return end
 
-        local pending = pendingBoxes[d.order.cookieId]
-        if not pending or pending.npcId ~= npcId then
+        -- Search by npcId (works for both single-type and variety boxes)
+        local pendingKey, pending = nil, nil
+        for key, pb in pairs(pendingBoxes) do
+            if pb.npcId == npcId then pendingKey = key; pending = pb; break end
+        end
+        if not pending then
             warn("[NPCController] No pending box for", d.name)
             return
         end
@@ -481,7 +485,7 @@ addDeliverPrompt = function(npcId)
             return
         end
 
-        pendingBoxes[d.order.cookieId] = nil
+        pendingBoxes[pendingKey] = nil
 
         -- Stars from quality (0-100 weighted aggregate → 1-5 stars)
         local stars = math.clamp(math.floor(1 + (quality / 100) * 4), 1, 5)
