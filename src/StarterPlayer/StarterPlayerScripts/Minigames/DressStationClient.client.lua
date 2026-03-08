@@ -84,7 +84,8 @@ local function flashMsg(text, success)
 end
 
 -- Persistent overlay while player walks to warmer
-local function showWarmerOverlay(cookieName, cookieId)
+-- step/total optional — shown for variety packs (e.g. "2 of 4")
+local function showWarmerOverlay(cookieName, cookieId, step, total)
     destroyWarmerOverlay()
 
     local sg = Instance.new("ScreenGui")
@@ -93,8 +94,8 @@ local function showWarmerOverlay(cookieName, cookieId)
     sg.Parent       = playerGui
 
     local bg = Instance.new("Frame", sg)
-    bg.Size                   = UDim2.new(0, 360, 0, 70)
-    bg.Position               = UDim2.new(0.5, -180, 1, -110)
+    bg.Size                   = UDim2.new(0, 400, 0, 70)
+    bg.Position               = UDim2.new(0.5, -200, 1, -110)
     bg.BackgroundColor3       = Color3.fromRGB(20, 20, 20)
     bg.BackgroundTransparency = 0.1
     bg.BorderSizePixel        = 0
@@ -108,6 +109,7 @@ local function showWarmerOverlay(cookieName, cookieId)
     arrow.Font                   = Enum.Font.GothamBold
     arrow.Text                   = "▶"
 
+    local prefix = (step and total and total > 1) and (step .. " of " .. total .. " — ") or ""
     local msg = Instance.new("TextLabel", bg)
     msg.Size                   = UDim2.new(1, -90, 1, 0)
     msg.Position               = UDim2.new(0, 40, 0, 0)
@@ -115,7 +117,7 @@ local function showWarmerOverlay(cookieName, cookieId)
     msg.TextColor3             = Color3.fromRGB(240, 240, 240)
     msg.TextScaled             = true
     msg.Font                   = Enum.Font.GothamBold
-    msg.Text                   = "Pick up  " .. cookieName .. "  from warmer"
+    msg.Text                   = prefix .. "Pick up  " .. cookieName .. "  from warmer"
     msg.TextXAlignment         = Enum.TextXAlignment.Left
 
     -- Cancel button
@@ -205,8 +207,20 @@ local function showKDS(payload)
 
     for i, order in ipairs(orders) do
         local yOff     = 62 + (i - 1) * 94
-        local cookId   = order.cookieId
-        local hasStock = (warmers[cookId] or 0) > 0
+        local cookId = order.cookieId
+        local hasStock
+        if order.isVariety and order.items then
+            hasStock = true
+            local seen = {}
+            for _, id in ipairs(order.items) do
+                if not seen[id] then
+                    seen[id] = true
+                    if (warmers[id] or 0) == 0 then hasStock = false; break end
+                end
+            end
+        else
+            hasStock = (warmers[cookId] or 0) > 0
+        end
 
         local row = Instance.new("Frame", bg)
         row.Size             = UDim2.new(1, -20, 0, 84)
@@ -238,8 +252,23 @@ local function showKDS(payload)
         cl.TextColor3             = COOKIE_COLOR[cookId] or Color3.fromRGB(200, 200, 200)
         cl.TextScaled             = true
         cl.Font                   = Enum.Font.Gotham
-        cl.Text                   = (COOKIE_DISPLAY[cookId] or cookId) .. "  ×" .. order.packSize
         cl.TextXAlignment         = Enum.TextXAlignment.Left
+        if order.isVariety and order.items then
+            local grouped, typeOrder = {}, {}
+            for _, id in ipairs(order.items) do
+                if not grouped[id] then grouped[id] = 0; table.insert(typeOrder, id) end
+                grouped[id] += 1
+            end
+            local parts = {}
+            for _, id in ipairs(typeOrder) do
+                local d = COOKIE_DISPLAY[id] or id
+                table.insert(parts, grouped[id] > 1 and (d .. "×" .. grouped[id]) or d)
+            end
+            cl.Text = table.concat(parts, " · ")
+            cl.TextColor3 = Color3.fromRGB(190, 190, 190)
+        else
+            cl.Text = (COOKIE_DISPLAY[cookId] or cookId) .. "  ×" .. order.packSize
+        end
 
         local wl = Instance.new("TextLabel", row)
         wl.Size                   = UDim2.new(0, 210, 0, 18)
@@ -285,12 +314,14 @@ orderLocked.OnClientEvent:Connect(function(result)
     local state = result.state
 
     if state == "locked" then
-        -- Player selected an order — close KDS, show warmer direction overlay
         closeKDS()
-        showWarmerOverlay(result.cookieName or "cookie", result.cookieId)
+        showWarmerOverlay(result.cookieName or "cookie", result.cookieId, result.step, result.total)
+
+    elseif state == "progress" then
+        -- Variety: picked up one warmer, advance to next
+        showWarmerOverlay(result.cookieName or "cookie", result.cookieId, result.step, result.total)
 
     elseif state == "done" then
-        -- Player picked up from warmer — box created
         destroyWarmerOverlay()
         flashMsg("Box #" .. (result.boxId or "?") .. " ready!  Deliver to the customer.", true)
 

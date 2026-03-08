@@ -26,6 +26,8 @@ local BASE_PATIENCE        = 120     -- seconds at 1 player
 local PATIENCE_PER_PLAYER  = 20      -- extra seconds per additional player
 local VIP_CHANCE           = 0.10
 local PACK_SIZES           = { 1, 4, 6 }
+local VARIETY_PACK_SIZES   = { 4, 6 }
+local VARIETY_CHANCE       = 0.70
 
 local SPAWN_STATES = { "Open" }  -- NPCs only arrive when the store is open
 
@@ -183,19 +185,87 @@ takeOrder = function(player, npcId)
     if data.state ~= "waiting_in_queue" then return end
     if data.queueSlot ~= 1 then return end
 
-    -- Force pink_sugar during tutorial so the order matches what the player will bake
-    local cookie = player:GetAttribute("InTutorial") and CookieData.GetById("pink_sugar") or CookieData.GetRandom()
-    local packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
-    local price    = calcPrice(cookie.id, packSize)
+    -- Force pink_sugar during tutorial
+    local isTutorial = player:GetAttribute("InTutorial")
+    local cookie, packSize, price, varItems
+
+    if isTutorial then
+        cookie   = CookieData.GetById("pink_sugar")
+        packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
+        price    = calcPrice(cookie.id, packSize)
+    else
+        -- Check warmer stock for variety eligibility
+        local warmerCounts   = OrderManager.GetWarmerCountsByType()
+        local availableTypes = {}
+        for cId, cnt in pairs(warmerCounts) do
+            if cnt > 0 then table.insert(availableTypes, cId) end
+        end
+
+        if #availableTypes >= 2 and math.random() < VARIETY_CHANCE then
+            -- ── Variety pack ──────────────────────────────────────────────────
+            packSize = VARIETY_PACK_SIZES[math.random(1, #VARIETY_PACK_SIZES)]
+            local numTypes = math.random(2, math.min(#availableTypes, packSize))
+
+            -- Shuffle available types
+            for i = #availableTypes, 2, -1 do
+                local j = math.random(i)
+                availableTypes[i], availableTypes[j] = availableTypes[j], availableTypes[i]
+            end
+            local chosenTypes = {}
+            for i = 1, numTypes do chosenTypes[i] = availableTypes[i] end
+
+            -- Distribute slots (each type gets ≥1, extras random)
+            local slotCounts = {}
+            for _, t in ipairs(chosenTypes) do slotCounts[t] = 1 end
+            local rem = packSize - numTypes
+            while rem > 0 do
+                local t = chosenTypes[math.random(1, #chosenTypes)]
+                slotCounts[t] += 1
+                rem -= 1
+            end
+
+            -- Build & shuffle items array
+            varItems = {}
+            for _, t in ipairs(chosenTypes) do
+                for _ = 1, slotCounts[t] do table.insert(varItems, t) end
+            end
+            for i = #varItems, 2, -1 do
+                local j = math.random(i)
+                varItems[i], varItems[j] = varItems[j], varItems[i]
+            end
+
+            -- Primary cookie = most expensive (for payout calc)
+            local maxP = 0
+            cookie = CookieData.GetById(chosenTypes[1])
+            for _, t in ipairs(chosenTypes) do
+                local c = CookieData.GetById(t)
+                if c and (c.price or 0) > maxP then maxP = c.price; cookie = c end
+            end
+
+            -- Price = sum of each type's price × slot count
+            price = 0
+            for t, cnt in pairs(slotCounts) do
+                local c = CookieData.GetById(t)
+                price += (c and c.price or 5) * cnt
+            end
+        else
+            -- ── Single-type order ─────────────────────────────────────────────
+            cookie   = CookieData.GetRandom()
+            packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
+            price    = calcPrice(cookie.id, packSize)
+        end
+    end
 
     -- Store order data — confirmed in Step 2 (confirmOrder)
     data.order = {
         cookieId   = cookie.id,
-        cookieName = cookie.name,
+        cookieName = varItems and "Variety Pack" or cookie.name,
         packSize   = packSize,
         price      = price,
         isVIP      = data.isVIP,
         orderId    = nil,
+        items      = varItems,
+        isVariety  = varItems ~= nil,
     }
     data.state            = "cutscene_pending"
     data.triggeringPlayer = player  -- track who triggered so PlayerRemoving confirms the right player
