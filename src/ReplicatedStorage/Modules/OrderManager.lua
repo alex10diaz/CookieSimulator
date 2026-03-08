@@ -378,7 +378,8 @@ end
 -- ============================================================
 -- NPC ORDER QUEUE
 -- ============================================================
--- extras: optional { packSize, price, isVIP, npcId }
+-- extras: optional { packSize, price, isVIP, npcId, items }
+-- items = array of cookieId strings for variety packs (e.g. {"pink_sugar","pink_sugar","lemon_blackraspberry"})
 function OrderManager.AddNPCOrder(npcName, cookieId, extras)
     local id = nextOrder
     nextOrder += 1
@@ -390,11 +391,13 @@ function OrderManager.AddNPCOrder(npcName, cookieId, extras)
         price     = extras and extras.price    or 0,
         isVIP     = extras and extras.isVIP    or false,
         npcId     = extras and extras.npcId    or nil,
+        items     = extras and extras.items    or nil,   -- variety pack slot array
+        isVariety = not not (extras and extras.items),
         orderedAt = tick(),
     }
     table.insert(npcOrders, order)
-    print(string.format("[OrderManager] NPC order #%d: %s wants %dx %s (price=%d)",
-        id, npcName, order.packSize, cookieId, order.price))
+    local label = order.isVariety and ("VARIETY ×" .. order.packSize) or (cookieId .. " ×" .. order.packSize)
+    print(string.format("[OrderManager] NPC order #%d: %s wants %s (price=%d)", id, npcName, label, order.price))
     notify("NPCOrderAdded", order)
     return order
 end
@@ -450,6 +453,53 @@ end
 
 function OrderManager.GetOvenBatch(batchId)
     return ovenBatches[batchId]
+end
+
+-- Variety box: averages scores across multiple collected warmer entries
+function OrderManager.CreateVarietyBox(player, entries, dressScore)
+    if not entries or #entries == 0 then
+        warn("[OrderManager] CreateVarietyBox: no entries"); return nil
+    end
+
+    local totalMix, totalDough, totalOven, totalFrost, count = 0, 0, 0, 0, 0
+    for _, entry in ipairs(entries) do
+        local post = postOvenScores[entry.batchId]
+        if post then
+            totalMix   += post.mix   or 0
+            totalDough += post.dough or 0
+            totalOven  += post.oven  or 0
+            totalFrost += entry.frostScore or 0
+            count += 1
+        end
+    end
+    if count == 0 then
+        warn("[OrderManager] CreateVarietyBox: no valid post-oven scores"); return nil
+    end
+
+    local finalQuality = math.clamp(math.floor(
+        (totalMix   / count) * STATION_WEIGHT.mix   +
+        (totalDough / count) * STATION_WEIGHT.dough +
+        (totalOven  / count) * STATION_WEIGHT.oven  +
+        (totalFrost / count) * STATION_WEIGHT.frost +
+        dressScore            * STATION_WEIGHT.dress
+    ), 0, 100)
+
+    for _, entry in ipairs(entries) do postOvenScores[entry.batchId] = nil end
+
+    local id = nextBox; nextBox += 1
+    local box = {
+        boxId     = id,
+        batchId   = entries[1].batchId,
+        quality   = finalQuality,
+        carrier   = player.Name,
+        status    = "ready",
+        cookieId  = "variety",
+        isVariety = true,
+    }
+    boxes[id] = box
+    print(string.format("[OrderManager] Variety Box #%d created by %s | Quality: %d%%", id, player.Name, finalQuality))
+    notify("BoxCreated", box)
+    return box
 end
 
 -- Per-cookieId counts for dress-ready (needsFrost=false) warmer entries

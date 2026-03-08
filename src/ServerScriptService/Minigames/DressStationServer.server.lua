@@ -164,7 +164,7 @@ local function updateTV()
         cookLbl.TextColor3             = COOKIE_COLORS[o.cookieId] or Color3.fromRGB(180, 180, 180)
         cookLbl.TextScaled             = true
         cookLbl.Font                   = Enum.Font.Gotham
-        cookLbl.Text                   = (COOKIE_NAMES[o.cookieId] or o.cookieId) .. "  ×" .. o.packSize
+        cookLbl.Text                   = o.isVariety and ("Variety ×" .. o.packSize) or ((COOKIE_NAMES[o.cookieId] or o.cookieId) .. "  ×" .. o.packSize)
         cookLbl.TextXAlignment         = Enum.TextXAlignment.Left
 
         -- Wait time
@@ -211,6 +211,8 @@ local function buildKDSPayload()
             price       = o.price,
             isVIP       = o.isVIP,
             waitSeconds = math.floor(now - (o.orderedAt or now)),
+            items       = o.items,
+            isVariety   = o.isVariety,
         }
     end
     return { orders = top3, warmers = warmers }
