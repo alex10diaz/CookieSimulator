@@ -88,6 +88,11 @@ local REMOTES = {
     "BakeryNameResult", -- Server→Client: success/failure + final name
     "BakeryLevelUp",    -- Server→Client: new bakery level on level-up
     "UpdateNameplate",  -- Server→All clients: broadcast the active bakery name
+    -- Phase 2: Menu selection
+    "OpenMenuBoard",       -- Server→Client: open menu selection UI (fires on PreOpen)
+    "SetMenuSelection",    -- Client→Server: array of cookieIds player selected
+    "MenuSelectionResult", -- Server→All: success/fail + updated menu list
+    "MenuLocked",          -- Server→All: menu is now locked (Open phase started)
 }
 
 -- Server creates all remotes; client waits for server-created ones.

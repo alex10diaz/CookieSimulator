@@ -2,13 +2,15 @@
 -- Manages all minigame sessions and integrates with OrderManager.
 -- Handles ProximityPrompt triggers for game stations.
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players           = game:GetService("Players")
-local Workspace         = game:GetService("Workspace")
+local ReplicatedStorage   = game:GetService("ReplicatedStorage")
+local Players             = game:GetService("Players")
+local Workspace           = game:GetService("Workspace")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
+local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
 
 -- ============================================================
 -- MINIGAME CONFIG

@@ -16,6 +16,7 @@ local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):Wait
 local EconomyManager    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EconomyManager"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
+local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
 
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
@@ -255,7 +256,7 @@ takeOrder = function(player, npcId)
             end
         else
             -- ── Single-type order ─────────────────────────────────────────────
-            cookie   = CookieData.GetRandom()
+            cookie   = CookieData.GetRandomFromMenu(MenuManager.GetActiveMenu())
             packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
             price    = calcPrice(cookie.id, packSize)
         end

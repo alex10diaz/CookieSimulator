@@ -98,6 +98,21 @@ function CookieData.GetRandom()
     return CookieData.Cookies[math.random(1, #CookieData.Cookies)]
 end
 
+-- Returns a random cookie restricted to the provided menu list (array of cookieIds).
+-- Falls back to GetRandom() if the list is empty or invalid.
+function CookieData.GetRandomFromMenu(menuList)
+    if not menuList or #menuList == 0 then
+        return CookieData.GetRandom()
+    end
+    local pool = {}
+    for _, id in ipairs(menuList) do
+        local cookie = CookieData.GetById(id)
+        if cookie then table.insert(pool, cookie) end
+    end
+    if #pool == 0 then return CookieData.GetRandom() end
+    return pool[math.random(1, #pool)]
+end
+
 function CookieData.NeedsStep(cookieId, step)
     local cookie = CookieData.GetById(cookieId)
     if not cookie then return false end
