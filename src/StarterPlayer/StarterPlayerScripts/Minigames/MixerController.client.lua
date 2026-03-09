@@ -83,7 +83,8 @@ local function showPicker(menuList)
 	list.SortOrder           = Enum.SortOrder.LayoutOrder
 
 	for i, cookie in ipairs(COOKIES) do
-		local isMatch = (not isForced) or (cookie.id == forcedCookie)
+		local inMenu  = (not menuSet) or (menuSet[cookie.id] == true)
+		local isMatch = inMenu and ((not isForced) or (cookie.id == forcedCookie))
 
 		local btn = Instance.new("TextButton", listFrame)
 		btn.LayoutOrder      = i
@@ -111,6 +112,8 @@ local function showPicker(menuList)
 	end
 end
 
-ShowMixPicker.OnClientEvent:Connect(showPicker)
+ShowMixPicker.OnClientEvent:Connect(function(menuList)
+	showPicker(menuList)
+end)
 
 print("[MixerController] Ready.")
