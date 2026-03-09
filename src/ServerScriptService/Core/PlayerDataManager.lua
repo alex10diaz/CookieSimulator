@@ -181,6 +181,8 @@ end
 Players.PlayerAdded:Connect(function(player)
     profiles[player.UserId] = loadProfile(player.UserId)
     local p = profiles[player.UserId]
+    -- TEMP DEBUG: 5k min coins for testing (remove before launch)
+    if p.coins < 5000 then p.coins = 5000 end
     print("[PlayerDataManager] Loaded profile for " .. player.Name
         .. " | coins=" .. p.coins
         .. " level=" .. p.level)
