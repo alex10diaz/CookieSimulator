@@ -87,6 +87,7 @@ local REMOTES = {
     "SetBakeryName",    -- Client→Server: player submits chosen bakery name
     "BakeryNameResult", -- Server→Client: success/failure + final name
     "BakeryLevelUp",    -- Server→Client: new bakery level on level-up
+    "UpdateNameplate",  -- Server→All clients: broadcast the active bakery name
 }
 
 -- Server creates all remotes; client waits for server-created ones.

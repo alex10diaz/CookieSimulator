@@ -9,8 +9,9 @@ local Players             = game:GetService("Players")
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
-local setNameRemote    = RemoteManager.Get("SetBakeryName")
-local nameResultRemote = RemoteManager.Get("BakeryNameResult")
+local setNameRemote      = RemoteManager.Get("SetBakeryName")
+local nameResultRemote   = RemoteManager.Get("BakeryNameResult")
+local updateNameplateRem = RemoteManager.Get("UpdateNameplate")
 
 -- ── NAMEPLATE ───────────────────────────────────────────────────
 local nameplateLabel = nil  -- cached TextLabel on the physical sign
@@ -60,6 +61,8 @@ setNameRemote.OnServerEvent:Connect(function(player, rawName)
     PlayerDataManager.SetBakeryName(player, cleanName)
     nameResultRemote:FireClient(player, true, cleanName)
     trySetNameplate(player)
+    -- Broadcast to all clients so they update the nameplate on their side too
+    updateNameplateRem:FireAllClients(cleanName)
     print("[BakeryManager]", player.Name, "named their bakery:", cleanName)
 end)
 

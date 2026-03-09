@@ -239,6 +239,13 @@ Players.PlayerRemoving:Connect(function(player)
     profiles[player.UserId] = nil
 end)
 
+-- Ensure all profiles save before server shuts down
+game:BindToClose(function()
+    for userId, _ in pairs(profiles) do
+        saveProfile(userId)
+    end
+end)
+
 -- Handle players already in game when first required
 for _, player in ipairs(Players:GetPlayers()) do
     if not profiles[player.UserId] then
