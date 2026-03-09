@@ -515,7 +515,7 @@ addDeliverPrompt = function(npcId)
             payout.coins = math.floor(payout.coins * 1.5)
         end
 
-        PlayerDataManager.RecordOrderComplete(player, stars == 5)
+        PlayerDataManager.RecordOrderComplete(player, stars == 5, d.order.packSize or 1)
         PlayerDataManager.AddCoins(player, payout.coins)
         PlayerDataManager.AddXP(player, payout.xp)
         local profile = PlayerDataManager.GetData(player)

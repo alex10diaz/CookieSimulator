@@ -15,6 +15,7 @@ local DEFAULT_PROFILE = {
     ordersCompleted   = 0,
     perfectOrders     = 0,
     failedOrders      = 0,
+    cookiesSold       = 0,   -- lifetime individual cookies sold (sum of packSizes)
     tutorialCompleted = false,
     rebirths          = 0,
     unlockedRecipes   = {"chocolate_chip"},
@@ -130,10 +131,11 @@ function PlayerDataManager.ResetCombo(player)
     if p then p.comboStreak = 0 end
 end
 
-function PlayerDataManager.RecordOrderComplete(player, isPerfect)
+function PlayerDataManager.RecordOrderComplete(player, isPerfect, cookieCount)
     local p = profiles[player.UserId]
     if not p then return end
     p.ordersCompleted += 1
+    p.cookiesSold     += (cookieCount or 1)
     if isPerfect then p.perfectOrders += 1 end
 end
 
