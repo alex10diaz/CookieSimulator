@@ -530,6 +530,7 @@ addDeliverPrompt = function(npcId)
             if _be then _be:Fire({ playerName = player.Name, coins = coins }) end
         end
         SessionStats.RecordDelivery(stars, payout.coins, comboStreak, d.order.packSize or 1)
+        PlayerDataManager.AwardBakeryXP(player, 15 + stars * 5)
         hudUpdate:FireClient(player,
             profile and profile.coins or 0,
             profile and profile.xp    or 0,
