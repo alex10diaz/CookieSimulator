@@ -1,4 +1,4 @@
--- ServerScriptService/Core/UnlockManager (ModuleScript)
+-- ServerScriptService/Core/UnlockManager (Script — auto-runs on server start)
 -- Catalog of purchasable upgrades and cosmetics.
 -- Handles PurchaseItem remote, validates purchases, updates PlayerDataManager.
 
@@ -137,4 +137,3 @@ purchaseRemote.OnServerEvent:Connect(function(player, itemId)
 end)
 
 print("[UnlockManager] Ready — " .. #CATALOG .. " items in catalog.")
-return UnlockManager
