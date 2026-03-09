@@ -4,8 +4,14 @@
 
 local Players           = game:GetService("Players")
 local DataStoreService  = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local playerStore = DataStoreService:GetDataStore("PlayerData_v1")
+
+-- Lazy-loaded to avoid require-at-load-time issues
+local function getRemoteManager()
+    return require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+end
 
 local DEFAULT_PROFILE = {
     coins             = 0,
@@ -22,6 +28,8 @@ local DEFAULT_PROFILE = {
     ownedMachines     = {},
     ratingScore       = 0,
     stats             = { fastestOrderTime = math.huge },
+    unlockedStations  = {},  -- upgrade IDs owned by this player
+    unlockedCosmetics = {},  -- cosmetic IDs owned by this player
 }
 
 local profiles = {}  -- userId -> profile table
@@ -144,12 +152,51 @@ function PlayerDataManager.SetTutorialCompleted(player)
     if p then p.tutorialCompleted = true end
 end
 
+function PlayerDataManager.DeductCoins(player, amount)
+    local p = profiles[player.UserId]
+    if not p then return false, 0 end
+    if p.coins < amount then return false, p.coins end
+    p.coins = p.coins - amount
+    return true, p.coins
+end
+
+function PlayerDataManager.AddUnlock(player, itemId, itemType)
+    -- itemType: "station" or "cosmetic"
+    local p = profiles[player.UserId]
+    if not p then return end
+    local list = itemType == "cosmetic" and p.unlockedCosmetics or p.unlockedStations
+    for _, id in ipairs(list) do
+        if id == itemId then return end  -- already owned
+    end
+    table.insert(list, itemId)
+end
+
+function PlayerDataManager.GetUnlocks(player)
+    local p = profiles[player.UserId]
+    if not p then return {}, {} end
+    return p.unlockedStations, p.unlockedCosmetics
+end
+
 -- ── LIFECYCLE ──────────────────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
     profiles[player.UserId] = loadProfile(player.UserId)
+    local p = profiles[player.UserId]
     print("[PlayerDataManager] Loaded profile for " .. player.Name
-        .. " | coins=" .. profiles[player.UserId].coins
-        .. " level=" .. profiles[player.UserId].level)
+        .. " | coins=" .. p.coins
+        .. " level=" .. p.level)
+    -- Notify client of their initial data (coins, level, unlocks)
+    task.defer(function()
+        local ok, rm = pcall(getRemoteManager)
+        if not ok then return end
+        local initRemote = rm.Get("PlayerDataInit")
+        initRemote:FireClient(player, {
+            coins             = p.coins,
+            level             = p.level,
+            xp                = p.xp,
+            unlockedStations  = p.unlockedStations,
+            unlockedCosmetics = p.unlockedCosmetics,
+        })
+    end)
 end)
 
 Players.PlayerRemoving:Connect(function(player)

@@ -82,6 +82,7 @@ local REMOTES = {
     "PurchaseResult",
     "SlotSelect",
     "SlotSelectResult",
+    "PlayerDataInit",   -- Server→Client: sends coins/level/unlocks on profile load
 }
 
 -- Server creates all remotes; client waits for server-created ones.
