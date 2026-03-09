@@ -42,9 +42,7 @@ local function runPhase(duration, stateName)
     while remaining > 0 do
         task.wait(1)
         remaining -= 1
-        if remaining % 5 == 0 or remaining <= 10 then
-            stateChangedRemote:FireAllClients(stateName, remaining)
-        end
+        stateChangedRemote:FireAllClients(stateName, remaining)
     end
 end
 
