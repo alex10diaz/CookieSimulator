@@ -2,6 +2,9 @@
 -- Both boards show: Cookies | Orders | Coins
 -- Session: tracked live this Open phase, coins via DeliveryPayout BindableEvent
 -- All-time: from PlayerDataManager profiles (online players)
+--
+-- Set LEADERBOARD_ENABLED = true when the game launches.
+local LEADERBOARD_ENABLED = false
 
 local Players             = game:GetService("Players")
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
