@@ -45,6 +45,7 @@ end
 
 -- ── BROADCAST ─────────────────────────────────────────────────
 local function broadcast()
+    if not LEADERBOARD_ENABLED then return end
     -- Session
     local sessionList = {}
     for name, s in pairs(sessionData) do
@@ -74,6 +75,7 @@ end
 -- ── HOOKS ─────────────────────────────────────────────────────
 -- Cookies + orders from BoxDelivered
 OrderManager.On("BoxDelivered", function(data)
+    if not LEADERBOARD_ENABLED then return end
     local box      = data and data.box
     local npcOrder = data and data.npcOrder
     if not box or not box.carrier then return end
@@ -89,6 +91,7 @@ if ssEvents then
     local deliveryPayoutBE = ssEvents:WaitForChild("DeliveryPayout", 10)
     if deliveryPayoutBE then
         deliveryPayoutBE.Event:Connect(function(payload)
+            if not LEADERBOARD_ENABLED then return end
             if not payload or not payload.playerName then return end
             local entry = getOrCreate(payload.playerName)
             entry.coins += (payload.coins or 0)
