@@ -7,10 +7,11 @@ local TweenService      = game:GetService("TweenService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 
-local setNameRemote    = RemoteManager.Get("SetBakeryName")
-local nameResultRemote = RemoteManager.Get("BakeryNameResult")
-local levelUpRemote    = RemoteManager.Get("BakeryLevelUp")
-local dataInitRemote   = RemoteManager.Get("PlayerDataInit")
+local setNameRemote      = RemoteManager.Get("SetBakeryName")
+local nameResultRemote   = RemoteManager.Get("BakeryNameResult")
+local levelUpRemote      = RemoteManager.Get("BakeryLevelUp")
+local dataInitRemote     = RemoteManager.Get("PlayerDataInit")
+local updateNameplateRem = RemoteManager.Get("UpdateNameplate")
 
 local player    = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
@@ -118,3 +119,17 @@ if confirmBtn then
         end
     end)
 end
+
+-- ── NAMEPLATE UPDATE ─────────────────────────────────────────────
+local function setNameplateText(name)
+    local part = workspace:FindFirstChild("Store Nameplate", true)
+    if not part then return end
+    local gui = part:FindFirstChildOfClass("SurfaceGui")
+    if not gui then return end
+    local label = gui:FindFirstChildOfClass("TextLabel")
+    if label then label.Text = name end
+end
+
+updateNameplateRem.OnClientEvent:Connect(function(name)
+    setNameplateText(name)
+end)
