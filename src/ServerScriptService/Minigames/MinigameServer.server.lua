@@ -236,7 +236,7 @@ local function hookMixerPrompts(model)
         if obj:IsA("ProximityPrompt") and obj.Name == "MixerPrompt" then
             obj.Triggered:Connect(function(player)
                 if activeSessions[player] then return end
-                ShowMixPicker:FireClient(player)
+                ShowMixPicker:FireClient(player, MenuManager.GetActiveMenu())
             end)
         end
     end

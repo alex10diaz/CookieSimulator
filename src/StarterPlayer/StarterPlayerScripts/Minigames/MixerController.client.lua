@@ -22,12 +22,19 @@ local COOKIES = {
 	{ id = "lemon_blackraspberry", label = "Lemon Berry"    },
 }
 
-local function showPicker()
+local function showPicker(menuList)
 	if playerGui:FindFirstChild("MixPickerGui") or playerGui:FindFirstChild("MixGui") then return end
 
 	-- Check if tutorial is forcing a specific cookie (set by TutorialUI on step 2)
 	local forcedCookie = playerGui:GetAttribute("TutorialForceCookie")
 	local isForced     = forcedCookie ~= nil
+
+	-- Build menu lookup set from server-provided active menu (nil = show all)
+	local menuSet = nil
+	if menuList and #menuList > 0 then
+		menuSet = {}
+		for _, id in ipairs(menuList) do menuSet[id] = true end
+	end
 
 	local sg = Instance.new("ScreenGui")
 	sg.Name           = "MixPickerGui"
