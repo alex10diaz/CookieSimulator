@@ -524,6 +524,11 @@ addDeliverPrompt = function(npcId)
         local xp    = payout.xp
 
         deliveryResult:FireClient(player, stars, coins, xp)
+        do
+            local _sse = game:GetService("ServerStorage"):FindFirstChild("Events")
+            local _be  = _sse and _sse:FindFirstChild("DeliveryPayout")
+            if _be then _be:Fire({ playerName = player.Name, coins = coins }) end
+        end
         SessionStats.RecordDelivery(stars, payout.coins, comboStreak, d.order.packSize or 1)
         hudUpdate:FireClient(player,
             profile and profile.coins or 0,

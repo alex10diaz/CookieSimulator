@@ -1,13 +1,13 @@
 -- LeaderboardManager
--- Tracks session and all-time leaderboard data.
--- Session: cookies sold + orders completed this Open phase, per player.
--- All-time: cookies sold + coins earned lifetime, from PlayerDataManager profiles.
--- Broadcasts both to all clients on every delivery.
+-- Both boards show: Cookies | Orders | Coins
+-- Session: tracked live this Open phase, coins via DeliveryPayout BindableEvent
+-- All-time: from PlayerDataManager profiles (online players)
 
-local Players           = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players             = game:GetService("Players")
+local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Workspace         = game:GetService("Workspace")
+local ServerStorage       = game:GetService("ServerStorage")
+local Workspace           = game:GetService("Workspace")
 
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
@@ -16,23 +16,21 @@ local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitF
 local leaderboardUpdate = RemoteManager.Get("LeaderboardUpdate")
 
 -- ── SESSION STATE ─────────────────────────────────────────────
--- Per player: { cookies = 0, orders = 0 }
+-- playerName -> { cookies, orders, coins }
 local sessionData = {}
 
-local function getOrCreate(playerName)
-    if not sessionData[playerName] then
-        sessionData[playerName] = { cookies = 0, orders = 0 }
+local function getOrCreate(name)
+    if not sessionData[name] then
+        sessionData[name] = { cookies = 0, orders = 0, coins = 0 }
     end
-    return sessionData[playerName]
+    return sessionData[name]
 end
 
--- ── BUILD TOP-6 LIST ──────────────────────────────────────────
-local function buildSorted(list, primaryKey, secondaryKey)
+-- ── SORT + TOP-6 ──────────────────────────────────────────────
+local function topSix(list)
     table.sort(list, function(a, b)
-        if a[primaryKey] ~= b[primaryKey] then
-            return a[primaryKey] > b[primaryKey]
-        end
-        return (a[secondaryKey] or 0) > (b[secondaryKey] or 0)
+        if a.cookies ~= b.cookies then return a.cookies > b.cookies end
+        return a.coins > b.coins
     end)
     local top = {}
     for i = 1, math.min(6, #list) do
@@ -44,46 +42,57 @@ end
 
 -- ── BROADCAST ─────────────────────────────────────────────────
 local function broadcast()
-    -- SESSION: per-player session stats
+    -- Session
     local sessionList = {}
-    for name, stats in pairs(sessionData) do
-        table.insert(sessionList, {
-            name    = name,
-            cookies = stats.cookies,
-            orders  = stats.orders,
-        })
+    for name, s in pairs(sessionData) do
+        table.insert(sessionList, { name = name, cookies = s.cookies, orders = s.orders, coins = s.coins })
     end
-    local topSession = buildSorted(sessionList, "cookies", "orders")
 
-    -- ALL-TIME: from PlayerDataManager profiles (online players only)
+    -- All-time (online players only)
     local alltimeList = {}
     for _, player in ipairs(Players:GetPlayers()) do
         local data = PlayerDataManager.GetData(player)
         if data then
             table.insert(alltimeList, {
                 name    = player.Name,
-                cookies = data.cookiesSold    or 0,
-                coins   = data.coins          or 0,
+                cookies = data.cookiesSold      or 0,
+                orders  = data.ordersCompleted  or 0,
+                coins   = data.coins            or 0,
             })
         end
     end
-    local topAlltime = buildSorted(alltimeList, "cookies", "coins")
 
-    leaderboardUpdate:FireAllClients({ session = topSession, alltime = topAlltime })
+    leaderboardUpdate:FireAllClients({
+        session = topSix(sessionList),
+        alltime = topSix(alltimeList),
+    })
 end
 
--- ── DELIVERY HOOK ─────────────────────────────────────────────
+-- ── HOOKS ─────────────────────────────────────────────────────
+-- Cookies + orders from BoxDelivered
 OrderManager.On("BoxDelivered", function(data)
     local box      = data and data.box
     local npcOrder = data and data.npcOrder
     if not box or not box.carrier then return end
-
     local entry = getOrCreate(box.carrier)
     entry.orders  += 1
     entry.cookies += npcOrder and (npcOrder.packSize or 1) or 1
-
     broadcast()
 end)
+
+-- Exact session coins from DeliveryPayout BindableEvent
+local ssEvents = ServerStorage:WaitForChild("Events", 10)
+if ssEvents then
+    local deliveryPayoutBE = ssEvents:WaitForChild("DeliveryPayout", 10)
+    if deliveryPayoutBE then
+        deliveryPayoutBE.Event:Connect(function(payload)
+            if not payload or not payload.playerName then return end
+            local entry = getOrCreate(payload.playerName)
+            entry.coins += (payload.coins or 0)
+            broadcast()
+        end)
+    end
+end
 
 -- ── RESET ON EACH OPEN PHASE ──────────────────────────────────
 Workspace:GetAttributeChangedSignal("GameState"):Connect(function()
@@ -93,9 +102,9 @@ Workspace:GetAttributeChangedSignal("GameState"):Connect(function()
     end
 end)
 
--- ── SEND CURRENT STATE TO NEW PLAYERS ─────────────────────────
+-- ── INITIAL BROADCAST WHEN PLAYER JOINS ──────────────────────
 Players.PlayerAdded:Connect(function()
-    task.wait(3)  -- wait for their profile to load
+    task.wait(3)
     broadcast()
 end)
 
