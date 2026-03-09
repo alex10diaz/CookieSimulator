@@ -83,6 +83,10 @@ local REMOTES = {
     "SlotSelect",
     "SlotSelectResult",
     "PlayerDataInit",   -- Server→Client: sends coins/level/unlocks on profile load
+    -- Phase 2: Bakery identity
+    "SetBakeryName",    -- Client→Server: player submits chosen bakery name
+    "BakeryNameResult", -- Server→Client: success/failure + final name
+    "BakeryLevelUp",    -- Server→Client: new bakery level on level-up
 }
 
 -- Server creates all remotes; client waits for server-created ones.

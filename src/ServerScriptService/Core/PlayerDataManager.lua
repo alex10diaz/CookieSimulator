@@ -30,6 +30,9 @@ local DEFAULT_PROFILE = {
     stats             = { fastestOrderTime = math.huge },
     unlockedStations  = {},  -- upgrade IDs owned by this player
     unlockedCosmetics = {},  -- cosmetic IDs owned by this player
+    bakeryName        = "",  -- set once on first join
+    bakeryXP          = 0,
+    bakeryLevel       = 1,
 }
 
 local profiles = {}  -- userId -> profile table
@@ -177,6 +180,32 @@ function PlayerDataManager.GetUnlocks(player)
     return p.unlockedStations, p.unlockedCosmetics
 end
 
+function PlayerDataManager.SetBakeryName(player, name)
+    local p = profiles[player.UserId]
+    if not p then return end
+    p.bakeryName = name
+end
+
+function PlayerDataManager.AwardBakeryXP(player, amount)
+    local p = profiles[player.UserId]
+    if not p then return 0, 1, false end
+    p.bakeryXP += amount
+    local required = math.floor(80 * (p.bakeryLevel ^ 1.4))
+    local didLevelUp = false
+    while p.bakeryXP >= required do
+        p.bakeryXP    -= required
+        p.bakeryLevel += 1
+        required       = math.floor(80 * (p.bakeryLevel ^ 1.4))
+        didLevelUp     = true
+        print("[PlayerDataManager]", player.Name, "bakery leveled up to", p.bakeryLevel)
+    end
+    if didLevelUp then
+        local ok, rm = pcall(getRemoteManager)
+        if ok then rm.Get("BakeryLevelUp"):FireClient(player, p.bakeryLevel) end
+    end
+    return p.bakeryXP, p.bakeryLevel, didLevelUp
+end
+
 -- ── LIFECYCLE ──────────────────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
     profiles[player.UserId] = loadProfile(player.UserId)
@@ -199,6 +228,8 @@ Players.PlayerAdded:Connect(function(player)
             xp                = p.xp,
             unlockedStations  = p.unlockedStations,
             unlockedCosmetics = p.unlockedCosmetics,
+            bakeryName        = p.bakeryName,
+            bakeryLevel       = p.bakeryLevel,
         })
     end)
 end)
