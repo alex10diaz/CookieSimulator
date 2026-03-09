@@ -270,11 +270,7 @@ local function buildMenuBoard(payload)
             confirmBtn.Text             = "✓ Saved!"
             confirmBtn.BackgroundColor3 = Color3.fromRGB(55, 140, 55)
             task.delay(1.5, function()
-                if confirmBtn and confirmBtn.Parent then
-                    confirmBtn.Text             = "Set Menu"
-                    confirmBtn.BackgroundColor3 = Color3.fromRGB(80, 165, 75)
-                    confirmBtn.AutoButtonColor  = true
-                end
+                if sg and sg.Parent then sg:Destroy() end
             end)
         else
             confirmBtn.Text             = message or "Error"
