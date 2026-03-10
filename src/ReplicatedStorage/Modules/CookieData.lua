@@ -527,4 +527,33 @@ function CookieData.GetFridgeId(cookieId)
     return cookie and cookie.fridgeId or nil
 end
 
+-- ============================================================
+-- UNLOCK / OWNERSHIP
+-- ============================================================
+
+-- The 4 cookies players receive for free at the start.
+CookieData.StarterIds = {
+    "chocolate_chip", "snickerdoodle", "pink_sugar", "birthday_cake",
+}
+
+local _STARTER_SET = {}
+for _, id in ipairs(CookieData.StarterIds) do _STARTER_SET[id] = true end
+
+-- Special pricing for the remaining "original 6" cookies (not tier-based).
+local _SPECIAL_COSTS = {
+    cookies_and_cream    = 100,
+    lemon_blackraspberry = 100,
+}
+
+-- Default unlock cost by price tier (for all other cookies).
+local _TIER_COSTS = { [4] = 100, [5] = 250, [6] = 500, [7] = 1000 }
+
+-- Returns the coin cost to unlock this cookie (0 = starter/free).
+function CookieData.GetUnlockCost(cookieId)
+    if _STARTER_SET[cookieId] then return 0 end
+    if _SPECIAL_COSTS[cookieId] then return _SPECIAL_COSTS[cookieId] end
+    local cookie = CookieData.GetById(cookieId)
+    return cookie and (_TIER_COSTS[cookie.price] or 100) or 100
+end
+
 return CookieData

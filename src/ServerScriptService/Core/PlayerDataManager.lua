@@ -24,7 +24,7 @@ local DEFAULT_PROFILE = {
     cookiesSold       = 0,   -- lifetime individual cookies sold (sum of packSizes)
     tutorialCompleted = false,
     rebirths          = 0,
-    unlockedRecipes   = {"chocolate_chip"},
+    unlockedRecipes   = {"chocolate_chip", "snickerdoodle", "pink_sugar", "birthday_cake"},
     ownedMachines     = {},
     ratingScore       = 0,
     stats             = { fastestOrderTime = math.huge },
@@ -178,6 +178,20 @@ function PlayerDataManager.GetUnlocks(player)
     local p = profiles[player.UserId]
     if not p then return {}, {} end
     return p.unlockedStations, p.unlockedCosmetics
+end
+
+function PlayerDataManager.GetOwnedCookies(player)
+    local p = profiles[player.UserId]
+    return p and p.unlockedRecipes or {}
+end
+
+function PlayerDataManager.AddOwnedCookie(player, cookieId)
+    local p = profiles[player.UserId]
+    if not p then return end
+    for _, id in ipairs(p.unlockedRecipes) do
+        if id == cookieId then return end  -- already owned
+    end
+    table.insert(p.unlockedRecipes, cookieId)
 end
 
 function PlayerDataManager.SetBakeryName(player, name)
