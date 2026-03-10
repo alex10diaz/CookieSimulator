@@ -8,7 +8,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local RemoteManager       = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local MenuManager         = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
 local CookieData          = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
-local CookieUnlockManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("CookieUnlockManager"))
+local CookieUnlockManager    = require(ServerScriptService:WaitForChild("Core"):WaitForChild("CookieUnlockManager"))
+local StationRemapService    = require(ServerScriptService:WaitForChild("Core"):WaitForChild("StationRemapService"))
 
 local openMenuBoardRemote     = RemoteManager.Get("OpenMenuBoard")
 local setMenuRemote           = RemoteManager.Get("SetMenuSelection")
@@ -68,6 +69,8 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
     elseif state == "Open" then
         MenuManager.LockMenu()
         sendMenuLocked()
+        -- Remap warmers/fridges to the confirmed active menu
+        StationRemapService.RemapStations(MenuManager.GetActiveMenu())
     end
 end)
 
