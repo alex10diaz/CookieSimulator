@@ -5,14 +5,19 @@ local Players             = game:GetService("Players")
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local MenuManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
-local CookieData    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
+local RemoteManager       = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local MenuManager         = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
+local CookieData          = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
+local CookieUnlockManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("CookieUnlockManager"))
 
-local openMenuBoardRemote = RemoteManager.Get("OpenMenuBoard")
-local setMenuRemote       = RemoteManager.Get("SetMenuSelection")
-local menuResultRemote    = RemoteManager.Get("MenuSelectionResult")
-local menuLockedRemote    = RemoteManager.Get("MenuLocked")
+local openMenuBoardRemote     = RemoteManager.Get("OpenMenuBoard")
+local setMenuRemote           = RemoteManager.Get("SetMenuSelection")
+local menuResultRemote        = RemoteManager.Get("MenuSelectionResult")
+local menuLockedRemote        = RemoteManager.Get("MenuLocked")
+local purchaseCookieRemote    = RemoteManager.Get("PurchaseCookie")
+local purchaseCookieResultRemote = RemoteManager.Get("PurchaseCookieResult")
+
+local MAX_MENU_SIZE = 6
 
 local function buildCookiePayload()
     local result = {}
@@ -26,15 +31,23 @@ local function buildCookiePayload()
 end
 
 local function sendOpenMenuBoard(targetPlayer)
-    local payload = {
-        allCookies = buildCookiePayload(),
-        activeMenu = MenuManager.GetActiveMenu(),
-    }
+    local allCookies = buildCookiePayload()
+    local activeMenu = MenuManager.GetActiveMenu()
+
+    local function fireOne(p)
+        local ownedCookies = CookieUnlockManager.GetOwned(p)
+        openMenuBoardRemote:FireClient(p, {
+            allCookies   = allCookies,
+            activeMenu   = activeMenu,
+            ownedCookies = ownedCookies,
+        })
+    end
+
     if targetPlayer then
-        openMenuBoardRemote:FireClient(targetPlayer, payload)
+        fireOne(targetPlayer)
     else
         for _, p in ipairs(Players:GetPlayers()) do
-            openMenuBoardRemote:FireClient(p, payload)
+            fireOne(p)
         end
     end
 end
@@ -58,40 +71,73 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
     end
 end)
 
--- ── PLAYER JOINS DURING PreOpen ────────────────────────────────
+-- ── PLAYER JOINS ────────────────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
-    local state = workspace:GetAttribute("GameState")
-    if state == "PreOpen" then
-        task.defer(function()
+    -- Grant starter cookies (idempotent — safe to call every join)
+    task.defer(function()
+        CookieUnlockManager.GrantStarters(player)
+        local state = workspace:GetAttribute("GameState")
+        if state == "PreOpen" then
             sendOpenMenuBoard(player)
-        end)
-    end
+        end
+    end)
 end)
 
--- ── REMOTE: SetMenuSelection ───────────────────────────────────
+-- ── REMOTE: SetMenuSelection ────────────────────────────────────
 setMenuRemote.OnServerEvent:Connect(function(player, cookieIds)
-    -- Type guard
     if type(cookieIds) ~= "table" then
         menuResultRemote:FireClient(player, false, "Invalid selection")
         return
     end
-    -- Size guard (prevent exploits)
-    local maxCookies = #MenuManager.GetAllCookies()
-    if #cookieIds < 1 or #cookieIds > maxCookies then
-        menuResultRemote:FireClient(player, false, "Invalid selection size")
+    if #cookieIds < 1 or #cookieIds > MAX_MENU_SIZE then
+        menuResultRemote:FireClient(player, false, "Select 1–" .. MAX_MENU_SIZE .. " cookies")
         return
+    end
+    -- Validate all IDs exist in the full catalog
+    local allCookies = MenuManager.GetAllCookies()
+    for _, id in ipairs(cookieIds) do
+        local found = false
+        for _, valid in ipairs(allCookies) do
+            if id == valid then found = true; break end
+        end
+        if not found then
+            menuResultRemote:FireClient(player, false, "Invalid cookie: " .. tostring(id))
+            return
+        end
+    end
+    -- Validate all selected cookies are owned by this player
+    for _, id in ipairs(cookieIds) do
+        if not CookieUnlockManager.IsOwned(player, id) then
+            menuResultRemote:FireClient(player, false, "Cookie not owned: " .. tostring(id))
+            return
+        end
     end
 
     local ok, result = MenuManager.SetMenu(cookieIds)
     if ok then
         local updatedMenu = MenuManager.GetActiveMenu()
-        -- Broadcast the updated menu to ALL players so their UIs sync
         for _, p in ipairs(Players:GetPlayers()) do
             menuResultRemote:FireClient(p, true, "Menu updated!", updatedMenu)
         end
         print("[MenuServer]", player.Name, "set menu to:", table.concat(updatedMenu, ", "))
     else
         menuResultRemote:FireClient(player, false, result)
+    end
+end)
+
+-- ── REMOTE: PurchaseCookie ──────────────────────────────────────
+purchaseCookieRemote.OnServerEvent:Connect(function(player, cookieId)
+    if type(cookieId) ~= "string" then
+        purchaseCookieResultRemote:FireClient(player, false, "Invalid cookie", cookieId)
+        return
+    end
+    local ok, result = CookieUnlockManager.PurchaseCookie(player, cookieId)
+    if ok then
+        local newCoins = result
+        purchaseCookieResultRemote:FireClient(player, true, newCoins, cookieId)
+        print("[MenuServer]", player.Name, "unlocked cookie:", cookieId, "| coins left:", newCoins)
+    else
+        purchaseCookieResultRemote:FireClient(player, false, result, cookieId)
     end
 end)
 

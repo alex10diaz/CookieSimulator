@@ -93,6 +93,9 @@ local REMOTES = {
     "SetMenuSelection",    -- Client→Server: array of cookieIds player selected
     "MenuSelectionResult", -- Server→All: success/fail + updated menu list
     "MenuLocked",          -- Server→All: menu is now locked (Open phase started)
+    -- Cookie unlock shop
+    "PurchaseCookie",       -- Client→Server: buy a cookie by id
+    "PurchaseCookieResult", -- Server→Client: ok/fail + newCoins + cookieId
 }
 
 -- Server creates all remotes; client waits for server-created ones.
