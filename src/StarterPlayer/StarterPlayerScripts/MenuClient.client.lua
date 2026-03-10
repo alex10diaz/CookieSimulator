@@ -103,14 +103,17 @@ local function buildMenuBoard(payload)
     statusLabel.TextColor3             = Color3.fromRGB(140, 210, 140)
     statusLabel.TextScaled             = true
     statusLabel.Font                   = Enum.Font.Gotham
-    statusLabel.Text                   = "6 / 6 selected"
+    statusLabel.Text                   = #allCookies .. " / " .. #allCookies .. " selected"
 
-    -- Cookie list container
-    local listFrame = Instance.new("Frame", card)
+    -- Cookie list container (ScrollingFrame handles any catalog size)
+    local listFrame = Instance.new("ScrollingFrame", card)
     listFrame.Size                   = UDim2.new(1, -20, 0, 250)
     listFrame.Position               = UDim2.new(0, 10, 0, 108)
     listFrame.BackgroundTransparency = 1
     listFrame.BorderSizePixel        = 0
+    listFrame.ScrollBarThickness     = 4
+    listFrame.ScrollBarImageColor3   = Color3.fromRGB(220, 160, 60)
+    listFrame.CanvasSize             = UDim2.new(0, 0, 0, 0)  -- set after rows built
 
     local listLayout = Instance.new("UIListLayout", listFrame)
     listLayout.Padding             = UDim.new(0, 5)
@@ -120,6 +123,8 @@ local function buildMenuBoard(payload)
     -- Row reference table for refresh
     local rowRefs = {}
 
+    local totalCookies = #allCookies
+
     local function countSelected()
         local n = 0
         for _ in pairs(selected) do n += 1 end
@@ -128,7 +133,7 @@ local function buildMenuBoard(payload)
 
     local function updateStatus()
         local n = countSelected()
-        statusLabel.Text       = n .. " / 6 selected"
+        statusLabel.Text       = n .. " / " .. totalCookies .. " selected"
         statusLabel.TextColor3 = n >= 1
             and Color3.fromRGB(140, 210, 140)
             or  Color3.fromRGB(220, 90, 90)
@@ -212,6 +217,11 @@ local function buildMenuBoard(payload)
             updateStatus()
         end)
     end
+
+    -- Set canvas height so ScrollingFrame knows how far to scroll
+    local ROW_H = 36
+    local ROW_GAP = 5
+    listFrame.CanvasSize = UDim2.new(0, 0, 0, #allCookies * ROW_H + math.max(0, #allCookies - 1) * ROW_GAP)
 
     updateStatus()
 
