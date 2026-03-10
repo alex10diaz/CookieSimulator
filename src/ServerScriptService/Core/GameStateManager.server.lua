@@ -51,7 +51,7 @@ local function teleportAllTo(targetCF)
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
-                hrp.CFrame = targetCF + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3))
+                hrp.CFrame = targetCF + Vector3.new(math.random(-2, 2), 0, math.random(-2, 2))
             end
         end
     end
