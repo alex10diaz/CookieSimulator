@@ -33,6 +33,11 @@ local DEFAULT_PROFILE = {
     bakeryName        = "",  -- set once on first join
     bakeryXP          = 0,
     bakeryLevel       = 1,
+    dailyChallenges = {
+        date     = "",            -- "YYYY-DDD" UTC date key, e.g. "2026-069"
+        progress = {0, 0, 0},   -- progress values for each of the 3 challenges
+        claimed  = {false, false, false},  -- whether reward was claimed
+    },
 }
 
 local profiles = {}  -- userId -> profile table
