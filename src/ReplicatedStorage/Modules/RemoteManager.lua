@@ -97,6 +97,9 @@ local REMOTES = {
     "PurchaseCookie",       -- Client→Server: buy a cookie by id
     "PurchaseCookieResult", -- Server→Client: ok/fail + newCoins + cookieId
     "StationRemapped",  -- Server->All: slot->cookieId map after menu locks
+    -- Daily challenges
+    "DailyChallengesInit",    -- Server->Client: send today's challenges + progress on join
+    "DailyChallengeProgress", -- Server->Client: incremental progress update after each delivery
 }
 
 -- Server creates all remotes; client waits for server-created ones.
