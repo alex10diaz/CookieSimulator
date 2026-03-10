@@ -7,10 +7,14 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
-local DEV_SKIP_PREOPEN  = true     -- DEV: set false for production
-local PREOPEN_DURATION  = 5 * 60  -- 5 min PreOpen for all cycles
-local OPEN_DURATION     = 10 * 60  -- 10 minutes (M6)
-local SUMMARY_DURATION  = 30       -- 30 seconds end-of-day
+local DEV_SKIP_PREOPEN    = true      -- DEV: set false for production
+local PREOPEN_DURATION    = 5 * 60   -- 5 min PreOpen for all cycles
+local OPEN_DURATION       = 10 * 60  -- 10 minutes (M6)
+local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
+local INTERMISSION_DURATION = 5 * 60 -- 5 minutes back room break
+
+local BACK_ROOM_CF  = CFrame.new(0, 3, -127)
+local FRONT_SPAWN_CF = CFrame.new(55, 2, 31)
 
 -- ─── State ────────────────────────────────────────────────────────────────────
 local currentState   = "Lobby"
@@ -36,6 +40,18 @@ local function broadcast(state, timeRemaining)
     fireListeners(state)
 end
 
+local function teleportAllTo(targetCF)
+    for _, player in ipairs(Players:GetPlayers()) do
+        local char = player.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = targetCF + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3))
+            end
+        end
+    end
+end
+
 local function runPhase(duration, stateName)
     local remaining = duration
     broadcast(stateName, remaining)
@@ -58,6 +74,13 @@ local function runCycle()
         broadcast("EndOfDay", SUMMARY_DURATION)
         summaryRemote:FireAllClients(SessionStats.GetSummary())
         task.wait(SUMMARY_DURATION)
+
+        -- Intermission — teleport to back room
+        teleportAllTo(BACK_ROOM_CF)
+        runPhase(INTERMISSION_DURATION, "Intermission")
+
+        -- Return players to front for next shift
+        teleportAllTo(FRONT_SPAWN_CF)
     end
 end
 
