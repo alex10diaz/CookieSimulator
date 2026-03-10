@@ -49,10 +49,11 @@ local orderLbl = makeLabel("ActiveOrderLabel",
 
 -- ─── Helpers ──────────────────────────────────────────────────────────────────
 local STATE_LABELS = {
-    PreOpen  = "PRE-OPEN",
-    Open     = "OPEN",
-    EndOfDay = "END OF DAY",
-    Lobby    = "LOBBY",
+    PreOpen      = "PRE-OPEN",
+    Open         = "OPEN",
+    EndOfDay     = "END OF DAY",
+    Lobby        = "LOBBY",
+    Intermission = "BREAK TIME",
 }
 
 local function formatTime(seconds)
@@ -65,8 +66,8 @@ end
 stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     local label = STATE_LABELS[state] or state
     timerLbl.Text = label .. "  " .. formatTime(timeRemaining or 0)
-    timerLbl.BackgroundColor3 = state == "Open"
-        and Color3.fromRGB(60, 140, 60)
+    timerLbl.BackgroundColor3 = state == "Open" and Color3.fromRGB(60, 140, 60)
+        or state == "Intermission" and Color3.fromRGB(50, 100, 160)
         or  Color3.fromRGB(30, 30, 30)
     -- Hide PreOpen countdown while player is in tutorial
     timerLbl.Visible = not (state == "PreOpen" and player:GetAttribute("InTutorial"))
