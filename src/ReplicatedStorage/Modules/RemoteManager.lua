@@ -96,6 +96,7 @@ local REMOTES = {
     -- Cookie unlock shop
     "PurchaseCookie",       -- Client→Server: buy a cookie by id
     "PurchaseCookieResult", -- Server→Client: ok/fail + newCoins + cookieId
+    "StationRemapped",  -- Server->All: slot->cookieId map after menu locks
 }
 
 -- Server creates all remotes; client waits for server-created ones.
