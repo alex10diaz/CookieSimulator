@@ -13,8 +13,13 @@ local OPEN_DURATION       = 10 * 60  -- 10 minutes (M6)
 local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
 local INTERMISSION_DURATION = 5 * 60 -- 5 minutes back room break
 
-local BACK_ROOM_CF  = CFrame.new(0, 3, -127)
-local FRONT_SPAWN_CF = CFrame.new(55, 2, 31)
+local BACK_ROOM_CF = CFrame.new(0, 3, -127)
+
+local function getFrontSpawnCF()
+    local sp = workspace:FindFirstChild("SpawnLocation")
+    if sp then return sp.CFrame + Vector3.new(0, 3, 0) end
+    return CFrame.new(55, 4, 31)
+end
 
 -- ─── State ────────────────────────────────────────────────────────────────────
 local currentState   = "Lobby"
@@ -80,7 +85,7 @@ local function runCycle()
         runPhase(INTERMISSION_DURATION, "Intermission")
 
         -- Return players to front for next shift
-        teleportAllTo(FRONT_SPAWN_CF)
+        teleportAllTo(getFrontSpawnCF())
     end
 end
 
