@@ -7,27 +7,20 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local MenuManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
+local CookieData    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 
 local openMenuBoardRemote = RemoteManager.Get("OpenMenuBoard")
 local setMenuRemote       = RemoteManager.Get("SetMenuSelection")
 local menuResultRemote    = RemoteManager.Get("MenuSelectionResult")
 local menuLockedRemote    = RemoteManager.Get("MenuLocked")
 
--- Cookie display info for the client UI
-local COOKIE_INFO = {
-    pink_sugar           = { label = "Pink Sugar",           price = 5 },
-    chocolate_chip       = { label = "Chocolate Chip",       price = 4 },
-    birthday_cake        = { label = "Birthday Cake",        price = 6 },
-    cookies_and_cream    = { label = "Cookies & Cream",      price = 6 },
-    snickerdoodle        = { label = "Snickerdoodle",        price = 4 },
-    lemon_blackraspberry = { label = "Lemon Blackraspberry", price = 5 },
-}
-
 local function buildCookiePayload()
     local result = {}
     for _, id in ipairs(MenuManager.GetAllCookies()) do
-        local info = COOKIE_INFO[id] or { label = id, price = 4 }
-        table.insert(result, { id = id, label = info.label, price = info.price })
+        local cookie = CookieData.GetById(id)
+        if cookie then
+            table.insert(result, { id = id, label = cookie.name, price = cookie.price })
+        end
     end
     return result
 end
@@ -83,8 +76,9 @@ setMenuRemote.OnServerEvent:Connect(function(player, cookieIds)
         return
     end
     -- Size guard (prevent exploits)
-    if #cookieIds < 1 or #cookieIds > 6 then
-        menuResultRemote:FireClient(player, false, "Select 1–6 cookies")
+    local maxCookies = #MenuManager.GetAllCookies()
+    if #cookieIds < 1 or #cookieIds > maxCookies then
+        menuResultRemote:FireClient(player, false, "Invalid selection size")
         return
     end
 

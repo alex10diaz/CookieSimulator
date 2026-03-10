@@ -2,16 +2,16 @@
 -- Shared state for the active cookie menu.
 -- Required by MenuServer (wiring), PersistentNPCSpawner, and MinigameServer.
 
-local ALL_COOKIES = {
-    "pink_sugar",
-    "chocolate_chip",
-    "birthday_cake",
-    "cookies_and_cream",
-    "snickerdoodle",
-    "lemon_blackraspberry",
-}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CookieData = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 
-local activeMenu = { table.unpack(ALL_COOKIES) }  -- default: all 6
+-- Derive the full cookie ID list from CookieData (single source of truth)
+local ALL_COOKIES = {}
+for _, cookie in ipairs(CookieData.Cookies) do
+    table.insert(ALL_COOKIES, cookie.id)
+end
+
+local activeMenu = { table.unpack(ALL_COOKIES) }  -- default: all cookies
 local menuLocked = false
 
 local MenuManager = {}
