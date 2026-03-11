@@ -225,9 +225,9 @@ end)
 
 -- Receive HUD coin updates (keep in sync)
 local hudRemote = RemoteManager.Get("HUDUpdate")
-hudRemote.OnClientEvent:Connect(function(data)
-    if data and data.coins then
-        playerCoins = data.coins
+hudRemote.OnClientEvent:Connect(function(coins, xp, activeOrderName)
+    if coins then
+        playerCoins = coins
         if ShopGui.Enabled then updateCoinsLabel() end
     end
 end)
