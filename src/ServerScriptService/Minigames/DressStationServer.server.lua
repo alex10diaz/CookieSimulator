@@ -391,6 +391,15 @@ local function hookWarmerPrompt(prompt, cookieId)
                 return
             end
 
+            -- Check for toppings before creating the box
+            local toppingLabel, toppingColor = getToppingInfo({ cookieId })
+            if toppingLabel then
+                lock.awaitingTopping = true
+                lock.pendingEntry    = entry   -- preserve warmer entry for after topping
+                startToppingRemote:FireClient(player, { label = toppingLabel, toppingColor = toppingColor })
+                return
+            end
+            -- No toppings — create box immediately
             local box = OrderManager.CreateBox(player, entry.batchId, DRESS_SCORE, entry)
             dressLocked[player] = nil
             if box then
@@ -430,6 +439,43 @@ if warmersFolder then
 else
     warn("[DressStation] Warmers folder not found")
 end
+
+-- ─── ToppingComplete ──────────────────────────────────────────────────────────
+toppingCompleteRemote.OnServerEvent:Connect(function(player, elapsed)
+    local lock = dressLocked[player]
+    if not lock or not lock.awaitingTopping then return end
+    if type(elapsed) ~= "number" then return end
+
+    -- Anti-cheat: clamp to plausible range
+    elapsed = math.clamp(elapsed, 0.5, 10)
+    local score = math.clamp(100 - math.max(0, elapsed - 2) * 8, 40, 100)
+    lock.awaitingTopping = false
+
+    if lock.isVariety then
+        local box = OrderManager.CreateVarietyBox(player, lock.collected, score)
+        dressLocked[player] = nil
+        if box then
+            print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- variety box #%d",
+                player.Name, elapsed, score, box.boxId))
+            orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
+            task.defer(updateTV)
+        else
+            orderLocked:FireClient(player, { state = "error", message = "Failed to create box" })
+        end
+    else
+        local entry = lock.pendingEntry
+        local box   = OrderManager.CreateBox(player, entry.batchId, score, entry)
+        dressLocked[player] = nil
+        if box then
+            print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- box #%d",
+                player.Name, elapsed, score, box.boxId))
+            orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
+            task.defer(updateTV)
+        else
+            orderLocked:FireClient(player, { state = "error", message = "Failed to create box" })
+        end
+    end
+end)
 
 -- ─── Cancel / Cleanup ────────────────────────────────────────────────────────
 cancelOrder.OnServerEvent:Connect(function(player)
