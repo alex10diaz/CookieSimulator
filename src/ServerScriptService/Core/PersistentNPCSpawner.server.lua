@@ -539,6 +539,12 @@ addDeliverPrompt = function(npcId)
             comboStreak = comboStreak,
             packSize    = d.order.packSize or 1,
         })
+        -- Advance tutorial step 9 gate (replaces TestNPCSpawner dependency)
+        do
+            local _evts = game:GetService("ServerStorage"):FindFirstChild("Events")
+            local _tde  = _evts and _evts:FindFirstChild("TutorialDelivered")
+            if _tde then _tde:Fire(player) end
+        end
         PlayerDataManager.AwardBakeryXP(player, 15 + stars * 5)
         hudUpdate:FireClient(player,
             profile and profile.coins or 0,

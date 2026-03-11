@@ -118,12 +118,7 @@ local function handlePlayerJoin(player)
 	player:SetAttribute("InTutorial", true)
 	sendStep(player, 1)
 
-	-- Signal TestNPCSpawner which display POS was chosen
-	task.spawn(function()
-		local evts = ServerStorage:WaitForChild("Events", 10)
-		local posChosenEvt = evts and evts:FindFirstChild("TutorialPOSChosen")
-		if posChosenEvt then posChosenEvt:Fire(player, chosen) end
-	end)
+
 end
 
 Players.PlayerAdded:Connect(function(player)
