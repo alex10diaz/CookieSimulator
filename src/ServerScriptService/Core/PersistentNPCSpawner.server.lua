@@ -76,7 +76,20 @@ end
 
 local function getPatienceTime()
     local pc = math.max(1, #Players:GetPlayers())
-    return BASE_PATIENCE + (pc - 1) * PATIENCE_PER_PLAYER
+    local base = BASE_PATIENCE + (pc - 1) * PATIENCE_PER_PLAYER
+    -- Apply patience upgrade from any player in server (co-op benefit)
+    local patienceBonus = 0
+    for _, p in ipairs(Players:GetPlayers()) do
+        local stations, _ = PlayerDataManager.GetUnlocks(p)
+        local hasP2, hasP1 = false, false
+        for _, id in ipairs(stations) do
+            if id == "patience_boost_2" then hasP2 = true end
+            if id == "patience_boost_1" then hasP1 = true end
+        end
+        local bonus = hasP2 and 20 or (hasP1 and 10 or 0)
+        if bonus > patienceBonus then patienceBonus = bonus end
+    end
+    return base + patienceBonus
 end
 
 local function formatTime(secs)
@@ -515,6 +528,19 @@ addDeliverPrompt = function(npcId)
 
         if rushHourActive then
             payout.coins = math.floor(payout.coins * 1.5)
+        end
+        -- Apply tip upgrade for the delivering player
+        do
+            local stations, _ = PlayerDataManager.GetUnlocks(player)
+            local hasTip2, hasTip1 = false, false
+            for _, id in ipairs(stations) do
+                if id == "tip_boost_2" then hasTip2 = true end
+                if id == "tip_boost_1" then hasTip1 = true end
+            end
+            local mult = hasTip2 and 1.20 or (hasTip1 and 1.10 or 1.0)
+            if mult > 1 then
+                payout.coins = math.floor(payout.coins * mult)
+            end
         end
 
         PlayerDataManager.RecordOrderComplete(player, stars == 5, d.order.packSize or 1)
