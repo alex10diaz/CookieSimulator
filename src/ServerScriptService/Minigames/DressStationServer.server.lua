@@ -11,17 +11,38 @@ local Workspace         = game:GetService("Workspace")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local CookieData    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 
 local kdsUpdate   = RemoteManager.Get("DressKDSUpdate")
 local lockOrder   = RemoteManager.Get("DressLockOrder")
 local orderLocked = RemoteManager.Get("DressOrderLocked")
 local cancelOrder = RemoteManager.Get("DressCancelOrder")
+local startToppingRemote    = RemoteManager.Get("StartToppingMinigame")
+local toppingCompleteRemote = RemoteManager.Get("ToppingComplete")
 
 -- ─── State ────────────────────────────────────────────────────────────────────
 local activeKDS   = {}  -- player -> true  (KDS UI is open)
 local dressLocked = {}  -- player -> { orderId, cookieId, npcName }
 
 local DRESS_SCORE = 85
+
+-- Returns topping label and color if any cookie in the id list has a dress field.
+-- Single unique label → that label; multiple → "Add Toppings"
+local function getToppingInfo(cookieIds)
+    local labels, firstColor = {}, nil
+    for _, id in ipairs(cookieIds) do
+        local ck = CookieData.GetById(id)
+        if ck and ck.dress then
+            if not firstColor then firstColor = ck.dress.toppingColor end
+            local lbl = ck.dress.label
+            local found = false
+            for _, l in ipairs(labels) do if l == lbl then found = true; break end end
+            if not found then table.insert(labels, lbl) end
+        end
+    end
+    if #labels == 0 then return nil, nil end
+    return (#labels == 1 and labels[1] or "Add Toppings"), firstColor
+end
 
 local COOKIE_NAMES = {
     pink_sugar           = "Pink Sugar",
@@ -273,6 +294,7 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
             remaining      = uniqueTypes,
             totalSteps     = #uniqueTypes,
             collected      = {},
+            collectedTypes = {},
             typeSlotCounts = typeSlotCounts,
         }
         local firstId = uniqueTypes[1]
@@ -323,6 +345,7 @@ local function hookWarmerPrompt(prompt, cookieId)
             end
 
             table.insert(lock.collected, entry)
+            table.insert(lock.collectedTypes, cookieId)
             table.remove(lock.remaining, 1)
 
             if #lock.remaining > 0 then
@@ -339,11 +362,18 @@ local function hookWarmerPrompt(prompt, cookieId)
                 return
             end
 
-            -- All collected — create variety box
+            -- All collected — check for toppings before creating the box
+            local toppingLabel, toppingColor = getToppingInfo(lock.collectedTypes)
+            if toppingLabel then
+                lock.awaitingTopping = true
+                startToppingRemote:FireClient(player, { label = toppingLabel, toppingColor = toppingColor })
+                return
+            end
+            -- No toppings — create box immediately
             local box = OrderManager.CreateVarietyBox(player, lock.collected, DRESS_SCORE)
             dressLocked[player] = nil
             if box then
-                print(string.format("[DressStation] %s completed variety pickup — box #%d for %s",
+                print(string.format("[DressStation] %s completed variety pickup -- box #%d for %s",
                     player.Name, box.boxId, lock.npcName))
                 orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
                 task.defer(updateTV)
