@@ -24,7 +24,7 @@
 | 1 | Fix ShopClient/ShopServer | Small | ✅ Done |
 | 2 | Station upgrade effects | Small | ✅ Done |
 | 3 | Topping minigame | Medium | ❌ Not done |
-| 4 | Lobby TV (Today's Menu display) | Small | ❌ Not done |
+| 4 | Lobby TV (Today's Menu display) | Small | ✅ Done |
 | 5 | Station Mastery / Roles | Large | ❌ Not done |
 | 6 | Employee of the Shift | Small | ❌ Not done |
 | 7 | Weekly Challenges | Small | ❌ Not done |
