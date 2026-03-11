@@ -100,6 +100,9 @@ local REMOTES = {
     -- Daily challenges
     "DailyChallengesInit",    -- Server->Client: send today's challenges + progress on join
     "DailyChallengeProgress", -- Server->Client: incremental progress update after each delivery
+    -- Topping minigame
+    "StartToppingMinigame",   -- Server->Client: begin topping minigame session
+    "ToppingComplete",        -- Client->Server: player finished topping minigame
 }
 
 -- Server creates all remotes; client waits for server-created ones.
