@@ -10,6 +10,8 @@ local kdsUpdate     = RemoteManager.Get("DressKDSUpdate")
 local lockOrder     = RemoteManager.Get("DressLockOrder")
 local orderLocked   = RemoteManager.Get("DressOrderLocked")
 local cancelOrder   = RemoteManager.Get("DressCancelOrder")
+local startToppingRemote    = RemoteManager.Get("StartToppingMinigame")
+local toppingCompleteRemote = RemoteManager.Get("ToppingComplete")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -63,6 +65,151 @@ end
 local function destroyWarmerOverlay()
     local g = playerGui:FindFirstChild("DressWarmerGui")
     if g then g:Destroy() end
+end
+
+local function destroyToppingGui()
+    local g = playerGui:FindFirstChild("ToppingMinigameGui")
+    if g then g:Destroy() end
+end
+
+local TAP_TARGET = 20
+
+local function showToppingMinigame(data)
+    destroyWarmerOverlay()
+    destroyToppingGui()
+    setMovement(false)
+
+    local label    = data.label or "Add Toppings"
+    local barColor = data.toppingColor or Color3.fromRGB(220, 180, 80)
+
+    local startTime    = tick()
+    local tapCount     = 0
+    local fillFraction = 0
+    local completed    = false
+
+    local sg = Instance.new("ScreenGui")
+    sg.Name           = "ToppingMinigameGui"
+    sg.ResetOnSpawn   = false
+    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.Parent         = playerGui
+
+    local bg = Instance.new("Frame", sg)
+    bg.Size                   = UDim2.new(0, 380, 0, 185)
+    bg.Position               = UDim2.new(0.5, -190, 0.5, -92)
+    bg.BackgroundColor3       = Color3.fromRGB(18, 18, 18)
+    bg.BackgroundTransparency = 0.05
+    bg.BorderSizePixel        = 0
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 14)
+
+    local headerLbl = Instance.new("TextLabel", bg)
+    headerLbl.Size                   = UDim2.new(1, -20, 0, 32)
+    headerLbl.Position               = UDim2.new(0, 10, 0, 10)
+    headerLbl.BackgroundTransparency = 1
+    headerLbl.TextColor3             = Color3.fromRGB(255, 215, 60)
+    headerLbl.Font                   = Enum.Font.GothamBold
+    headerLbl.TextSize               = 18
+    headerLbl.Text                   = "ADD TOPPINGS"
+    headerLbl.TextXAlignment         = Enum.TextXAlignment.Left
+
+    local toppingNameLbl = Instance.new("TextLabel", bg)
+    toppingNameLbl.Size                   = UDim2.new(1, -20, 0, 22)
+    toppingNameLbl.Position               = UDim2.new(0, 10, 0, 44)
+    toppingNameLbl.BackgroundTransparency = 1
+    toppingNameLbl.TextColor3             = Color3.fromRGB(200, 200, 220)
+    toppingNameLbl.Font                   = Enum.Font.Gotham
+    toppingNameLbl.TextSize               = 14
+    toppingNameLbl.Text                   = label
+
+    local barBg = Instance.new("Frame", bg)
+    barBg.Size             = UDim2.new(1, -20, 0, 26)
+    barBg.Position         = UDim2.new(0, 10, 0, 76)
+    barBg.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    barBg.BorderSizePixel  = 0
+    Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 6)
+
+    local barFill = Instance.new("Frame", barBg)
+    barFill.Size             = UDim2.new(0, 0, 1, 0)
+    barFill.BackgroundColor3 = barColor
+    barFill.BorderSizePixel  = 0
+    Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 6)
+
+    local pctLbl = Instance.new("TextLabel", bg)
+    pctLbl.Size                   = UDim2.new(1, -20, 0, 20)
+    pctLbl.Position               = UDim2.new(0, 10, 0, 106)
+    pctLbl.BackgroundTransparency = 1
+    pctLbl.TextColor3             = Color3.fromRGB(180, 180, 200)
+    pctLbl.Font                   = Enum.Font.Gotham
+    pctLbl.TextSize               = 12
+    pctLbl.Text                   = "0%"
+    pctLbl.TextXAlignment         = Enum.TextXAlignment.Right
+
+    local instrLbl = Instance.new("TextLabel", bg)
+    instrLbl.Size                   = UDim2.new(1, -20, 0, 22)
+    instrLbl.Position               = UDim2.new(0, 10, 0, 128)
+    instrLbl.BackgroundTransparency = 1
+    instrLbl.TextColor3             = Color3.fromRGB(210, 210, 210)
+    instrLbl.Font                   = Enum.Font.GothamBold
+    instrLbl.TextSize               = 13
+    instrLbl.Text                   = "Tap  E  rapidly to shake!"
+
+    local timerLbl = Instance.new("TextLabel", bg)
+    timerLbl.Size                   = UDim2.new(1, -20, 0, 20)
+    timerLbl.Position               = UDim2.new(0, 10, 0, 155)
+    timerLbl.BackgroundTransparency = 1
+    timerLbl.TextColor3             = Color3.fromRGB(140, 200, 140)
+    timerLbl.Font                   = Enum.Font.Gotham
+    timerLbl.TextSize               = 12
+    timerLbl.Text                   = "0.0s"
+    timerLbl.TextXAlignment         = Enum.TextXAlignment.Right
+
+    local function complete()
+        if completed then return end
+        completed = true
+        local elapsed = tick() - startTime
+
+        local rating = elapsed <= 2 and "Perfect!" or (elapsed <= 4 and "Good!" or "OK")
+        local flashLbl = Instance.new("TextLabel", bg)
+        flashLbl.Size                   = UDim2.new(1, 0, 1, 0)
+        flashLbl.BackgroundColor3       = Color3.fromRGB(25, 25, 35)
+        flashLbl.BackgroundTransparency = 0.05
+        flashLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
+        flashLbl.Font                   = Enum.Font.GothamBold
+        flashLbl.TextSize               = 20
+        flashLbl.Text                   = rating .. string.format("  %.1fs", elapsed)
+        flashLbl.ZIndex                 = 10
+        flashLbl.BorderSizePixel        = 0
+        Instance.new("UICorner", flashLbl).CornerRadius = UDim.new(0, 14)
+
+        toppingCompleteRemote:FireServer(elapsed)
+
+        task.delay(1.2, function()
+            destroyToppingGui()
+            setMovement(true)
+        end)
+    end
+
+    local UIS = game:GetService("UserInputService")
+    local inputConn
+    inputConn = UIS.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed or completed then return end
+        if input.KeyCode ~= Enum.KeyCode.E then return end
+        tapCount      += 1
+        fillFraction   = math.min(1, tapCount / TAP_TARGET)
+        barFill.Size   = UDim2.new(fillFraction, 0, 1, 0)
+        pctLbl.Text    = math.floor(fillFraction * 100) .. "%"
+        if fillFraction >= 1 then
+            inputConn:Disconnect()
+            complete()
+        end
+    end)
+
+    local RunService = game:GetService("RunService")
+    local heartbeatConn
+    heartbeatConn = RunService.Heartbeat:Connect(function()
+        if completed then heartbeatConn:Disconnect(); return end
+        if not sg.Parent then heartbeatConn:Disconnect(); return end
+        timerLbl.Text = string.format("%.1fs", tick() - startTime)
+    end)
 end
 
 local function flashMsg(text, success)
@@ -330,6 +477,10 @@ orderLocked.OnClientEvent:Connect(function(result)
         closeKDS()
         flashMsg(result.message or "Something went wrong", false)
     end
+end)
+
+startToppingRemote.OnClientEvent:Connect(function(data)
+    showToppingMinigame(data)
 end)
 
 print("[DressStationClient] Ready — KDS v2.")
