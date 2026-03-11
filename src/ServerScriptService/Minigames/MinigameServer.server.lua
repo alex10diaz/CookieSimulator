@@ -280,6 +280,13 @@ local function hookFridgeOvenPrompts()
         local prompt = fridge:FindFirstChild("FridgePrompt", true)
         local fridgeId = fridge:GetAttribute("FridgeId")
         if prompt and fridgeId then
+            -- Label prompt with cookie name so players know which fridge they're at
+            for _, cookie in ipairs(CookieData.Cookies) do
+                if cookie.fridgeId == fridgeId then
+                    prompt.ActionText = "Pull " .. cookie.name .. " Dough"
+                    break
+                end
+            end
             prompt.Triggered:Connect(function(player)
                 if ovenSession[player] or activeSessions[player] then return end
                 
