@@ -11,7 +11,13 @@ for _, cookie in ipairs(CookieData.Cookies) do
     table.insert(ALL_COOKIES, cookie.id)
 end
 
-local activeMenu = { table.unpack(ALL_COOKIES) }  -- default: all cookies
+-- Default menu: the 6 core launch cookies (shown before anyone picks via the menu board)
+local DEFAULT_MENU = {
+    "pink_sugar", "chocolate_chip", "birthday_cake",
+    "cookies_and_cream", "snickerdoodle", "lemon_blackraspberry"
+}
+
+local activeMenu = { table.unpack(DEFAULT_MENU) }  -- default: 6 core cookies
 local menuLocked = false
 
 local MenuManager = {}
@@ -51,7 +57,7 @@ end
 
 function MenuManager.UnlockMenu()
     menuLocked = false
-    activeMenu = { table.unpack(ALL_COOKIES) }  -- reset to all cookies for new session
+    activeMenu = { table.unpack(DEFAULT_MENU) }  -- reset to 6 core cookies for new session
 end
 
 function MenuManager.IsLocked()

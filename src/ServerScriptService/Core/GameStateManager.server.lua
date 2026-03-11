@@ -8,7 +8,7 @@ local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChi
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local DEV_SKIP_PREOPEN    = true      -- DEV: set false for production
-local PREOPEN_DURATION    = 5 * 60   -- 5 min PreOpen for all cycles
+local PREOPEN_DURATION    = 20       -- TEMP: 20s for testing (restore to 5 * 60)
 local OPEN_DURATION       = 10 * 60  -- 10 minutes (M6)
 local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
 local INTERMISSION_DURATION = 5 * 60 -- 5 minutes back room break
