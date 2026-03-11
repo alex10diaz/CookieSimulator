@@ -9,7 +9,6 @@ local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForC
 local CookieData    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 
 local stationRemapped = RemoteManager.Get("StationRemapped")
-local gameStateRemote = RemoteManager.Get("GameStateUpdate")
 
 -- ── FIND TV ────────────────────────────────────────────────────────────────────
 local tv = Workspace:WaitForChild("LobbyTV", 30)
@@ -55,7 +54,8 @@ stationRemapped.OnClientEvent:Connect(function(slotMap)
 end)
 
 -- Reset to placeholders when phase goes back to PreOpen or Intermission
-gameStateRemote.OnClientEvent:Connect(function(state)
+Workspace:GetAttributeChangedSignal("GameState"):Connect(function()
+    local state = Workspace:GetAttribute("GameState") or "Lobby"
     if state == "PreOpen" or state == "Intermission" or state == "Lobby" then
         resetToPlaceholder()
     end
