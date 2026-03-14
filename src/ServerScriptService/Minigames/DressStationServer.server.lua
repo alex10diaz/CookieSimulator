@@ -373,7 +373,17 @@ local function hookWarmerPrompt(prompt, model)
             local toppingLabel, toppingColor = getToppingInfo(lock.collectedTypes)
             if toppingLabel then
                 lock.awaitingTopping = true
-                startToppingRemote:FireClient(player, { label = toppingLabel, toppingColor = toppingColor })
+                -- Bug 4: 1s buffer then TP to dress station before starting topping
+                task.spawn(function()
+                    task.wait(1)
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") and dressLocked[player] then
+                        char.HumanoidRootPart.CFrame = DRESS_STATION_CF
+                    end
+                    if dressLocked[player] then
+                        startToppingRemote:FireClient(player, { label = toppingLabel, toppingColor = toppingColor })
+                    end
+                end)
                 return
             end
             -- No toppings — create box immediately
@@ -403,7 +413,17 @@ local function hookWarmerPrompt(prompt, model)
             if toppingLabel then
                 lock.awaitingTopping = true
                 lock.pendingEntry    = entry   -- preserve warmer entry for after topping
-                startToppingRemote:FireClient(player, { label = toppingLabel, toppingColor = toppingColor })
+                -- Bug 4: 1s buffer then TP to dress station before starting topping
+                task.spawn(function()
+                    task.wait(1)
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") and dressLocked[player] then
+                        char.HumanoidRootPart.CFrame = DRESS_STATION_CF
+                    end
+                    if dressLocked[player] then
+                        startToppingRemote:FireClient(player, { label = toppingLabel, toppingColor = toppingColor })
+                    end
+                end)
                 return
             end
             -- No toppings — create box immediately
@@ -422,11 +442,10 @@ local function hookWarmerPrompt(prompt, model)
 end
 
 local function hookWarmerModel(model)
-    local cookieId = model:GetAttribute("CookieId")
-    if not cookieId then return end
+    -- No initial CookieId guard needed — hookWarmerPrompt reads it dynamically
     for _, child in ipairs(model:GetDescendants()) do
         if child:IsA("ProximityPrompt") and child.Name == "WarmerPickupPrompt" then
-            hookWarmerPrompt(child, cookieId)
+            hookWarmerPrompt(child, model)  -- pass model, not cookieId
         end
     end
 end
@@ -438,9 +457,8 @@ if warmersFolder then
     -- Also catch prompts added after startup (e.g. from MCP)
     warmersFolder.DescendantAdded:Connect(function(desc)
         if desc:IsA("ProximityPrompt") and desc.Name == "WarmerPickupPrompt" then
-            local model = desc:FindFirstAncestorOfClass("Model")
-            local cookieId = model and model:GetAttribute("CookieId")
-            if cookieId then hookWarmerPrompt(desc, cookieId) end
+            local mdl = desc:FindFirstAncestorOfClass("Model")
+            if mdl then hookWarmerPrompt(desc, mdl) end
         end
     end)
 else
