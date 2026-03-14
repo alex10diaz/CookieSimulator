@@ -6,6 +6,7 @@ local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local RunService        = game:GetService("RunService")
+local TweenService      = game:GetService("TweenService")
 local ServerStorage     = game:GetService("ServerStorage")
 local Workspace         = game:GetService("Workspace")
 
