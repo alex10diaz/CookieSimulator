@@ -137,7 +137,7 @@ local function updateBoard()
                 or  Color3.fromRGB(255, 220, 50)
         end
         if fill then
-            local ratio = ch.goal > 0 and ((state.progress[i] or 0) / ch.goal) or 0
+            local ratio = ch.goal > 0 and math.min(1, (state.progress[i] or 0) / ch.goal) or 0
             fill.Size             = UDim2.new(state.claimed[i] and 1 or ratio, 0, 1, 0)
             fill.BackgroundColor3 = state.claimed[i]
                 and Color3.fromRGB(80, 200, 80)
