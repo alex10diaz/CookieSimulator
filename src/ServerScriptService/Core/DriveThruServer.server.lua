@@ -36,6 +36,13 @@ local tvModel         = driveThruFolder and driveThruFolder:FindFirstChild("Driv
 local tvPart          = tvModel and tvModel:FindFirstChildWhichIsA("BasePart")
 local deliveryZone    = nil   -- created on unlock
 
+-- Window 1 sliding parts (grabbed once at startup)
+local win1Model  = driveThruFolder
+    and driveThruFolder:FindFirstChild("Drive Thru Window")
+    and driveThruFolder:FindFirstChild("Drive Thru Window"):FindFirstChild("Window 1")
+local WIN_SLIDE_DELTA = Vector3.new(0, 0, -3.1)  -- slides toward Window 2 to open
+local WIN_TWEEN_INFO  = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+
 -- ── STATE ─────────────────────────────────────────────────────────────────────
 local currentOrder    = nil   -- { cookieId, packSize, price, car, timeoutThread }
 local loopRunning     = false
@@ -60,6 +67,36 @@ local function setFolderVisible(visible)
                 d.CanCollide   = false
             end
         end
+    end
+end
+
+-- ── WINDOW ANIMATION ──────────────────────────────────────────────────────────
+local windowOpen = false
+
+local function collectWindow1Parts()
+    local parts = {}
+    if not win1Model then return parts end
+    for _, d in ipairs(win1Model:GetDescendants()) do
+        if d:IsA("BasePart") then
+            table.insert(parts, d)
+        end
+    end
+    return parts
+end
+
+local function setWindowOpen(open)
+    if open == windowOpen then return end
+    windowOpen = open
+    local parts  = collectWindow1Parts()
+    local delta  = open and WIN_SLIDE_DELTA or -WIN_SLIDE_DELTA
+    for _, part in ipairs(parts) do
+        part.Anchored = false  -- TweenService needs non-anchored OR we set directly
+        local target = part.CFrame * CFrame.new(delta)
+        local tween  = TweenService:Create(part, WIN_TWEEN_INFO, { CFrame = target })
+        tween:Play()
+        tween.Completed:Connect(function()
+            part.Anchored = true
+        end)
     end
 end
 
@@ -181,8 +218,8 @@ end
 local function createDeliveryZone()
     local p = Instance.new("Part")
     p.Name         = "DriveThruDeliveryZone"
-    p.Size         = Vector3.new(2, 4, 2)
-    p.CFrame       = CFrame.new(-33, 5, CAR_ROAD_Z)
+    p.Size         = Vector3.new(3, 5, 4)
+    p.CFrame       = CFrame.new(-31, 5, CAR_ROAD_Z)  -- inside bakery, reachable from floor
     p.Anchored     = true
     p.CanCollide   = false
     p.Transparency = 1
@@ -201,7 +238,7 @@ local function addDeliveryPrompt(onDeliver)
     pp.Name                  = "DriveThruDeliverPrompt"
     pp.ActionText            = "Hand Box"
     pp.ObjectText            = "Drive Thru"
-    pp.MaxActivationDistance = 8
+    pp.MaxActivationDistance = 15
     pp.HoldDuration          = 0
     pp.RequiresLineOfSight   = false
     pp.Parent                = deliveryZone
@@ -236,6 +273,7 @@ local function dismissCar(car, reason)
     clearDeliveryPrompt()
     currentOrder = nil
     updateTV("No Orders", "")
+    setWindowOpen(false)
     moveCarToX(car, CAR_EXIT_X, CAR_EXIT_SEC, function()
         car:Destroy()
     end)
@@ -267,7 +305,8 @@ local function handleCarArrival()
 
         local cookie = CookieData.GetById(order.cookieId)
         local name   = cookie and cookie.name or order.cookieId
-        updateTV(name .. " ×" .. order.packSize, order.coins .. " coins")
+        updateTV(name .. " x" .. order.packSize, order.coins .. " coins")
+        setWindowOpen(true)
         print(string.format("[DriveThruServer] Car at window | %s x%d | %d coins", name, order.packSize, order.coins))
 
         -- Timeout: car leaves if nobody delivers in time
@@ -282,6 +321,8 @@ end
 -- ── BOX DELIVERY HOOK ─────────────────────────────────────────────────────────
 OrderManager.On("BoxCreated", function(box)
     if not currentOrder then return end
+    print(string.format("[DriveThruServer] BoxCreated: box.cookieId=%s order.cookieId=%s",
+        tostring(box.cookieId), tostring(currentOrder.cookieId)))
     if box.cookieId ~= currentOrder.cookieId then return end
 
     local order = currentOrder
@@ -312,7 +353,8 @@ OrderManager.On("BoxCreated", function(box)
             })
         end
 
-        -- Car drives away
+        -- Close window and drive car away
+        setWindowOpen(false)
         moveCarToX(order.car, CAR_EXIT_X, CAR_EXIT_SEC, function()
             order.car:Destroy()
         end)
