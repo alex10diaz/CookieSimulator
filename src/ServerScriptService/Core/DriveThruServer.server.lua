@@ -170,8 +170,8 @@ local function spawnCar()
             if d:IsA("BasePart") then car.PrimaryPart = d; break end
         end
     end
-    -- +90° rotation: car's -Z (front) now faces +X = direction of travel (left→right)
-    car:PivotTo(CFrame.new(CAR_SPAWN_X, CAR_Y, CAR_ROAD_Z) * CFrame.Angles(0, math.rad(90), 0))
+    -- -90° rotation: aligns car along X-axis road
+    car:PivotTo(CFrame.new(CAR_SPAWN_X, CAR_Y, CAR_ROAD_Z) * CFrame.Angles(0, math.rad(-90), 0))
     return car
 end
 
@@ -197,9 +197,8 @@ local function spawnCarNPC(onTakeOrder)
         if pg then pg.Enabled = false end
     end
 
-    -- Position NPC seated at window side of car
-    local hrp = npc:FindFirstChild("HumanoidRootPart")
-    if hrp then hrp.CFrame = NPC_CF end
+    -- Position NPC seated at window side of car (PivotTo moves entire model)
+    npc:PivotTo(NPC_CF)
 
     -- Set up "Take Order" prompt (reuse existing OrderPrompt)
     if head then
