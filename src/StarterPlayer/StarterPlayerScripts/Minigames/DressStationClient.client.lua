@@ -150,7 +150,7 @@ local function showToppingMinigame(data)
     instrLbl.TextColor3             = Color3.fromRGB(210, 210, 210)
     instrLbl.Font                   = Enum.Font.GothamBold
     instrLbl.TextSize               = 13
-    instrLbl.Text                   = "Tap  E  rapidly to shake!"
+    instrLbl.Text                   = "Tap rapidly!"
 
     local timerLbl = Instance.new("TextLabel", bg)
     timerLbl.Size                   = UDim2.new(1, -20, 0, 20)
@@ -162,9 +162,24 @@ local function showToppingMinigame(data)
     timerLbl.Text                   = "0.0s"
     timerLbl.TextXAlignment         = Enum.TextXAlignment.Right
 
+    -- Large tap/click button — works for mouse click and mobile touch (Bug 3 fix)
+    local tapBtn = Instance.new("TextButton", bg)
+    tapBtn.Size                   = UDim2.new(1, 0, 1, -50)
+    tapBtn.Position               = UDim2.new(0, 0, 0, 50)
+    tapBtn.BackgroundColor3       = Color3.fromRGB(40, 40, 55)
+    tapBtn.BackgroundTransparency = 0.5
+    tapBtn.TextColor3             = Color3.fromRGB(255, 255, 255)
+    tapBtn.Font                   = Enum.Font.GothamBold
+    tapBtn.TextSize               = 22
+    tapBtn.Text                   = "TAP!"
+    tapBtn.BorderSizePixel        = 0
+    tapBtn.ZIndex                 = 5
+    Instance.new("UICorner", tapBtn).CornerRadius = UDim.new(0, 14)
+
     local function complete()
         if completed then return end
         completed = true
+        tapBtn.Active = false
         local elapsed = tick() - startTime
 
         local rating = elapsed <= 2 and "Perfect!" or (elapsed <= 4 and "Good!" or "OK")
@@ -188,20 +203,16 @@ local function showToppingMinigame(data)
         end)
     end
 
-    local UIS = game:GetService("UserInputService")
-    local inputConn
-    inputConn = UIS.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed or completed then return end
-        if input.KeyCode ~= Enum.KeyCode.E then return end
-        tapCount      += 1
-        fillFraction   = math.min(1, tapCount / TAP_TARGET)
-        barFill.Size   = UDim2.new(fillFraction, 0, 1, 0)
-        pctLbl.Text    = math.floor(fillFraction * 100) .. "%"
-        if fillFraction >= 1 then
-            inputConn:Disconnect()
-            complete()
-        end
-    end)
+    local function onTap()
+        if completed then return end
+        tapCount     += 1
+        fillFraction  = math.min(1, tapCount / TAP_TARGET)
+        barFill.Size  = UDim2.new(fillFraction, 0, 1, 0)
+        pctLbl.Text   = math.floor(fillFraction * 100) .. "%"
+        if fillFraction >= 1 then complete() end
+    end
+
+    tapBtn.MouseButton1Click:Connect(onTap)
 
     local RunService = game:GetService("RunService")
     local heartbeatConn
