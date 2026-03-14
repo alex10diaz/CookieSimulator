@@ -26,6 +26,9 @@ local dressLocked = {}  -- player -> { orderId, cookieId, npcName }
 
 local DRESS_SCORE = 85
 
+-- CFrame players are teleported to before the topping minigame starts (Bug 4 fix)
+local DRESS_STATION_CF = CFrame.new(-28, 5, -33)
+
 -- Returns topping label and color if any cookie in the id list has a dress field.
 -- Single unique label → that label; multiple → "Add Toppings"
 local function getToppingInfo(cookieIds)
@@ -327,10 +330,14 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
 end)
 
 -- ─── Warmer Pickup Prompts ────────────────────────────────────────────────────
-local function hookWarmerPrompt(prompt, cookieId)
+-- model passed (not cookieId) so CookieId is read dynamically after StationRemap
+local function hookWarmerPrompt(prompt, model)
     prompt.Triggered:Connect(function(player)
+        local cookieId = model:GetAttribute("CookieId")
+        if not cookieId then return end
         local lock = dressLocked[player]
         if not lock then return end
+        if lock.awaitingTopping then return end  -- Bug 2 fix: block re-trigger during topping
 
         if lock.isVariety then
             -- ── Variety: must visit warmers in guided order ────────────────────

@@ -289,8 +289,10 @@ local function hookFridgeOvenPrompts()
             end
             prompt.Triggered:Connect(function(player)
                 if ovenSession[player] or activeSessions[player] then return end
-                
-                local batchId = OrderManager.PullFromFridge(player, fridgeId)
+                -- Read FridgeId dynamically so StationRemap changes are respected (Bug 1 fix)
+                local currentFridgeId = fridge:GetAttribute("FridgeId")
+                if not currentFridgeId then return end
+                local batchId = OrderManager.PullFromFridge(player, currentFridgeId)
                 if batchId then
                     ovenSession[player] = batchId
                     PullResultRemote:FireClient(player, batchId, true)
