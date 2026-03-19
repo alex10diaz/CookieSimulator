@@ -1,6 +1,7 @@
 -- StarterPlayerScripts/ShopClient (LocalScript)
 -- Handles the back room shop GUI: two tabs (Upgrades | Cosmetics).
 -- Receives player unlock data via PlayerDataInit and PurchaseResult remotes.
+-- M7 Polish: dark navy rows, gold active tab, UIStroke on rows/buttons.
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,6 +23,9 @@ local coinsLabel = bg:WaitForChild("CoinsLabel")
 local tabUpgrade = bg:WaitForChild("TabUpgrades")
 local tabCosm    = bg:WaitForChild("TabCosmetics")
 local itemList   = bg:WaitForChild("ItemList")  -- ScrollingFrame
+
+local ACCENT   = Color3.fromRGB(255, 200, 0)  -- gold
+local NAVY     = Color3.fromRGB(14, 14, 26)
 
 -- ── CLIENT STATE ────────────────────────────────────────────────
 local ownedStations  = {}
@@ -65,7 +69,7 @@ local function requiresMet(item)
 end
 
 local function updateCoinsLabel()
-    coinsLabel.Text = "💰 " .. tostring(playerCoins) .. " coins"
+    coinsLabel.Text = tostring(playerCoins) .. " coins"
 end
 
 -- ── RENDER ITEMS ────────────────────────────────────────────────
@@ -89,77 +93,97 @@ local function renderItems()
 
         -- Row frame
         local row = Instance.new("Frame")
-        row.Name            = item.id
-        row.Size            = UDim2.new(1, -8, 0, ROW_H - 4)
-        row.Position        = UDim2.new(0, 4, 0, yOffset + 2)
-        row.BackgroundColor3 = owned and Color3.fromRGB(50, 80, 50)
-                              or Color3.fromRGB(45, 45, 55)
-        row.BorderSizePixel = 0
-        row.Parent          = itemList
+        row.Name             = item.id
+        row.Size             = UDim2.new(1, -8, 0, ROW_H - 4)
+        row.Position         = UDim2.new(0, 4, 0, yOffset + 2)
+        row.BackgroundColor3 = owned
+            and Color3.fromRGB(18, 38, 20)
+            or  Color3.fromRGB(18, 18, 32)
+        row.BorderSizePixel  = 0
+        row.Parent           = itemList
+        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+        local rowStroke = Instance.new("UIStroke", row)
+        rowStroke.Color     = owned
+            and Color3.fromRGB(40, 110, 45)
+            or  Color3.fromRGB(40, 40, 65)
+        rowStroke.Thickness = 1
 
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 6)
-        corner.Parent       = row
+        -- Left accent stripe (gold = owned, dim = not)
+        local stripe = Instance.new("Frame", row)
+        stripe.Size             = UDim2.new(0, 4, 1, 0)
+        stripe.BackgroundColor3 = owned and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(50, 50, 80)
+        stripe.BorderSizePixel  = 0
+        Instance.new("UICorner", stripe).CornerRadius = UDim.new(0, 8)
 
         -- Name
         local nameLabel = Instance.new("TextLabel")
-        nameLabel.Size            = UDim2.new(0.55, 0, 0.45, 0)
-        nameLabel.Position        = UDim2.new(0.02, 0, 0.05, 0)
+        nameLabel.Size                   = UDim2.new(0.55, 0, 0, 22)
+        nameLabel.Position               = UDim2.new(0, 14, 0, 8)
         nameLabel.BackgroundTransparency = 1
-        nameLabel.Text            = item.name
-        nameLabel.TextColor3      = Color3.fromRGB(255, 255, 255)
-        nameLabel.Font            = Enum.Font.GothamBold
-        nameLabel.TextSize        = 14
-        nameLabel.TextXAlignment  = Enum.TextXAlignment.Left
-        nameLabel.Parent          = row
+        nameLabel.Text                   = item.name
+        nameLabel.TextColor3             = owned
+            and Color3.fromRGB(120, 220, 120)
+            or  Color3.fromRGB(230, 230, 245)
+        nameLabel.Font                   = Enum.Font.GothamBold
+        nameLabel.TextSize               = 14
+        nameLabel.TextXAlignment         = Enum.TextXAlignment.Left
+        nameLabel.Parent                 = row
 
         -- Description
         local descLabel = Instance.new("TextLabel")
-        descLabel.Size            = UDim2.new(0.7, 0, 0.45, 0)
-        descLabel.Position        = UDim2.new(0.02, 0, 0.52, 0)
+        descLabel.Size                   = UDim2.new(0.7, 0, 0, 24)
+        descLabel.Position               = UDim2.new(0, 14, 0, 32)
         descLabel.BackgroundTransparency = 1
-        descLabel.Text            = item.desc
-        descLabel.TextColor3      = Color3.fromRGB(180, 180, 200)
-        descLabel.Font            = Enum.Font.Gotham
-        descLabel.TextSize        = 11
-        descLabel.TextXAlignment  = Enum.TextXAlignment.Left
-        descLabel.TextWrapped     = true
-        descLabel.Parent          = row
+        descLabel.Text                   = item.desc
+        descLabel.TextColor3             = Color3.fromRGB(130, 130, 165)
+        descLabel.Font                   = Enum.Font.Gotham
+        descLabel.TextSize               = 11
+        descLabel.TextXAlignment         = Enum.TextXAlignment.Left
+        descLabel.TextWrapped            = true
+        descLabel.Parent                 = row
 
         -- Price label
         local priceLabel = Instance.new("TextLabel")
-        priceLabel.Size            = UDim2.new(0.22, 0, 0.4, 0)
-        priceLabel.Position        = UDim2.new(0.73, 0, 0.05, 0)
+        priceLabel.Size                   = UDim2.new(0.22, 0, 0, 20)
+        priceLabel.Position               = UDim2.new(0.73, 0, 0, 8)
         priceLabel.BackgroundTransparency = 1
-        priceLabel.Text            = owned and "✔ Owned" or ("💰 " .. item.price)
-        priceLabel.TextColor3      = owned and Color3.fromRGB(100, 220, 100)
-                                    or (afford and prereq and Color3.fromRGB(255, 220, 80)
-                                        or Color3.fromRGB(160, 160, 160))
-        priceLabel.Font            = Enum.Font.GothamBold
-        priceLabel.TextSize        = 13
-        priceLabel.TextXAlignment  = Enum.TextXAlignment.Center
-        priceLabel.Parent          = row
+        priceLabel.Text                   = owned
+            and "Owned"
+            or  (tostring(item.price) .. " coins")
+        priceLabel.TextColor3             = owned
+            and Color3.fromRGB(80, 200, 80)
+            or  ((afford and prereq) and Color3.fromRGB(255, 215, 80) or Color3.fromRGB(120, 120, 145))
+        priceLabel.Font                   = Enum.Font.GothamBold
+        priceLabel.TextSize               = 12
+        priceLabel.TextXAlignment         = Enum.TextXAlignment.Center
+        priceLabel.Parent                 = row
 
         -- Buy button (hidden if owned)
         if not owned then
+            local canBuy = afford and prereq
             local buyBtn = Instance.new("TextButton")
-            buyBtn.Size            = UDim2.new(0.22, 0, 0.42, 0)
-            buyBtn.Position        = UDim2.new(0.73, 0, 0.52, 0)
-            buyBtn.BackgroundColor3 = (afford and prereq)
-                                      and Color3.fromRGB(80, 180, 80)
-                                      or  Color3.fromRGB(80, 80, 80)
-            buyBtn.Text            = (not prereq) and "Locked" or "Buy"
-            buyBtn.TextColor3      = Color3.fromRGB(255, 255, 255)
-            buyBtn.Font            = Enum.Font.GothamBold
-            buyBtn.TextSize        = 13
-            buyBtn.AutoButtonColor = afford and prereq
-            buyBtn.Parent          = row
+            buyBtn.Size             = UDim2.new(0.22, 0, 0, 26)
+            buyBtn.Position         = UDim2.new(0.73, 0, 0, 34)
+            buyBtn.BackgroundColor3 = canBuy
+                and Color3.fromRGB(30, 100, 40)
+                or  Color3.fromRGB(22, 22, 40)
+            buyBtn.Text             = (not prereq) and "Locked" or "Buy"
+            buyBtn.TextColor3       = canBuy
+                and Color3.fromRGB(180, 240, 180)
+                or  Color3.fromRGB(80, 80, 100)
+            buyBtn.Font             = Enum.Font.GothamBold
+            buyBtn.TextSize         = 13
+            buyBtn.AutoButtonColor  = false
+            buyBtn.BorderSizePixel  = 0
+            buyBtn.Parent           = row
+            Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 6)
+            local buyStroke = Instance.new("UIStroke", buyBtn)
+            buyStroke.Color     = canBuy
+                and Color3.fromRGB(50, 160, 60)
+                or  Color3.fromRGB(40, 40, 65)
+            buyStroke.Thickness = 1.5
 
-            local bc = Instance.new("UICorner")
-            bc.CornerRadius = UDim.new(0, 5)
-            bc.Parent       = buyBtn
-
-            if afford and prereq then
+            if canBuy then
                 buyBtn.MouseButton1Click:Connect(function()
                     buyBtn.Text           = "..."
                     buyBtn.AutoButtonColor = false
@@ -177,10 +201,19 @@ end
 -- ── TAB SWITCHING ───────────────────────────────────────────────
 local function setTab(tab)
     activeTab = tab
+    -- Active tab = gold accent; inactive = dark navy
     tabUpgrade.BackgroundColor3 = tab == "Upgrades"
-        and Color3.fromRGB(80, 160, 255) or Color3.fromRGB(50, 50, 65)
+        and ACCENT
+        or  Color3.fromRGB(28, 28, 46)
+    tabUpgrade.TextColor3 = tab == "Upgrades"
+        and Color3.fromRGB(20, 14, 4)
+        or  Color3.fromRGB(140, 140, 180)
     tabCosm.BackgroundColor3 = tab == "Cosmetics"
-        and Color3.fromRGB(80, 160, 255) or Color3.fromRGB(50, 50, 65)
+        and ACCENT
+        or  Color3.fromRGB(28, 28, 46)
+    tabCosm.TextColor3 = tab == "Cosmetics"
+        and Color3.fromRGB(20, 14, 4)
+        or  Color3.fromRGB(140, 140, 180)
     renderItems()
 end
 
@@ -243,7 +276,6 @@ resultRemote.OnClientEvent:Connect(function(data)
     else
         -- Re-render to restore button state (remove "...")
         renderItems()
-        -- Optional: show brief error message in UI
         warn("[ShopClient] Purchase failed:", data.reason)
     end
 end)

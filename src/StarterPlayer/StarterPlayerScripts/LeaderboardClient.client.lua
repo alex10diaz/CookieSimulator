@@ -40,9 +40,9 @@ local function fillBoard(rows, entries)
         if entry then
             if rankL  then rankL.Text  = "#" .. entry.rank end
             if nameL  then nameL.Text  = entry.name end
-            if cookL  then cookL.Text  = tostring(entry.cookies or 0) .. " 🍪" end
-            if orderL then orderL.Text = tostring(entry.orders  or 0) .. " 📦" end
-            if coinL  then coinL.Text  = tostring(entry.coins   or 0) .. " 💰" end
+            if cookL  then cookL.Text  = tostring(entry.cookies or 0) .. " ck"  end
+            if orderL then orderL.Text = tostring(entry.orders  or 0) .. " ord" end
+            if coinL  then coinL.Text  = tostring(entry.coins   or 0) .. " g"   end
         else
             if rankL  then rankL.Text  = tostring(i) end
             if nameL  then nameL.Text  = "—" end
