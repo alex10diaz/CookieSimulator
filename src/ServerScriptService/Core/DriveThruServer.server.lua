@@ -19,20 +19,22 @@ local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitF
 local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ── CONSTANTS ────────────────────────────────────────────────────────────────
-local CAR_SPAWN_X    = -84    -- left end of road (off-screen)
-local CAR_STOP_X     = -43    -- car center when stopped at window
-local CAR_EXIT_X     = -2     -- right end of road (off-screen, road ends at X≈-3)
-local CAR_ROAD_Z     = -14    -- road/window Z centre
+-- Car travels along Z axis (south→north). Window wall is at X≈-33.5, faces -X.
+-- Car rotation 180° Y: local -Z→world +Z (front north), local -X→world +X (driver side faces window)
+local CAR_LANE_X     = -40    -- X lane position; driver side (local -X) ends up at X≈-33.8 (next to window)
+local CAR_SPAWN_Z    = -80    -- south, off-screen
+local CAR_STOP_Z     = -20    -- stopped: car front (local -Z end, +6.2 offset) reaches Z≈-13.8
+local CAR_EXIT_Z     =  40    -- north, past building off-screen
 local CAR_Y          = 2.5
 local CAR_ARRIVE_SEC = 6
 local CAR_EXIT_SEC   = 5
-local SPAWN_INTERVAL = 90     -- seconds between cars during Open
+local SPAWN_INTERVAL = 150    -- seconds between cars during Open
 local WINDOW_TIMEOUT = 90     -- seconds before car gives up (after order is taken)
 local TAKE_TIMEOUT   = 60     -- seconds to take the order before car leaves
 local PACK_SIZES     = { 1, 2, 4 }
 
--- NPC seated position (window side of stopped car)
-local NPC_CF = CFrame.new(-38, 3.5, -14)
+-- NPC sits at driver-side window (east face), positioned near the window opening
+local NPC_CF = CFrame.new(-34, 3.5, -16) * CFrame.Angles(0, math.rad(-90), 0)
 
 -- ── STUDIO OBJECTS ────────────────────────────────────────────────────────────
 local driveThruFolder = Workspace:WaitForChild("Drive Thru", 10)
@@ -140,9 +142,9 @@ local function updateTV(line1, line2)
 end
 
 -- ── CAR MOVEMENT ─────────────────────────────────────────────────────────────
-local function moveCarToX(car, targetX, duration, callback)
+local function moveCarToZ(car, targetZ, duration, callback)
     local sp = car:GetPivot()
-    local tp = CFrame.new(targetX, sp.Y, sp.Z)
+    local tp = CFrame.new(sp.X, sp.Y, targetZ)
         * CFrame.fromMatrix(Vector3.zero, sp.XVector, sp.YVector)
     local elapsed = 0
     local conn
@@ -170,8 +172,9 @@ local function spawnCar()
             if d:IsA("BasePart") then car.PrimaryPart = d; break end
         end
     end
-    -- -90° rotation: aligns car along X-axis road
-    car:PivotTo(CFrame.new(CAR_SPAWN_X, CAR_Y, CAR_ROAD_Z) * CFrame.Angles(0, math.rad(-90), 0))
+    -- 180° Y rotation: front (local -Z) faces world +Z (north toward building)
+    -- driver side (local -X / Head) faces world +X (east, toward window at X≈-33.5)
+    car:PivotTo(CFrame.new(CAR_LANE_X, CAR_Y, CAR_SPAWN_Z) * CFrame.Angles(0, math.rad(180), 0))
     return car
 end
 
@@ -232,7 +235,7 @@ end
 local function createDeliveryZone()
     local p = Instance.new("Part")
     p.Name = "DriveThruDeliveryZone"; p.Size = Vector3.new(3, 5, 4)
-    p.CFrame = CFrame.new(-31, 5, CAR_ROAD_Z)
+    p.CFrame = CFrame.new(-31, 5, -14)
     p.Anchored = true; p.CanCollide = false; p.Transparency = 1
     p.Parent = driveThruFolder
     return p
@@ -273,16 +276,28 @@ local function dismissCar(car, npc, reason)
     if not currentOrder or currentOrder.car ~= car then return end
     print("[DriveThruServer] Car dismissed: " .. reason)
     clearDeliveryPrompt()
+    -- Remove the drive-thru entry from the Dress TV queue
+    if currentOrder.npcOrderId then
+        OrderManager.CancelNPCOrder(currentOrder.npcOrderId)
+    end
     despawnNPC(npc)
     currentOrder = nil
     updateTV("No Orders", "")
     setWindowOpen(false)
-    moveCarToX(car, CAR_EXIT_X, CAR_EXIT_SEC, function() car:Destroy() end)
+    moveCarToZ(car, CAR_EXIT_Z, CAR_EXIT_SEC, function()
+        car:Destroy()
+        if driveThruFolder then
+            local leftover = driveThruFolder:FindFirstChild("DriveThruCustomer")
+            if leftover then leftover:Destroy() end
+        end
+    end)
 end
 
 -- ── CAR ARRIVAL FLOW ──────────────────────────────────────────────────────────
 local function handleCarArrival()
     if currentOrder then return end
+    -- Also block if a car from a previous cycle is still physically present
+    if driveThruFolder and driveThruFolder:FindFirstChild("ActiveDriveThruCar") then return end
 
     local order = generateOrder()
     if not order then return end
@@ -291,7 +306,7 @@ local function handleCarArrival()
     if not car then return end
 
     -- Drive to window
-    moveCarToX(car, CAR_STOP_X, CAR_ARRIVE_SEC, function()
+    moveCarToZ(car, CAR_STOP_Z, CAR_ARRIVE_SEC, function()
         if currentOrder then car:Destroy(); return end
 
         -- Window slides open
@@ -300,20 +315,27 @@ local function handleCarArrival()
 
         -- Spawn NPC in car
         local npc = spawnCarNPC(function(player)
-            -- Player took the order
+            -- Add to Dress TV queue so player can box it at the dress station
+            local dressEntry = OrderManager.AddNPCOrder("Drive Thru", order.cookieId, {
+                packSize    = order.packSize,
+                price       = order.coins,
+                isDriveThru = true,
+            })
+
             currentOrder = {
-                cookieId = order.cookieId,
-                packSize = order.packSize,
-                coins    = order.coins,
-                xp       = order.xp,
-                car      = car,
-                npc      = npc,
+                cookieId   = order.cookieId,
+                packSize   = order.packSize,
+                coins      = order.coins,
+                xp         = order.xp,
+                car        = car,
+                npc        = npc,
+                npcOrderId = dressEntry and dressEntry.orderId,
             }
 
             local cookie = CookieData.GetById(order.cookieId)
             local name   = cookie and cookie.name or order.cookieId
             updateTV(name .. " x" .. order.packSize, order.coins .. " coins")
-            print(string.format("[DriveThruServer] %s took drive-thru order | %s x%d",
+            print(string.format("[DriveThruServer] %s took drive-thru order | %s x%d → added to Dress TV",
                 player.Name, name, order.packSize))
 
             -- Timeout after order is taken
@@ -347,33 +369,52 @@ OrderManager.On("BoxCreated", function(box)
     addDeliveryPrompt(function(player)
         if not currentOrder or currentOrder.car ~= order.car then return end
 
+        -- Capture locals before clearing state
+        local deliverCar = order.car
+        local deliverNpc = order.npc
+        local deliverNpcOrderId = order.npcOrderId
+        local deliverCoins = tonumber(order.coins) or 0
+        local deliverXp    = tonumber(order.xp) or 0
+
+        -- Clear state and close window immediately so no double-delivery
         currentOrder = nil
         updateTV("No Orders", "")
         clearDeliveryPrompt()
 
-        PlayerDataManager.AddCoins(player, order.coins)
-        PlayerDataManager.AddXP(player, order.xp)
-        SessionStats.RecordDelivery(player, order.cookieId, order.coins)
+        -- Car exit runs first — guaranteed even if reward code errors
+        despawnNPC(deliverNpc)
+        setWindowOpen(false)
+        moveCarToZ(deliverCar, CAR_EXIT_Z, CAR_EXIT_SEC, function()
+            deliverCar:Destroy()
+            -- Safety net: destroy any NPC that wasn't cleaned up
+            if driveThruFolder then
+                local leftover = driveThruFolder:FindFirstChild("DriveThruCustomer")
+                if leftover then leftover:Destroy() end
+            end
+        end)
 
-        local cookie = CookieData.GetById(order.cookieId)
+        -- Remove from Dress TV queue
+        if deliverNpcOrderId then
+            OrderManager.CancelNPCOrder(deliverNpcOrderId)
+        end
+
+        -- Award rewards
+        PlayerDataManager.AddCoins(player, deliverCoins)
+        PlayerDataManager.AddXP(player, deliverXp)
+        SessionStats.RecordDelivery(5, deliverCoins, 0, order.packSize)
+
         print(string.format("[DriveThruServer] %s delivered | %s x%d | +%d coins",
-            player.Name, order.cookieId, order.packSize, order.coins))
+            player.Name, order.cookieId, order.packSize, deliverCoins))
 
         local deliveryResult = RemoteManager.Get("DeliveryResult")
         for _, p in ipairs(Players:GetPlayers()) do
             deliveryResult:FireClient(p, {
                 playerName  = player.Name,
                 cookieId    = order.cookieId,
-                reward      = order.coins,
+                reward      = deliverCoins,
                 isDriveThru = true,
             })
         end
-
-        despawnNPC(order.npc)
-        setWindowOpen(false)
-        moveCarToX(order.car, CAR_EXIT_X, CAR_EXIT_SEC, function()
-            order.car:Destroy()
-        end)
     end)
 end)
 

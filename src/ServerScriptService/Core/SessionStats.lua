@@ -12,6 +12,25 @@ local data = {
     peakCombo    = 0,
 }
 
+-- Per-player station stats for Employee of the Shift
+-- { [userId] = { name=str, mix={total,count}, oven={total,count}, frost={total,count}, dough=0, boxes=0 } }
+local stationData = {}
+
+local function getStationEntry(player)
+    local uid = player.UserId
+    if not stationData[uid] then
+        stationData[uid] = {
+            name  = player.Name,
+            mix   = {0, 0},
+            oven  = {0, 0},
+            frost = {0, 0},
+            dough = 0,
+            boxes = 0,
+        }
+    end
+    return stationData[uid]
+end
+
 function SessionStats.RecordDelivery(stars, coins, comboStreak, cookieCount)
     data.orders       += 1
     data.coins        += (coins or 0)
@@ -20,6 +39,58 @@ function SessionStats.RecordDelivery(stars, coins, comboStreak, cookieCount)
     if (comboStreak or 0) > data.peakCombo then
         data.peakCombo = comboStreak
     end
+end
+
+-- Called by MinigameServer after each completed station session.
+function SessionStats.RecordStationScore(player, station, score)
+    local d = getStationEntry(player)
+    if     station == "mix"   then d.mix[1]   += score; d.mix[2]   += 1
+    elseif station == "oven"  then d.oven[1]  += score; d.oven[2]  += 1
+    elseif station == "frost" then d.frost[1] += score; d.frost[2] += 1
+    elseif station == "dough" then d.dough    += 1
+    elseif station == "dress" then d.boxes    += 1
+    end
+end
+
+-- Returns one winner per station role for the shift.
+-- { Mixer={name,value}, Baller={name,value}, Baker={name,value}, Glazer={name,value}, Decorator={name,value} }
+function SessionStats.GetEmployeeOfShift()
+    local best = {
+        Mixer     = { name="—", value=0 },
+        Baller    = { name="—", value=0 },
+        Baker     = { name="—", value=0 },
+        Glazer    = { name="—", value=0 },
+        Decorator = { name="—", value=0 },
+    }
+    for _, d in pairs(stationData) do
+        local mixAvg   = d.mix[2]   > 0 and math.floor(d.mix[1]   / d.mix[2]   + 0.5) or 0
+        local ovenAvg  = d.oven[2]  > 0 and math.floor(d.oven[1]  / d.oven[2]  + 0.5) or 0
+        local frostAvg = d.frost[2] > 0 and math.floor(d.frost[1] / d.frost[2] + 0.5) or 0
+
+        if mixAvg   > best.Mixer.value     then best.Mixer.name     = d.name; best.Mixer.value     = mixAvg   end
+        if d.dough  > best.Baller.value    then best.Baller.name    = d.name; best.Baller.value    = d.dough  end
+        if ovenAvg  > best.Baker.value     then best.Baker.name     = d.name; best.Baker.value     = ovenAvg  end
+        if frostAvg > best.Glazer.value    then best.Glazer.name    = d.name; best.Glazer.value    = frostAvg end
+        if d.boxes  > best.Decorator.value then best.Decorator.name = d.name; best.Decorator.value = d.boxes  end
+    end
+    return best
+end
+
+-- Returns the single overall top player this shift (for the back-room board).
+-- Weighted: boxes*30 + dough*20 + quality averages. Returns { name, userId } or nil.
+function SessionStats.GetTopEmployee()
+    local best, bestScore = nil, -1
+    for uid, d in pairs(stationData) do
+        local mixAvg   = d.mix[2]   > 0 and (d.mix[1]   / d.mix[2])   or 0
+        local ovenAvg  = d.oven[2]  > 0 and (d.oven[1]  / d.oven[2])  or 0
+        local frostAvg = d.frost[2] > 0 and (d.frost[1] / d.frost[2]) or 0
+        local score = d.boxes * 30 + d.dough * 20 + mixAvg + ovenAvg + frostAvg
+        if score > bestScore then
+            bestScore = score
+            best = { name = d.name, userId = uid }
+        end
+    end
+    return best
 end
 
 function SessionStats.GetSummary()
@@ -41,6 +112,7 @@ function SessionStats.Reset()
     data.cookiesBaked = 0
     data.totalStars   = 0
     data.peakCombo    = 0
+    stationData       = {}
 end
 
 return SessionStats

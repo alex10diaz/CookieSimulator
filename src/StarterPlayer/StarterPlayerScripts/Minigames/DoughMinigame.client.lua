@@ -1,4 +1,4 @@
--- DoughMinigame.client.lua (redesigned)
+-- DoughMinigame.client.lua (redesigned + M7 polish)
 -- Three sub-games: Weigh -> Form -> Tray
 -- Weigh: 0-34 pts, Form: 0-33 pts, Tray: 0-33 pts
 
@@ -24,6 +24,8 @@ local WEIGH_MAX_PTS   = 34
 local FORM_MAX_PTS    = 33
 local TRAY_MAX_PTS    = 33
 
+local ACCENT = Color3.fromRGB(255, 170, 40)  -- warm amber (dough)
+
 startRemote.OnClientEvent:Connect(function()
     if player:WaitForChild("PlayerGui"):FindFirstChild("DoughGui") then return end
     local char = player.Character
@@ -42,34 +44,51 @@ startRemote.OnClientEvent:Connect(function()
     local bg = Instance.new("Frame")
     bg.Size                   = UDim2.new(0, 380, 0, 460)
     bg.Position               = UDim2.new(0.5, -190, 0.5, -230)
-    bg.BackgroundColor3       = Color3.fromRGB(20, 20, 20)
-    bg.BackgroundTransparency = 0.1
+    bg.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
+    bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
     bg.Parent                 = sg
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
+    local bgStroke = Instance.new("UIStroke", bg)
+    bgStroke.Color = ACCENT
+    bgStroke.Thickness = 1.5
+
+    -- Amber header bar
+    local headerBar = Instance.new("Frame", bg)
+    headerBar.Size = UDim2.new(1, 0, 0, 44)
+    headerBar.BackgroundColor3 = ACCENT
+    headerBar.BorderSizePixel = 0
+    Instance.new("UICorner", headerBar).CornerRadius = UDim.new(0, 16)
+    local headerFlat = Instance.new("Frame", headerBar)
+    headerFlat.Size = UDim2.new(1, 0, 0.5, 0)
+    headerFlat.Position = UDim2.new(0, 0, 0.5, 0)
+    headerFlat.BackgroundColor3 = ACCENT
+    headerFlat.BorderSizePixel = 0
 
     local titleLbl = Instance.new("TextLabel")
-    titleLbl.Size                   = UDim2.new(1, 0, 0, 40)
+    titleLbl.Size                   = UDim2.new(1, -14, 1, 0)
+    titleLbl.Position               = UDim2.new(0, 14, 0, 0)
     titleLbl.BackgroundTransparency = 1
-    titleLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
+    titleLbl.TextColor3             = Color3.fromRGB(30, 18, 4)
     titleLbl.TextScaled             = true
     titleLbl.Font                   = Enum.Font.GothamBold
-    titleLbl.Text                   = "DOUGH -- Step 1/3: Weigh"
-    titleLbl.Parent                 = bg
+    titleLbl.Text                   = "DOUGH — Step 1/3: Weigh"
+    titleLbl.TextXAlignment         = Enum.TextXAlignment.Left
+    titleLbl.Parent                 = headerBar
 
     local subLbl = Instance.new("TextLabel")
     subLbl.Size                   = UDim2.new(1, -20, 0, 28)
-    subLbl.Position               = UDim2.new(0, 10, 0, 40)
+    subLbl.Position               = UDim2.new(0, 10, 0, 48)
     subLbl.BackgroundTransparency = 1
-    subLbl.TextColor3             = Color3.fromRGB(180, 180, 180)
+    subLbl.TextColor3             = Color3.fromRGB(165, 168, 210)
     subLbl.TextScaled             = true
     subLbl.Font                   = Enum.Font.Gotham
-    subLbl.Text                   = "Hold button -- release in the green zone"
+    subLbl.Text                   = "Hold button — release in the green zone"
     subLbl.Parent                 = bg
 
     local content = Instance.new("Frame")
-    content.Size             = UDim2.new(1, -20, 0, 340)
-    content.Position         = UDim2.new(0, 10, 0, 74)
+    content.Size             = UDim2.new(1, -20, 0, 336)
+    content.Position         = UDim2.new(0, 10, 0, 80)
     content.BackgroundTransparency = 1
     content.BorderSizePixel  = 0
     content.Parent           = bg
@@ -77,12 +96,13 @@ startRemote.OnClientEvent:Connect(function()
     local timerBar = Instance.new("Frame")
     timerBar.Size             = UDim2.new(1, -20, 0, 8)
     timerBar.Position         = UDim2.new(0, 10, 1, -20)
-    timerBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    timerBar.BackgroundColor3 = Color3.fromRGB(25, 25, 45)
     timerBar.BorderSizePixel  = 0
     timerBar.Parent           = bg
+    Instance.new("UICorner", timerBar).CornerRadius = UDim.new(0, 4)
     local timerFill = Instance.new("Frame")
     timerFill.Size             = UDim2.new(1, 0, 1, 0)
-    timerFill.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+    timerFill.BackgroundColor3 = ACCENT
     timerFill.BorderSizePixel  = 0
     timerFill.Parent           = timerBar
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
@@ -105,16 +125,19 @@ startRemote.OnClientEvent:Connect(function()
     local function startTray(prevScore)
         totalScore = prevScore
         content:ClearAllChildren()
-        titleLbl.Text = "DOUGH -- Step 3/3: Tray"
+        titleLbl.Text = "DOUGH — Step 3/3: Tray"
         subLbl.Text   = "Click all 6 spots!"
 
         local trayFrame = Instance.new("Frame")
         trayFrame.Size             = UDim2.new(0, 280, 0, 200)
         trayFrame.Position         = UDim2.new(0.5, -140, 0.5, -100)
-        trayFrame.BackgroundColor3 = Color3.fromRGB(180, 140, 80)
+        trayFrame.BackgroundColor3 = Color3.fromRGB(28, 24, 46)
         trayFrame.BorderSizePixel  = 0
         trayFrame.Parent           = content
         Instance.new("UICorner", trayFrame).CornerRadius = UDim.new(0, 12)
+        local trayStroke = Instance.new("UIStroke", trayFrame)
+        trayStroke.Color = Color3.fromRGB(55, 48, 80)
+        trayStroke.Thickness = 1
 
         local COLS, ROWS = 3, 2
         local SPOT_W, SPOT_H = 60, 60
@@ -130,8 +153,8 @@ startRemote.OnClientEvent:Connect(function()
                     0, PAD_X + (col - 1) * (SPOT_W + PAD_X),
                     0, PAD_Y + (row - 1) * (SPOT_H + PAD_Y)
                 )
-                spot.BackgroundColor3 = Color3.fromRGB(220, 180, 100)
-                spot.TextColor3       = Color3.fromRGB(100, 60, 20)
+                spot.BackgroundColor3 = Color3.fromRGB(60, 50, 90)
+                spot.TextColor3       = Color3.fromRGB(200, 170, 110)
                 spot.TextScaled       = true
                 spot.Font             = Enum.Font.GothamBold
                 spot.Text             = "+"
@@ -139,13 +162,18 @@ startRemote.OnClientEvent:Connect(function()
                 spot.AutoButtonColor  = false
                 spot.Parent           = trayFrame
                 Instance.new("UICorner", spot).CornerRadius = UDim.new(1, 0)
+                local spotStroke = Instance.new("UIStroke", spot)
+                spotStroke.Color = Color3.fromRGB(100, 85, 140)
+                spotStroke.Thickness = 1.5
 
                 local alreadyClicked = false
                 spot.MouseButton1Click:Connect(function()
                     if finished or alreadyClicked then return end
                     alreadyClicked = true
                     spot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
-                    spot.Text = "v"
+                    spot.TextColor3 = Color3.fromRGB(20, 50, 20)
+                    spotStroke.Color = Color3.fromRGB(50, 160, 50)
+                    spot.Text = "✓"
                     spotsClicked = spotsClicked + 1
                     if spotsClicked >= COLS * ROWS then
                         totalScore = prevScore + TRAY_MAX_PTS
@@ -171,7 +199,7 @@ startRemote.OnClientEvent:Connect(function()
     -- PHASE 2: FORM
     local function startForm(prevScore)
         content:ClearAllChildren()
-        titleLbl.Text = "DOUGH -- Step 2/3: Form"
+        titleLbl.Text = "DOUGH — Step 2/3: Form"
         subLbl.Text   = "Press STOP when circle is in the green zone!"
 
         local BAR_SIZE = 200
@@ -198,7 +226,7 @@ startRemote.OnClientEvent:Connect(function()
         local zoneInner = Instance.new("Frame")
         zoneInner.Size             = UDim2.new(0, zoneMin, 0, zoneMin)
         zoneInner.Position         = UDim2.new(0.5, -zoneMin/2, 0.5, -zoneMin/2)
-        zoneInner.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        zoneInner.BackgroundColor3 = Color3.fromRGB(14, 14, 26)
         zoneInner.BorderSizePixel  = 0
         zoneInner.ZIndex           = 2
         zoneInner.Parent           = areaFrame
@@ -208,7 +236,7 @@ startRemote.OnClientEvent:Connect(function()
         growCircle.Size             = UDim2.new(0, 0, 0, 0)
         growCircle.AnchorPoint      = Vector2.new(0.5, 0.5)
         growCircle.Position         = UDim2.new(0.5, 0, 0.5, 0)
-        growCircle.BackgroundColor3 = Color3.fromRGB(220, 180, 100)
+        growCircle.BackgroundColor3 = ACCENT
         growCircle.BorderSizePixel  = 0
         growCircle.ZIndex           = 3
         growCircle.Parent           = areaFrame
@@ -217,7 +245,7 @@ startRemote.OnClientEvent:Connect(function()
         local stopBtn = Instance.new("TextButton")
         stopBtn.Size             = UDim2.new(0, 120, 0, 44)
         stopBtn.Position         = UDim2.new(0.5, -60, 1, -50)
-        stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        stopBtn.BackgroundColor3 = Color3.fromRGB(210, 60, 60)
         stopBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
         stopBtn.TextScaled       = true
         stopBtn.Font             = Enum.Font.GothamBold
@@ -270,11 +298,14 @@ startRemote.OnClientEvent:Connect(function()
         local barTrack = Instance.new("Frame")
         barTrack.Size             = UDim2.new(0, 60, 0, BAR_H)
         barTrack.Position         = UDim2.new(0.5, -30, 0.5, -BAR_H / 2)
-        barTrack.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        barTrack.BackgroundColor3 = Color3.fromRGB(28, 28, 50)
         barTrack.BorderSizePixel  = 0
         barTrack.ClipsDescendants = false
         barTrack.Parent           = content
         Instance.new("UICorner", barTrack).CornerRadius = UDim.new(0, 8)
+        local trackStroke = Instance.new("UIStroke", barTrack)
+        trackStroke.Color = Color3.fromRGB(50, 50, 80)
+        trackStroke.Thickness = 1
 
         local zoneH = math.floor(BAR_H * (WEIGH_ZONE_MAX - WEIGH_ZONE_MIN))
         local zoneY = math.floor(BAR_H * (1 - WEIGH_ZONE_MAX))
@@ -292,7 +323,7 @@ startRemote.OnClientEvent:Connect(function()
         fillFrame.Size             = UDim2.new(1, 0, 0, 0)
         fillFrame.AnchorPoint      = Vector2.new(0, 1)
         fillFrame.Position         = UDim2.new(0, 0, 1, 0)
-        fillFrame.BackgroundColor3 = Color3.fromRGB(220, 180, 80)
+        fillFrame.BackgroundColor3 = ACCENT
         fillFrame.BorderSizePixel  = 0
         fillFrame.Parent           = barTrack
         Instance.new("UICorner", fillFrame).CornerRadius = UDim.new(0, 8)

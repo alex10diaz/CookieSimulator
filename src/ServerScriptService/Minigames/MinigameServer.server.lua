@@ -7,10 +7,12 @@ local Players             = game:GetService("Players")
 local Workspace           = game:GetService("Workspace")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
-local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
-local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
+local RemoteManager          = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local OrderManager           = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local CookieData             = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
+local MenuManager            = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
+local StationMasteryManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("StationMasteryManager"))
+local SessionStats           = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ============================================================
 -- MINIGAME CONFIG
@@ -153,6 +155,10 @@ local function endSession(player, stationName, score)
             print("[MinigameServer] Box #" .. box.boxId .. " ready | Quality: " .. box.quality .. "%")
         end
     end
+
+    -- Award station mastery XP and record Employee of the Shift stat
+    StationMasteryManager.AwardFromScore(player, stationName, score)
+    SessionStats.RecordStationScore(player, stationName, score)
 end
 
 -- ============================================================

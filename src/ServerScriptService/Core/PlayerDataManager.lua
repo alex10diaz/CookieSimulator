@@ -38,6 +38,19 @@ local DEFAULT_PROFILE = {
         progress = {0, 0, 0},   -- progress values for each of the 3 challenges
         claimed  = {false, false, false},  -- whether reward was claimed
     },
+    mastery = {
+        MixerLevel=1,     MixerXP=0,
+        BallerLevel=1,    BallerXP=0,
+        BakerLevel=1,     BakerXP=0,
+        GlazerLevel=1,    GlazerXP=0,
+        DecoratorLevel=1, DecoratorXP=0,
+    },
+    weeklyChallenges = {
+        weekKey  = "",
+        progress = {0, 0, 0},
+        claimed  = {false, false, false},
+    },
+    lifetimeChallenges = {},  -- set of claimed milestone IDs: { [id]=true }
 }
 
 local profiles = {}  -- userId -> profile table

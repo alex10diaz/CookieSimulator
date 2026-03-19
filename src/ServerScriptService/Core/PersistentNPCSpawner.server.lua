@@ -16,8 +16,10 @@ local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):Wait
 local EconomyManager    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EconomyManager"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 local SessionStats          = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
-local DailyChallengeManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("DailyChallengeManager"))
-local MenuManager           = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
+local DailyChallengeManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("DailyChallengeManager"))
+local WeeklyChallengeManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("WeeklyChallengeManager"))
+local LifetimeChallengeManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("LifetimeChallengeManager"))
+local MenuManager              = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
 
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
@@ -565,6 +567,14 @@ addDeliverPrompt = function(npcId)
             comboStreak = comboStreak,
             packSize    = d.order.packSize or 1,
         })
+        WeeklyChallengeManager.RecordDelivery(player, {
+            stars       = stars,
+            cookieId    = d.order.cookieId,
+            coins       = payout.coins,
+            comboStreak = comboStreak,
+            packSize    = d.order.packSize or 1,
+        })
+        LifetimeChallengeManager.CheckAll(player)
         -- Advance tutorial step 9 gate (replaces TestNPCSpawner dependency)
         do
             local _evts = game:GetService("ServerStorage"):FindFirstChild("Events")

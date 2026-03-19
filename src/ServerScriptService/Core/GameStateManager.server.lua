@@ -77,7 +77,9 @@ local function runCycle()
 
         -- End of day
         broadcast("EndOfDay", SUMMARY_DURATION)
-        summaryRemote:FireAllClients(SessionStats.GetSummary())
+        local summary = SessionStats.GetSummary()
+        summary.employees = SessionStats.GetEmployeeOfShift()
+        summaryRemote:FireAllClients(summary)
         task.wait(SUMMARY_DURATION)
 
         -- Intermission — teleport to back room

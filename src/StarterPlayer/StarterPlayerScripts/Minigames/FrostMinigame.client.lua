@@ -12,6 +12,8 @@ local player = Players.LocalPlayer
 local TIMER           = 10
 local NUM_CHECKPOINTS = 8
 
+local ACCENT = Color3.fromRGB(100, 210, 255)  -- ice blue
+
 local CHECKPOINT_OFFSETS = {
     Vector2.new(  0, -150),
     Vector2.new(120,  -90),
@@ -41,42 +43,64 @@ startRemote.OnClientEvent:Connect(function()
     local bg = Instance.new("Frame")
     bg.Size                   = UDim2.new(0, 420, 0, 460)
     bg.Position               = UDim2.new(0.5, -210, 0.5, -230)
-    bg.BackgroundColor3       = Color3.fromRGB(20, 20, 20)
-    bg.BackgroundTransparency = 0.1
+    bg.BackgroundColor3       = Color3.fromRGB(12, 16, 30)
+    bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
     bg.Parent                 = sg
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
+    local bgStroke = Instance.new("UIStroke", bg)
+    bgStroke.Color = ACCENT
+    bgStroke.Thickness = 1.5
+
+    -- Ice blue header bar
+    local headerBar = Instance.new("Frame", bg)
+    headerBar.Name = "HeaderBar"
+    headerBar.Size = UDim2.new(1, 0, 0, 44)
+    headerBar.BackgroundColor3 = ACCENT
+    headerBar.BorderSizePixel = 0
+    Instance.new("UICorner", headerBar).CornerRadius = UDim.new(0, 16)
+    local headerFlat = Instance.new("Frame", headerBar)
+    headerFlat.Size = UDim2.new(1, 0, 0.5, 0)
+    headerFlat.Position = UDim2.new(0, 0, 0.5, 0)
+    headerFlat.BackgroundColor3 = ACCENT
+    headerFlat.BorderSizePixel = 0
 
     local titleLbl = Instance.new("TextLabel")
-    titleLbl.Size                   = UDim2.new(1, 0, 0, 40)
+    titleLbl.Size                   = UDim2.new(1, -14, 1, 0)
+    titleLbl.Position               = UDim2.new(0, 14, 0, 0)
     titleLbl.BackgroundTransparency = 1
-    titleLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
+    titleLbl.TextColor3             = Color3.fromRGB(10, 30, 55)
     titleLbl.TextScaled             = true
     titleLbl.Font                   = Enum.Font.GothamBold
-    titleLbl.Text                   = "FROST — Click dots 1 to 8!"
-    titleLbl.Parent                 = bg
+    titleLbl.Text                   = "FROST  — Click dots 1 to 8!"
+    titleLbl.TextXAlignment         = Enum.TextXAlignment.Left
+    titleLbl.Parent                 = headerBar
 
     local timerBar = Instance.new("Frame")
     timerBar.Size             = UDim2.new(1, -20, 0, 8)
     timerBar.Position         = UDim2.new(0, 10, 1, -20)
-    timerBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    timerBar.BackgroundColor3 = Color3.fromRGB(20, 25, 48)
     timerBar.BorderSizePixel  = 0
     timerBar.Parent           = bg
+    Instance.new("UICorner", timerBar).CornerRadius = UDim.new(0, 4)
     local timerFill = Instance.new("Frame")
     timerFill.Size             = UDim2.new(1, 0, 1, 0)
-    timerFill.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+    timerFill.BackgroundColor3 = ACCENT
     timerFill.BorderSizePixel  = 0
     timerFill.Parent           = timerBar
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
     local playArea = Instance.new("Frame")
     playArea.Size             = UDim2.new(0, 360, 0, 360)
-    playArea.Position         = UDim2.new(0.5, -180, 0, 50)
-    playArea.BackgroundColor3 = Color3.fromRGB(35, 35, 60)
+    playArea.Position         = UDim2.new(0.5, -180, 0, 56)
+    playArea.BackgroundColor3 = Color3.fromRGB(18, 24, 48)
     playArea.BorderSizePixel  = 0
     playArea.ClipsDescendants = false
     playArea.Parent           = bg
-    Instance.new("UICorner", playArea).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", playArea).CornerRadius = UDim.new(0, 10)
+    local playStroke = Instance.new("UIStroke", playArea)
+    playStroke.Color = Color3.fromRGB(40, 60, 100)
+    playStroke.Thickness = 1
 
     local AREA_CENTER = Vector2.new(180, 180)
 
@@ -105,8 +129,10 @@ startRemote.OnClientEvent:Connect(function()
                                      0, AREA_CENTER.Y + offset.Y)
         dot.BackgroundColor3 = i == 1
             and Color3.fromRGB(255, 220, 0)
-            or  Color3.fromRGB(100, 100, 180)
-        dot.TextColor3  = Color3.fromRGB(20, 20, 20)
+            or  Color3.fromRGB(45, 55, 120)
+        dot.TextColor3  = i == 1
+            and Color3.fromRGB(20, 14, 4)
+            or  Color3.fromRGB(150, 170, 220)
         dot.TextScaled  = true
         dot.Font        = Enum.Font.GothamBold
         dot.Text        = tostring(i)
@@ -115,6 +141,9 @@ startRemote.OnClientEvent:Connect(function()
         dot.AutoButtonColor = false
         dot.Parent      = playArea
         Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+        local dotStroke = Instance.new("UIStroke", dot)
+        dotStroke.Color = i == 1 and Color3.fromRGB(200, 160, 0) or Color3.fromRGB(60, 70, 140)
+        dotStroke.Thickness = 1.5
         dots[i] = dot
 
         local idx = i
@@ -123,9 +152,14 @@ startRemote.OnClientEvent:Connect(function()
             if idx ~= activeIndex then return end  -- must click in order
             numHit = numHit + 1
             dot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+            dot.TextColor3 = Color3.fromRGB(20, 50, 20)
+            dotStroke.Color = Color3.fromRGB(50, 160, 50)
             activeIndex = activeIndex + 1
             if activeIndex <= NUM_CHECKPOINTS then
                 dots[activeIndex].BackgroundColor3 = Color3.fromRGB(255, 220, 0)
+                dots[activeIndex].TextColor3 = Color3.fromRGB(20, 14, 4)
+                local s = dots[activeIndex]:FindFirstChildOfClass("UIStroke")
+                if s then s.Color = Color3.fromRGB(200, 160, 0) end
             else
                 task.delay(0.3, finish)
             end

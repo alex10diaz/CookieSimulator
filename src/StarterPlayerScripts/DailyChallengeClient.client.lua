@@ -103,7 +103,7 @@ local function updateBoard()
     local sg = getBoardGui()
     if not sg then return end
 
-    local header = sg:FindFirstChild("Header")
+    local header = sg:FindFirstChild("Header", true)
     if header then
         local h = math.floor(state.resetIn / 3600)
         local m = math.floor((state.resetIn % 3600) / 60)
@@ -112,7 +112,7 @@ local function updateBoard()
     end
 
     for i = 1, 3 do
-        local row = sg:FindFirstChild("Row" .. i)
+        local row = sg:FindFirstChild("Row" .. i, true)
         local ch  = state.challenges[i]
         if not row or not ch then continue end
 
@@ -200,7 +200,7 @@ task.spawn(function()
         end
         local sg = getBoardGui()
         if sg then
-            local header = sg:FindFirstChild("Header")
+            local header = sg:FindFirstChild("Header", true)
             if header then
                 local h = math.floor(state.resetIn / 3600)
                 local m = math.floor((state.resetIn % 3600) / 60)

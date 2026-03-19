@@ -103,6 +103,14 @@ local REMOTES = {
     -- Topping minigame
     "StartToppingMinigame",   -- Server->Client: begin topping minigame session
     "ToppingComplete",        -- Client->Server: player finished topping minigame
+    -- Station Mastery
+    "MasteryLevelUp",         -- Server->Client: player leveled up a role
+    -- Weekly challenges
+    "WeeklyChallengesInit",   -- Server->Client: send this week's challenges + progress on join
+    "WeeklyChallengeProgress",-- Server->Client: incremental progress update after each delivery
+    -- Lifetime milestones
+    "LifetimeChallengesInit",  -- Server->Client: full milestone list on join
+    "LifetimeChallengeComplete",-- Server->Client: a milestone was just completed
 }
 
 -- Server creates all remotes; client waits for server-created ones.

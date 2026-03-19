@@ -1,4 +1,4 @@
--- MixMinigame.client.lua (redesigned + speed cap)
+-- MixMinigame.client.lua (redesigned + speed cap + M7 polish)
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
@@ -16,6 +16,8 @@ local TOTAL_TIME      = 15
 local MIN_NEXT_DELTA  = 90
 local MAX_NEXT_DELTA  = 270
 local MAX_ANG_SPEED   = 200   -- degrees/sec cap on cursor rotation
+
+local ACCENT = Color3.fromRGB(255, 200, 0)  -- gold
 
 local function toAngle360(dx, dy)
     return (math.deg(math.atan2(dy, dx)) + 360) % 360
@@ -39,26 +41,43 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     local bg = Instance.new("Frame")
     bg.Size = UDim2.new(0, 380, 0, 440)
     bg.Position = UDim2.new(0.5, -190, 0.5, -220)
-    bg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    bg.BackgroundTransparency = 0.1
+    bg.BackgroundColor3 = Color3.fromRGB(14, 14, 26)
+    bg.BackgroundTransparency = 0
     bg.BorderSizePixel = 0
     bg.Parent = sg
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
+    local bgStroke = Instance.new("UIStroke", bg)
+    bgStroke.Color = ACCENT
+    bgStroke.Thickness = 1.5
+
+    -- Gold header bar
+    local headerBar = Instance.new("Frame", bg)
+    headerBar.Size = UDim2.new(1, 0, 0, 44)
+    headerBar.BackgroundColor3 = ACCENT
+    headerBar.BorderSizePixel = 0
+    Instance.new("UICorner", headerBar).CornerRadius = UDim.new(0, 16)
+    local headerFlat = Instance.new("Frame", headerBar)
+    headerFlat.Size = UDim2.new(1, 0, 0.5, 0)
+    headerFlat.Position = UDim2.new(0, 0, 0.5, 0)
+    headerFlat.BackgroundColor3 = ACCENT
+    headerFlat.BorderSizePixel = 0
 
     local titleLbl = Instance.new("TextLabel")
-    titleLbl.Size = UDim2.new(1, 0, 0, 40)
+    titleLbl.Size = UDim2.new(1, -14, 1, 0)
+    titleLbl.Position = UDim2.new(0, 14, 0, 0)
     titleLbl.BackgroundTransparency = 1
-    titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLbl.TextColor3 = Color3.fromRGB(20, 14, 4)
     titleLbl.TextScaled = true
     titleLbl.Font = Enum.Font.GothamBold
-    titleLbl.Text = "MIX -- Move clockwise!"
-    titleLbl.Parent = bg
+    titleLbl.Text = "MIX  — Move clockwise!"
+    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+    titleLbl.Parent = headerBar
 
     local progressLbl = Instance.new("TextLabel")
-    progressLbl.Size = UDim2.new(1, 0, 0, 28)
-    progressLbl.Position = UDim2.new(0, 0, 0, 40)
+    progressLbl.Size = UDim2.new(1, 0, 0, 26)
+    progressLbl.Position = UDim2.new(0, 0, 0, 48)
     progressLbl.BackgroundTransparency = 1
-    progressLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+    progressLbl.TextColor3 = Color3.fromRGB(180, 185, 220)
     progressLbl.TextScaled = true
     progressLbl.Font = Enum.Font.Gotham
     progressLbl.Text = "0 / " .. NUM_CHECKPOINTS
@@ -66,7 +85,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
 
     local ringFrame = Instance.new("Frame")
     ringFrame.Size = UDim2.new(0, 300, 0, 300)
-    ringFrame.Position = UDim2.new(0.5, -150, 0, 72)
+    ringFrame.Position = UDim2.new(0.5, -150, 0, 78)
     ringFrame.BackgroundTransparency = 1
     ringFrame.BorderSizePixel = 0
     ringFrame.ClipsDescendants = false
@@ -74,25 +93,31 @@ startRemote.OnClientEvent:Connect(function(settings, label)
 
     local ringOuter = Instance.new("Frame")
     ringOuter.Size = UDim2.new(1, 0, 1, 0)
-    ringOuter.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    ringOuter.BackgroundColor3 = Color3.fromRGB(22, 22, 42)
     ringOuter.BorderSizePixel = 0
     ringOuter.Parent = ringFrame
     Instance.new("UICorner", ringOuter).CornerRadius = UDim.new(1, 0)
+    local ringStroke = Instance.new("UIStroke", ringOuter)
+    ringStroke.Color = Color3.fromRGB(50, 50, 90)
+    ringStroke.Thickness = 1
 
     local ringInner = Instance.new("Frame")
     ringInner.Size = UDim2.new(0, 190, 0, 190)
     ringInner.Position = UDim2.new(0.5, -95, 0.5, -95)
-    ringInner.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    ringInner.BackgroundColor3 = Color3.fromRGB(14, 14, 26)
     ringInner.BorderSizePixel = 0
     ringInner.ZIndex = 2
     ringInner.Parent = ringFrame
     Instance.new("UICorner", ringInner).CornerRadius = UDim.new(1, 0)
+    local innerStroke = Instance.new("UIStroke", ringInner)
+    innerStroke.Color = Color3.fromRGB(40, 40, 70)
+    innerStroke.Thickness = 1
 
     local arrowLbl = Instance.new("TextLabel")
     arrowLbl.Size = UDim2.new(1, -20, 1, -20)
     arrowLbl.Position = UDim2.new(0, 10, 0, 10)
     arrowLbl.BackgroundTransparency = 1
-    arrowLbl.TextColor3 = Color3.fromRGB(90, 90, 120)
+    arrowLbl.TextColor3 = Color3.fromRGB(55, 55, 95)
     arrowLbl.TextScaled = true
     arrowLbl.Font = Enum.Font.GothamBold
     arrowLbl.Text = "CW"
@@ -102,8 +127,8 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     local cursorDot = Instance.new("Frame")
     cursorDot.Size = UDim2.new(0, 20, 0, 20)
     cursorDot.AnchorPoint = Vector2.new(0.5, 0.5)
-    cursorDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    cursorDot.BackgroundTransparency = 0.35
+    cursorDot.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
+    cursorDot.BackgroundTransparency = 0
     cursorDot.BorderSizePixel = 0
     cursorDot.ZIndex = 5
     cursorDot.Parent = ringFrame
@@ -121,12 +146,13 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     local timerBar = Instance.new("Frame")
     timerBar.Size = UDim2.new(1, -20, 0, 8)
     timerBar.Position = UDim2.new(0, 10, 1, -20)
-    timerBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    timerBar.BackgroundColor3 = Color3.fromRGB(25, 25, 45)
     timerBar.BorderSizePixel = 0
     timerBar.Parent = bg
+    Instance.new("UICorner", timerBar).CornerRadius = UDim.new(0, 4)
     local timerFill = Instance.new("Frame")
     timerFill.Size = UDim2.new(1, 0, 1, 0)
-    timerFill.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+    timerFill.BackgroundColor3 = ACCENT
     timerFill.BorderSizePixel = 0
     timerFill.Parent = timerBar
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
