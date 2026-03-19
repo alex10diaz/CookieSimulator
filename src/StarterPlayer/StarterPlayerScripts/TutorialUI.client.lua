@@ -1,6 +1,7 @@
 -- src/StarterPlayer/StarterPlayerScripts/TutorialUI.client.lua
 -- Shows the tutorial step overlay pushed by TutorialController (server).
 -- Owns: FadeFrame (used by TutorialCamera), bottom panel, Final Menu.
+-- M7 Polish: dark navy + gold UIStroke + gold header bars.
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,6 +14,9 @@ local replayRemote       = RemoteManager.Get("ReplayTutorial")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+
+local ACCENT  = Color3.fromRGB(255, 200, 0)   -- gold
+local NAVY    = Color3.fromRGB(14, 14, 26)     -- dark panel
 
 -- ─── Build ScreenGui ──────────────────────────────────────────────────────────
 local sg = Instance.new("ScreenGui")
@@ -40,19 +44,35 @@ local panel = Instance.new("Frame")
 panel.Name                   = "TutorialPanel"
 panel.Size                   = UDim2.new(0, 420, 0, 110)
 panel.Position               = UDim2.new(0, 14, 1, -130)
-panel.BackgroundColor3       = Color3.fromRGB(20, 20, 30)
-panel.BackgroundTransparency = 0.1
+panel.BackgroundColor3       = NAVY
+panel.BackgroundTransparency = 0
 panel.BorderSizePixel        = 0
 panel.Visible                = false
 panel.Parent                 = sg
 Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
+local panelStroke = Instance.new("UIStroke", panel)
+panelStroke.Color     = ACCENT
+panelStroke.Thickness = 1.5
+
+-- Gold top accent stripe
+local topStripe = Instance.new("Frame", panel)
+topStripe.Size             = UDim2.new(1, 0, 0, 4)
+topStripe.BackgroundColor3 = ACCENT
+topStripe.BorderSizePixel  = 0
+Instance.new("UICorner", topStripe).CornerRadius = UDim.new(0, 12)
+-- flat bottom half of stripe so only top corners are rounded
+local stripeFlat = Instance.new("Frame", topStripe)
+stripeFlat.Size             = UDim2.new(1, 0, 0.5, 0)
+stripeFlat.Position         = UDim2.new(0, 0, 0.5, 0)
+stripeFlat.BackgroundColor3 = ACCENT
+stripeFlat.BorderSizePixel  = 0
 
 local stepLbl = Instance.new("TextLabel")
 stepLbl.Name                   = "StepLabel"
-stepLbl.Size                   = UDim2.new(0.55, 0, 0, 26)
-stepLbl.Position               = UDim2.new(0, 12, 0, 10)
+stepLbl.Size                   = UDim2.new(0.55, 0, 0, 24)
+stepLbl.Position               = UDim2.new(0, 12, 0, 8)
 stepLbl.BackgroundTransparency = 1
-stepLbl.TextColor3             = Color3.fromRGB(255, 200, 60)
+stepLbl.TextColor3             = ACCENT
 stepLbl.TextScaled             = true
 stepLbl.Font                   = Enum.Font.GothamBold
 stepLbl.TextXAlignment         = Enum.TextXAlignment.Left
@@ -61,26 +81,29 @@ stepLbl.Parent                 = panel
 
 local skipBtn = Instance.new("TextButton")
 skipBtn.Name             = "SkipButton"
-skipBtn.Size             = UDim2.new(0, 80, 0, 28)
+skipBtn.Size             = UDim2.new(0, 80, 0, 26)
 skipBtn.Position         = UDim2.new(1, -92, 0, 8)
-skipBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-skipBtn.TextColor3       = Color3.fromRGB(200, 200, 200)
+skipBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+skipBtn.TextColor3       = Color3.fromRGB(160, 160, 185)
 skipBtn.TextScaled       = true
 skipBtn.Font             = Enum.Font.Gotham
 skipBtn.Text             = "Skip"
 skipBtn.BorderSizePixel  = 0
 skipBtn.Parent           = panel
 Instance.new("UICorner", skipBtn).CornerRadius = UDim.new(0, 8)
+local skipStroke = Instance.new("UIStroke", skipBtn)
+skipStroke.Color     = Color3.fromRGB(70, 70, 95)
+skipStroke.Thickness = 1
 
 local msgLbl = Instance.new("TextLabel")
 msgLbl.Name                   = "MessageLabel"
-msgLbl.Size                   = UDim2.new(1, -24, 0, 56)
-msgLbl.Position               = UDim2.new(0, 12, 0, 46)
+msgLbl.Size                   = UDim2.new(1, -24, 0, 60)
+msgLbl.Position               = UDim2.new(0, 12, 0, 40)
 msgLbl.BackgroundTransparency = 1
-msgLbl.TextColor3             = Color3.fromRGB(240, 240, 240)
+msgLbl.TextColor3             = Color3.fromRGB(220, 220, 240)
 msgLbl.TextWrapped            = true
 msgLbl.TextScaled             = false
-msgLbl.TextSize               = 18
+msgLbl.TextSize               = 17
 msgLbl.Font                   = Enum.Font.Gotham
 msgLbl.TextXAlignment         = Enum.TextXAlignment.Left
 msgLbl.Text                   = ""
@@ -89,33 +112,50 @@ msgLbl.Parent                 = panel
 -- ─── Final Menu — shown on step 10 ───────────────────────────────────────────
 local finalMenu = Instance.new("Frame")
 finalMenu.Name                   = "FinalMenu"
-finalMenu.Size                   = UDim2.new(0, 320, 0, 170)
-finalMenu.Position               = UDim2.new(0.5, -160, 0.5, -85)
-finalMenu.BackgroundColor3       = Color3.fromRGB(20, 20, 30)
-finalMenu.BackgroundTransparency = 0.05
+finalMenu.Size                   = UDim2.new(0, 340, 0, 190)
+finalMenu.Position               = UDim2.new(0.5, -170, 0.5, -95)
+finalMenu.BackgroundColor3       = NAVY
+finalMenu.BackgroundTransparency = 0
 finalMenu.BorderSizePixel        = 0
 finalMenu.Visible                = false
 finalMenu.ZIndex                 = 15
 finalMenu.Parent                 = sg
 Instance.new("UICorner", finalMenu).CornerRadius = UDim.new(0, 16)
+local finalStroke = Instance.new("UIStroke", finalMenu)
+finalStroke.Color     = ACCENT
+finalStroke.Thickness = 1.5
 
-local menuTitle = Instance.new("TextLabel")
-menuTitle.Size                   = UDim2.new(1, -20, 0, 40)
-menuTitle.Position               = UDim2.new(0, 10, 0, 10)
+-- Gold header bar
+local finalHeader = Instance.new("Frame", finalMenu)
+finalHeader.Name             = "HeaderBar"
+finalHeader.Size             = UDim2.new(1, 0, 0, 44)
+finalHeader.BackgroundColor3 = ACCENT
+finalHeader.BorderSizePixel  = 0
+finalHeader.ZIndex           = 16
+Instance.new("UICorner", finalHeader).CornerRadius = UDim.new(0, 16)
+local fhFlat = Instance.new("Frame", finalHeader)
+fhFlat.Size             = UDim2.new(1, 0, 0.5, 0)
+fhFlat.Position         = UDim2.new(0, 0, 0.5, 0)
+fhFlat.BackgroundColor3 = ACCENT
+fhFlat.BorderSizePixel  = 0
+
+local menuTitle = Instance.new("TextLabel", finalHeader)
+menuTitle.Size                   = UDim2.new(1, -14, 1, 0)
+menuTitle.Position               = UDim2.new(0, 14, 0, 0)
 menuTitle.BackgroundTransparency = 1
-menuTitle.TextColor3             = Color3.fromRGB(255, 220, 80)
+menuTitle.TextColor3             = Color3.fromRGB(20, 14, 4)
 menuTitle.TextScaled             = true
 menuTitle.Font                   = Enum.Font.GothamBold
 menuTitle.Text                   = "You're ready to bake!"
+menuTitle.TextXAlignment         = Enum.TextXAlignment.Left
 menuTitle.ZIndex                 = 16
-menuTitle.Parent                 = finalMenu
 
 local startDayBtn = Instance.new("TextButton")
 startDayBtn.Name             = "StartDayButton"
-startDayBtn.Size             = UDim2.new(0, 280, 0, 50)
-startDayBtn.Position         = UDim2.new(0, 20, 0, 60)
-startDayBtn.BackgroundColor3 = Color3.fromRGB(34, 160, 70)
-startDayBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
+startDayBtn.Size             = UDim2.new(1, -28, 0, 52)
+startDayBtn.Position         = UDim2.new(0, 14, 0, 56)
+startDayBtn.BackgroundColor3 = Color3.fromRGB(30, 100, 40)
+startDayBtn.TextColor3       = Color3.fromRGB(200, 240, 200)
 startDayBtn.TextScaled       = true
 startDayBtn.Font             = Enum.Font.GothamBold
 startDayBtn.Text             = "START DAY (PRE-OPEN)"
@@ -123,13 +163,16 @@ startDayBtn.BorderSizePixel  = 0
 startDayBtn.ZIndex           = 16
 startDayBtn.Parent           = finalMenu
 Instance.new("UICorner", startDayBtn).CornerRadius = UDim.new(0, 10)
+local sdStroke = Instance.new("UIStroke", startDayBtn)
+sdStroke.Color     = Color3.fromRGB(50, 160, 60)
+sdStroke.Thickness = 1.5
 
 local replayBtn = Instance.new("TextButton")
 replayBtn.Name             = "ReplayButton"
-replayBtn.Size             = UDim2.new(0, 280, 0, 40)
-replayBtn.Position         = UDim2.new(0, 20, 0, 120)
-replayBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
-replayBtn.TextColor3       = Color3.fromRGB(200, 200, 200)
+replayBtn.Size             = UDim2.new(1, -28, 0, 38)
+replayBtn.Position         = UDim2.new(0, 14, 0, 118)
+replayBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 52)
+replayBtn.TextColor3       = Color3.fromRGB(160, 160, 190)
 replayBtn.TextScaled       = true
 replayBtn.Font             = Enum.Font.Gotham
 replayBtn.Text             = "REPLAY TUTORIAL"
@@ -137,6 +180,9 @@ replayBtn.BorderSizePixel  = 0
 replayBtn.ZIndex           = 16
 replayBtn.Parent           = finalMenu
 Instance.new("UICorner", replayBtn).CornerRadius = UDim.new(0, 10)
+local rpStroke = Instance.new("UIStroke", replayBtn)
+rpStroke.Color     = Color3.fromRGB(55, 55, 80)
+rpStroke.Thickness = 1
 
 -- ─── Logic ───────────────────────────────────────────────────────────────────
 tutorialStepRemote.OnClientEvent:Connect(function(data)
