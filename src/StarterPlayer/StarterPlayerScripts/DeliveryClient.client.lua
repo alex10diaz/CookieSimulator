@@ -5,7 +5,6 @@
 
 local Players                = game:GetService("Players")
 local ReplicatedStorage      = game:GetService("ReplicatedStorage")
-local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local boxCreated     = RemoteManager.Get("BoxCreated")
@@ -19,7 +18,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 -- ─── State ────────────────────────────────────────────────────────────────────
 local carriedBoxId = nil
 
--- ─── Carrying indicator UI ────────────────────────────────────────────────────
+-- ─── Cookie display names ─────────────────────────────────────────────────────
 local COOKIE_DISPLAY = {
     pink_sugar           = "Pink Sugar",
     chocolate_chip       = "Choc Chip",
@@ -29,6 +28,7 @@ local COOKIE_DISPLAY = {
     lemon_blackraspberry = "Lemon Berry",
 }
 
+-- ─── Carry indicator ──────────────────────────────────────────────────────────
 local function showCarryIndicator(box)
     local existing = playerGui:FindFirstChild("CarryIndicator")
     if existing then existing:Destroy() end
@@ -40,18 +40,33 @@ local function showCarryIndicator(box)
     sg.ResetOnSpawn = false
     sg.Parent       = playerGui
 
-    local label = Instance.new("TextLabel")
-    label.Size               = UDim2.new(0, 320, 0, 44)
-    label.Position           = UDim2.new(0.5, -160, 0.85, 0)
-    label.BackgroundColor3   = Color3.fromRGB(60, 120, 200)
-    label.BackgroundTransparency = 0.1
-    label.TextColor3         = Color3.fromRGB(255, 255, 255)
+    local card = Instance.new("Frame", sg)
+    card.Size                   = UDim2.new(0, 340, 0, 48)
+    card.Position               = UDim2.new(0.5, -170, 0.85, 0)
+    card.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
+    card.BackgroundTransparency = 0
+    card.BorderSizePixel        = 0
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+    local cardStroke = Instance.new("UIStroke", card)
+    cardStroke.Color     = Color3.fromRGB(255, 200, 0)
+    cardStroke.Thickness = 1.5
+
+    -- Left gold accent stripe
+    local stripe = Instance.new("Frame", card)
+    stripe.Size             = UDim2.new(0, 5, 1, 0)
+    stripe.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    stripe.BorderSizePixel  = 0
+    Instance.new("UICorner", stripe).CornerRadius = UDim.new(0, 10)
+
+    local label = Instance.new("TextLabel", card)
+    label.Size               = UDim2.new(1, -14, 1, 0)
+    label.Position           = UDim2.new(0, 14, 0, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3         = Color3.fromRGB(255, 215, 80)
     label.TextScaled         = true
     label.Font               = Enum.Font.GothamBold
-    label.Text               = cookieName .. " box — walk to customer!"
-    label.BorderSizePixel    = 0
-    label.Parent             = sg
-    Instance.new("UICorner", label).CornerRadius = UDim.new(0, 8)
+    label.Text               = cookieName .. " box  —  walk to customer!"
+    label.TextXAlignment     = Enum.TextXAlignment.Left
 end
 
 local function clearCarryIndicator()
@@ -74,7 +89,7 @@ deliveryResult.OnClientEvent:Connect(function()
     clearCarryIndicator()
 end)
 
--- ─── ForceDropBox: NPC left before delivery — drop carried box ───────────────
+-- ─── ForceDropBox: NPC left before delivery ───────────────────────────────────
 forceDropBox.OnClientEvent:Connect(function()
     if carriedBoxId then
         print("[DeliveryClient] Box #" .. carriedBoxId .. " dropped — customer left")
@@ -84,6 +99,4 @@ forceDropBox.OnClientEvent:Connect(function()
 end)
 
 -- Delivery trigger is handled server-side via ProximityPrompt in PersistentNPCSpawner.
--- No client-side remote fire needed.
-
 print("[DeliveryClient] Ready.")
