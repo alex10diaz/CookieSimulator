@@ -1,4 +1,4 @@
--- MenuClient (LocalScript, StarterPlayerScripts)
+-- MenuClient (LocalScript, StarterPlayerScripts)  M7 Polish
 -- Shows the Menu Board GUI during PreOpen so players can choose today's cookie menu.
 -- Owned cookies show a checkbox (max 6 selectable).
 -- Locked cookies show their unlock cost and an "Unlock" button.
@@ -20,8 +20,8 @@ local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local MAX_SELECT = 6
+local ACCENT     = Color3.fromRGB(255, 200, 0)  -- gold
 
--- Module-level callbacks so connections are centralised per board instance
 local onResultCallback         = nil
 local onLockCallback           = nil
 local onPurchaseResultCallback = nil
@@ -45,7 +45,7 @@ purchaseCookieResultRemote.OnClientEvent:Connect(function(success, newCoinsOrMsg
     end
 end)
 
--- ── FADE HELPERS ──────────────────────────────────────────────
+-- ── Fade helpers ──────────────────────────────────────────────────────────────
 local function createBlackFade()
     local fadeGui = Instance.new("ScreenGui")
     fadeGui.Name           = "MenuFadeGui"
@@ -66,37 +66,30 @@ end
 local function fadeIn(fill, duration)
     local tween = TweenService:Create(fill,
         TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        { BackgroundTransparency = 0 }
-    )
-    tween:Play()
-    tween.Completed:Wait()
+        { BackgroundTransparency = 0 })
+    tween:Play(); tween.Completed:Wait()
 end
 
 local function fadeOut(fill, duration)
     local tween = TweenService:Create(fill,
         TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-        { BackgroundTransparency = 1 }
-    )
-    tween:Play()
-    tween.Completed:Wait()
+        { BackgroundTransparency = 1 })
+    tween:Play(); tween.Completed:Wait()
 end
 
--- ── BUILD MENU BOARD GUI ──────────────────────────────────────
+-- ── Build menu board ──────────────────────────────────────────────────────────
 local function buildMenuBoard(payload)
     local existing = playerGui:FindFirstChild("MenuBoardGui")
     if existing then existing:Destroy() end
 
-    local allCookies   = payload.allCookies   -- { id, label, price } in CookieData order
-    local activeMenu   = payload.activeMenu   -- { cookieId, ... } current menu
+    local allCookies   = payload.allCookies
+    local activeMenu   = payload.activeMenu
     local ownedCookies = payload.ownedCookies or {}
 
-    -- Build owned set for quick lookup
     local ownedSet = {}
     for _, id in ipairs(ownedCookies) do ownedSet[id] = true end
 
-    -- Split into owned / locked lists (preserving CookieData order)
-    local ownedList  = {}
-    local lockedList = {}
+    local ownedList, lockedList = {}, {}
     for _, info in ipairs(allCookies) do
         if ownedSet[info.id] then
             table.insert(ownedList, info)
@@ -105,25 +98,21 @@ local function buildMenuBoard(payload)
         end
     end
 
-    -- Initial selection: activeMenu ∩ owned, capped at MAX_SELECT
     local selected = {}
     local selCount = 0
     for _, id in ipairs(activeMenu) do
         if ownedSet[id] and selCount < MAX_SELECT then
-            selected[id] = true
-            selCount += 1
+            selected[id] = true; selCount += 1
         end
     end
-    -- If empty (first time), auto-select all owned up to MAX_SELECT
     if next(selected) == nil then
         for _, info in ipairs(ownedList) do
             if selCount >= MAX_SELECT then break end
-            selected[info.id] = true
-            selCount += 1
+            selected[info.id] = true; selCount += 1
         end
     end
 
-    -- ── Root ScreenGui ─────────────────────────────────────────
+    -- ── Root ──
     local sg = Instance.new("ScreenGui")
     sg.Name           = "MenuBoardGui"
     sg.ResetOnSpawn   = false
@@ -131,50 +120,54 @@ local function buildMenuBoard(payload)
     sg.IgnoreGuiInset = false
     sg.Parent         = playerGui
 
-    -- Dark overlay
     local overlay = Instance.new("Frame", sg)
     overlay.Size                   = UDim2.new(1, 0, 1, 0)
     overlay.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
     overlay.BackgroundTransparency = 0.55
     overlay.BorderSizePixel        = 0
 
-    -- Card frame
+    -- Main card
     local card = Instance.new("Frame", sg)
-    card.Size                   = UDim2.new(0, 400, 0, 480)
-    card.Position               = UDim2.new(0.5, -200, 0.5, -240)
-    card.BackgroundColor3       = Color3.fromRGB(42, 28, 18)
+    card.Size                   = UDim2.new(0, 410, 0, 490)
+    card.Position               = UDim2.new(0.5, -205, 0.5, -245)
+    card.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
     card.BackgroundTransparency = 0
     card.BorderSizePixel        = 0
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 16)
+    local cardStroke = Instance.new("UIStroke", card)
+    cardStroke.Color     = ACCENT
+    cardStroke.Thickness = 1.5
 
-    -- Accent bar
-    local accentBar = Instance.new("Frame", card)
-    accentBar.Size             = UDim2.new(1, 0, 0, 6)
-    accentBar.BackgroundColor3 = Color3.fromRGB(220, 160, 60)
-    accentBar.BorderSizePixel  = 0
-    Instance.new("UICorner", accentBar).CornerRadius = UDim.new(0, 16)
+    -- Gold header bar
+    local headerBar = Instance.new("Frame", card)
+    headerBar.Size             = UDim2.new(1, 0, 0, 46)
+    headerBar.BackgroundColor3 = ACCENT
+    headerBar.BorderSizePixel  = 0
+    Instance.new("UICorner", headerBar).CornerRadius = UDim.new(0, 16)
+    local hFlat = Instance.new("Frame", headerBar)
+    hFlat.Size             = UDim2.new(1, 0, 0.5, 0)
+    hFlat.Position         = UDim2.new(0, 0, 0.5, 0)
+    hFlat.BackgroundColor3 = ACCENT
+    hFlat.BorderSizePixel  = 0
+    local titleLbl = Instance.new("TextLabel", headerBar)
+    titleLbl.Size                   = UDim2.new(1, -14, 1, 0)
+    titleLbl.Position               = UDim2.new(0, 14, 0, 0)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.TextColor3             = Color3.fromRGB(20, 14, 4)
+    titleLbl.TextScaled             = true
+    titleLbl.Font                   = Enum.Font.GothamBold
+    titleLbl.Text                   = "Today's Menu"
+    titleLbl.TextXAlignment         = Enum.TextXAlignment.Left
 
-    -- Title
-    local title = Instance.new("TextLabel", card)
-    title.Size                   = UDim2.new(1, -20, 0, 40)
-    title.Position               = UDim2.new(0, 10, 0, 14)
-    title.BackgroundTransparency = 1
-    title.TextColor3             = Color3.fromRGB(255, 220, 140)
-    title.TextScaled             = true
-    title.Font                   = Enum.Font.GothamBold
-    title.Text                   = "Today's Menu"
-
-    -- Subtitle
     local sub = Instance.new("TextLabel", card)
     sub.Size                   = UDim2.new(1, -20, 0, 20)
     sub.Position               = UDim2.new(0, 10, 0, 54)
     sub.BackgroundTransparency = 1
-    sub.TextColor3             = Color3.fromRGB(200, 175, 135)
+    sub.TextColor3             = Color3.fromRGB(160, 160, 200)
     sub.TextScaled             = true
     sub.Font                   = Enum.Font.Gotham
     sub.Text                   = "Pick up to " .. MAX_SELECT .. " cookies to serve today"
 
-    -- Status counter
     local statusLabel = Instance.new("TextLabel", card)
     statusLabel.Size                   = UDim2.new(1, -20, 0, 20)
     statusLabel.Position               = UDim2.new(0, 10, 0, 76)
@@ -184,14 +177,13 @@ local function buildMenuBoard(payload)
     statusLabel.Font                   = Enum.Font.GothamBold
     statusLabel.Text                   = "0 / " .. MAX_SELECT .. " selected"
 
-    -- Cookie list (ScrollingFrame)
     local listFrame = Instance.new("ScrollingFrame", card)
     listFrame.Size                   = UDim2.new(1, -20, 0, 300)
-    listFrame.Position               = UDim2.new(0, 10, 0, 102)
+    listFrame.Position               = UDim2.new(0, 10, 0, 100)
     listFrame.BackgroundTransparency = 1
     listFrame.BorderSizePixel        = 0
     listFrame.ScrollBarThickness     = 4
-    listFrame.ScrollBarImageColor3   = Color3.fromRGB(220, 160, 60)
+    listFrame.ScrollBarImageColor3   = ACCENT
     listFrame.CanvasSize             = UDim2.new(0, 0, 0, 0)
 
     local listLayout = Instance.new("UIListLayout", listFrame)
@@ -199,34 +191,34 @@ local function buildMenuBoard(payload)
     listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     listLayout.SortOrder           = Enum.SortOrder.LayoutOrder
 
-    -- Confirm button
     local confirmBtn = Instance.new("TextButton", card)
     confirmBtn.Size             = UDim2.new(0.8, 0, 0, 44)
-    confirmBtn.Position         = UDim2.new(0.1, 0, 0, 416)
-    confirmBtn.BackgroundColor3 = Color3.fromRGB(80, 165, 75)
-    confirmBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
+    confirmBtn.Position         = UDim2.new(0.1, 0, 0, 414)
+    confirmBtn.BackgroundColor3 = Color3.fromRGB(30, 100, 40)
+    confirmBtn.TextColor3       = Color3.fromRGB(200, 255, 200)
     confirmBtn.TextScaled       = true
     confirmBtn.Font             = Enum.Font.GothamBold
     confirmBtn.Text             = "Set Menu"
     confirmBtn.BorderSizePixel  = 0
     Instance.new("UICorner", confirmBtn).CornerRadius = UDim.new(0, 10)
+    local cbStroke = Instance.new("UIStroke", confirmBtn)
+    cbStroke.Color     = Color3.fromRGB(50, 185, 75)
+    cbStroke.Thickness = 1.5
 
     local hintLabel = Instance.new("TextLabel", card)
     hintLabel.Size                   = UDim2.new(1, -20, 0, 16)
     hintLabel.Position               = UDim2.new(0, 10, 0, 462)
     hintLabel.BackgroundTransparency = 1
-    hintLabel.TextColor3             = Color3.fromRGB(140, 120, 90)
+    hintLabel.TextColor3             = Color3.fromRGB(80, 80, 110)
     hintLabel.TextScaled             = true
     hintLabel.Font                   = Enum.Font.Gotham
     hintLabel.Text                   = "Menu locks when the store opens"
 
-    -- ── ROW HELPERS ──────────────────────────────────────────────
-    local checkboxRefs = {}  -- cookieId → { row, checkLabel, nameLabel }
+    -- ── Row helpers ────────────────────────────────────────────────────────────
+    local checkboxRefs = {}
 
     local function countSelected()
-        local n = 0
-        for _ in pairs(selected) do n += 1 end
-        return n
+        local n = 0; for _ in pairs(selected) do n += 1 end; return n
     end
 
     local function updateStatus()
@@ -242,282 +234,205 @@ local function buildMenuBoard(payload)
         local ref = checkboxRefs[id]
         if not ref then return end
         local on = selected[id] == true
-        ref.row.BackgroundColor3  = on and Color3.fromRGB(75, 58, 32) or Color3.fromRGB(44, 34, 22)
-        ref.checkLabel.Text       = on and "☑" or "☐"
-        ref.checkLabel.TextColor3 = on and Color3.fromRGB(255, 200, 90) or Color3.fromRGB(110, 95, 70)
-        ref.nameLabel.TextColor3  = on and Color3.fromRGB(245, 225, 185) or Color3.fromRGB(130, 115, 90)
+        ref.row.BackgroundColor3  = on and Color3.fromRGB(38, 32, 8) or Color3.fromRGB(20, 20, 38)
+        ref.checkLabel.Text       = on and "[X]" or "[ ]"
+        ref.checkLabel.TextColor3 = on and Color3.fromRGB(255, 200, 60) or Color3.fromRGB(70, 70, 100)
+        ref.nameLabel.TextColor3  = on and Color3.fromRGB(255, 215, 120) or Color3.fromRGB(130, 130, 170)
+        local s = ref.row:FindFirstChildOfClass("UIStroke")
+        if s then s.Color = on and Color3.fromRGB(180, 140, 20) or Color3.fromRGB(35, 35, 60) end
     end
 
-    -- ── OWNED SECTION HEADER ─────────────────────────────────────
-    local ROW_H    = 34
-    local HDR_H    = 22
-    local ROW_GAP  = 4
-    local totalHeight = 0
+    -- Owned section
+    local ROW_H = 34; local HDR_H = 22; local ROW_GAP = 4; local totalHeight = 0
 
     local ownedHeader = Instance.new("TextLabel", listFrame)
     ownedHeader.LayoutOrder       = 0
     ownedHeader.Size              = UDim2.new(1, 0, 0, HDR_H)
     ownedHeader.BackgroundTransparency = 1
     ownedHeader.TextXAlignment    = Enum.TextXAlignment.Left
-    ownedHeader.TextColor3        = Color3.fromRGB(200, 160, 70)
+    ownedHeader.TextColor3        = ACCENT
     ownedHeader.TextScaled        = true
     ownedHeader.Font              = Enum.Font.GothamBold
-    ownedHeader.Text              = "  ☆ Owned (" .. #ownedList .. ")"
+    ownedHeader.Text              = "  Owned (" .. #ownedList .. ")"
     totalHeight += HDR_H + ROW_GAP
 
-    -- ── OWNED ROWS ────────────────────────────────────────────────
     for i, info in ipairs(ownedList) do
         local isOn = selected[info.id] == true
 
         local row = Instance.new("TextButton", listFrame)
         row.LayoutOrder      = i
         row.Size             = UDim2.new(1, 0, 0, ROW_H)
-        row.BackgroundColor3 = isOn and Color3.fromRGB(75, 58, 32) or Color3.fromRGB(44, 34, 22)
-        row.BorderSizePixel  = 0
-        row.Text             = ""
-        row.AutoButtonColor  = false
+        row.BackgroundColor3 = isOn and Color3.fromRGB(38, 32, 8) or Color3.fromRGB(20, 20, 38)
+        row.BorderSizePixel  = 0; row.Text = ""; row.AutoButtonColor = false
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+        local rs = Instance.new("UIStroke", row)
+        rs.Color = isOn and Color3.fromRGB(180, 140, 20) or Color3.fromRGB(35, 35, 60); rs.Thickness = 1
 
         local checkLbl = Instance.new("TextLabel", row)
-        checkLbl.Size                   = UDim2.new(0, 30, 1, 0)
-        checkLbl.Position               = UDim2.new(0, 6, 0, 0)
-        checkLbl.BackgroundTransparency = 1
-        checkLbl.TextScaled             = true
-        checkLbl.Font                   = Enum.Font.GothamBold
-        checkLbl.Text                   = isOn and "☑" or "☐"
-        checkLbl.TextColor3             = isOn
-            and Color3.fromRGB(255, 200, 90) or Color3.fromRGB(110, 95, 70)
+        checkLbl.Size=UDim2.new(0,34,1,0); checkLbl.Position=UDim2.new(0,6,0,0)
+        checkLbl.BackgroundTransparency=1; checkLbl.TextScaled=true; checkLbl.Font=Enum.Font.GothamBold
+        checkLbl.Text = isOn and "[X]" or "[ ]"
+        checkLbl.TextColor3 = isOn and Color3.fromRGB(255,200,60) or Color3.fromRGB(70,70,100)
 
         local nameLbl = Instance.new("TextLabel", row)
-        nameLbl.Size                   = UDim2.new(0.6, 0, 1, 0)
-        nameLbl.Position               = UDim2.new(0, 40, 0, 0)
-        nameLbl.BackgroundTransparency = 1
-        nameLbl.TextXAlignment         = Enum.TextXAlignment.Left
-        nameLbl.TextScaled             = true
-        nameLbl.Font                   = Enum.Font.Gotham
-        nameLbl.Text                   = info.label
-        nameLbl.TextColor3             = isOn
-            and Color3.fromRGB(245, 225, 185) or Color3.fromRGB(130, 115, 90)
+        nameLbl.Size=UDim2.new(0.65,0,1,0); nameLbl.Position=UDim2.new(0,42,0,0)
+        nameLbl.BackgroundTransparency=1; nameLbl.TextXAlignment=Enum.TextXAlignment.Left
+        nameLbl.TextScaled=true; nameLbl.Font=Enum.Font.Gotham; nameLbl.Text=info.label
+        nameLbl.TextColor3 = isOn and Color3.fromRGB(255,215,120) or Color3.fromRGB(130,130,170)
 
         local priceLbl = Instance.new("TextLabel", row)
-        priceLbl.Size                   = UDim2.new(0, 50, 1, 0)
-        priceLbl.Position               = UDim2.new(1, -54, 0, 0)
-        priceLbl.BackgroundTransparency = 1
-        priceLbl.TextScaled             = true
-        priceLbl.Font                   = Enum.Font.Gotham
-        priceLbl.Text                   = info.price .. "🪙"
-        priceLbl.TextColor3             = Color3.fromRGB(200, 170, 100)
+        priceLbl.Size=UDim2.new(0,60,1,0); priceLbl.Position=UDim2.new(1,-64,0,0)
+        priceLbl.BackgroundTransparency=1; priceLbl.TextScaled=true; priceLbl.Font=Enum.Font.Gotham
+        priceLbl.Text=info.price.."c"; priceLbl.TextColor3=Color3.fromRGB(140,120,60)
 
-        checkboxRefs[info.id] = { row = row, checkLabel = checkLbl, nameLabel = nameLbl }
+        checkboxRefs[info.id] = { row=row, checkLabel=checkLbl, nameLabel=nameLbl }
         totalHeight += ROW_H + ROW_GAP
 
         row.MouseButton1Click:Connect(function()
             if selected[info.id] then
-                if countSelected() <= 1 then return end  -- keep at least 1
+                if countSelected() <= 1 then return end
                 selected[info.id] = nil
             else
-                if countSelected() >= MAX_SELECT then return end  -- cap at 6
+                if countSelected() >= MAX_SELECT then return end
                 selected[info.id] = true
             end
-            refreshCheckRow(info.id)
-            updateStatus()
+            refreshCheckRow(info.id); updateStatus()
         end)
     end
 
-    -- ── LOCKED SECTION HEADER ─────────────────────────────────────
+    -- Locked section
     if #lockedList > 0 then
         local lockedHeader = Instance.new("TextLabel", listFrame)
-        lockedHeader.LayoutOrder       = 1000
-        lockedHeader.Size              = UDim2.new(1, 0, 0, HDR_H)
-        lockedHeader.BackgroundTransparency = 1
-        lockedHeader.TextXAlignment    = Enum.TextXAlignment.Left
-        lockedHeader.TextColor3        = Color3.fromRGB(160, 130, 90)
-        lockedHeader.TextScaled        = true
-        lockedHeader.Font              = Enum.Font.GothamBold
-        lockedHeader.Text              = "  🔒 Locked (" .. #lockedList .. ")"
+        lockedHeader.LayoutOrder=1000; lockedHeader.Size=UDim2.new(1,0,0,HDR_H)
+        lockedHeader.BackgroundTransparency=1; lockedHeader.TextXAlignment=Enum.TextXAlignment.Left
+        lockedHeader.TextColor3=Color3.fromRGB(80,80,120); lockedHeader.TextScaled=true
+        lockedHeader.Font=Enum.Font.GothamBold; lockedHeader.Text="  Locked ("..#lockedList..")"
         totalHeight += HDR_H + ROW_GAP
 
-        -- ── LOCKED ROWS ──────────────────────────────────────────
-        local unlockBtnRefs = {}  -- cookieId → TextButton (for disabling during purchase)
+        local unlockBtnRefs = {}
 
         for i, info in ipairs(lockedList) do
             local cost = nil
-            -- Compute unlock cost client-side for display (server re-validates on purchase)
-            if info.price == 4 then cost = 100
-            elseif info.price == 5 then cost = 250
-            elseif info.price == 6 then cost = 500
-            elseif info.price == 7 then cost = 1000
-            else cost = 100 end
-            -- Special pricing for original main-6
-            if info.id == "cookies_and_cream" or info.id == "lemon_blackraspberry" then
-                cost = 100
-            end
+            if info.price==4 then cost=100 elseif info.price==5 then cost=250
+            elseif info.price==6 then cost=500 elseif info.price==7 then cost=1000
+            else cost=100 end
+            if info.id=="cookies_and_cream" or info.id=="lemon_blackraspberry" then cost=100 end
 
             local row = Instance.new("Frame", listFrame)
-            row.LayoutOrder      = 1000 + i
-            row.Size             = UDim2.new(1, 0, 0, ROW_H)
-            row.BackgroundColor3 = Color3.fromRGB(32, 26, 18)
-            row.BorderSizePixel  = 0
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+            row.LayoutOrder=1000+i; row.Size=UDim2.new(1,0,0,ROW_H)
+            row.BackgroundColor3=Color3.fromRGB(18,18,34); row.BorderSizePixel=0
+            Instance.new("UICorner",row).CornerRadius=UDim.new(0,8)
+            local rs=Instance.new("UIStroke",row); rs.Color=Color3.fromRGB(35,35,60); rs.Thickness=1
 
-            local lockIcon = Instance.new("TextLabel", row)
-            lockIcon.Size                   = UDim2.new(0, 26, 1, 0)
-            lockIcon.Position               = UDim2.new(0, 4, 0, 0)
-            lockIcon.BackgroundTransparency = 1
-            lockIcon.TextScaled             = true
-            lockIcon.Font                   = Enum.Font.GothamBold
-            lockIcon.Text                   = "🔒"
-            lockIcon.TextColor3             = Color3.fromRGB(130, 105, 65)
+            local lockIcon=Instance.new("TextLabel",row)
+            lockIcon.Size=UDim2.new(0,26,1,0); lockIcon.Position=UDim2.new(0,4,0,0)
+            lockIcon.BackgroundTransparency=1; lockIcon.TextScaled=true
+            lockIcon.Font=Enum.Font.GothamBold; lockIcon.Text="[L]"
+            lockIcon.TextColor3=Color3.fromRGB(60,60,90)
 
-            local nameLbl = Instance.new("TextLabel", row)
-            nameLbl.Size                   = UDim2.new(0.5, 0, 1, 0)
-            nameLbl.Position               = UDim2.new(0, 34, 0, 0)
-            nameLbl.BackgroundTransparency = 1
-            nameLbl.TextXAlignment         = Enum.TextXAlignment.Left
-            nameLbl.TextScaled             = true
-            nameLbl.Font                   = Enum.Font.Gotham
-            nameLbl.Text                   = info.label
-            nameLbl.TextColor3             = Color3.fromRGB(100, 85, 60)
+            local nameLbl=Instance.new("TextLabel",row)
+            nameLbl.Size=UDim2.new(0.5,0,1,0); nameLbl.Position=UDim2.new(0,34,0,0)
+            nameLbl.BackgroundTransparency=1; nameLbl.TextXAlignment=Enum.TextXAlignment.Left
+            nameLbl.TextScaled=true; nameLbl.Font=Enum.Font.Gotham; nameLbl.Text=info.label
+            nameLbl.TextColor3=Color3.fromRGB(70,70,100)
 
-            local unlockBtn = Instance.new("TextButton", row)
-            unlockBtn.Size             = UDim2.new(0, 90, 0, 24)
-            unlockBtn.Position         = UDim2.new(1, -96, 0.5, -12)
-            unlockBtn.BackgroundColor3 = Color3.fromRGB(190, 140, 40)
-            unlockBtn.TextColor3       = Color3.fromRGB(255, 245, 220)
-            unlockBtn.TextScaled       = true
-            unlockBtn.Font             = Enum.Font.GothamBold
-            unlockBtn.Text             = cost .. " 🪙 Buy"
-            unlockBtn.BorderSizePixel  = 0
-            Instance.new("UICorner", unlockBtn).CornerRadius = UDim.new(0, 6)
+            local unlockBtn=Instance.new("TextButton",row)
+            unlockBtn.Size=UDim2.new(0,90,0,24); unlockBtn.Position=UDim2.new(1,-96,0.5,-12)
+            unlockBtn.BackgroundColor3=Color3.fromRGB(36,30,8); unlockBtn.TextColor3=Color3.fromRGB(255,200,60)
+            unlockBtn.TextScaled=true; unlockBtn.Font=Enum.Font.GothamBold
+            unlockBtn.Text=cost.."c Unlock"; unlockBtn.BorderSizePixel=0
+            Instance.new("UICorner",unlockBtn).CornerRadius=UDim.new(0,6)
+            local ubs=Instance.new("UIStroke",unlockBtn); ubs.Color=Color3.fromRGB(180,140,20); ubs.Thickness=1
 
             unlockBtnRefs[info.id] = unlockBtn
             totalHeight += ROW_H + ROW_GAP
 
             unlockBtn.MouseButton1Click:Connect(function()
                 if not unlockBtn.Active then return end
-                unlockBtn.Active = false
-                unlockBtn.Text   = "..."
+                unlockBtn.Active=false; unlockBtn.Text="..."
                 purchaseCookieRemote:FireServer(info.id)
             end)
         end
 
-        -- Handle purchase result: re-enable failed buttons, rebuild board on success
         local currentPayload = payload
         onPurchaseResultCallback = function(success, newCoinsOrMsg, cookieId)
             if success then
-                -- Update local ownedCookies and rebuild the board
                 local newOwned = {}
-                for _, id in ipairs(currentPayload.ownedCookies or {}) do
-                    table.insert(newOwned, id)
-                end
+                for _, id in ipairs(currentPayload.ownedCookies or {}) do table.insert(newOwned, id) end
                 table.insert(newOwned, cookieId)
-                local updatedPayload = {
-                    allCookies   = currentPayload.allCookies,
-                    activeMenu   = currentPayload.activeMenu,
-                    ownedCookies = newOwned,
-                }
+                local updatedPayload = { allCookies=currentPayload.allCookies,
+                    activeMenu=currentPayload.activeMenu, ownedCookies=newOwned }
                 currentPayload = updatedPayload
-                -- Persist current selection to carry through rebuild
                 local currentSelected = {}
                 for id in pairs(selected) do table.insert(currentSelected, id) end
                 updatedPayload.activeMenu = currentSelected
                 buildMenuBoard(updatedPayload)
             else
-                -- Re-enable the failed button
                 local btn = unlockBtnRefs[cookieId]
-                if btn and btn.Parent then
-                    btn.Active = true
-                    btn.Text   = "Retry"
-                end
+                if btn and btn.Parent then btn.Active=true; btn.Text="Retry" end
             end
         end
     end
 
-    -- Set canvas height
     listFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
     updateStatus()
 
-    -- ── FADE & CONFIRM ──────────────────────────────────────────
-    local fadeGui  = nil
-    local fadeFill = nil
+    -- Fade & confirm
+    local fadeGui, fadeFill = nil, nil
 
     local function doFadeIn()
-        fadeGui, fadeFill = createBlackFade()
-        fadeIn(fadeFill, 0.3)
+        fadeGui, fadeFill = createBlackFade(); fadeIn(fadeFill, 0.3)
     end
-
     local function doFadeOut()
-        if fadeFill and fadeFill.Parent then
-            fadeOut(fadeFill, 0.3)
-        end
-        if fadeGui and fadeGui.Parent then
-            fadeGui:Destroy()
-        end
-        fadeGui  = nil
-        fadeFill = nil
+        if fadeFill and fadeFill.Parent then fadeOut(fadeFill, 0.3) end
+        if fadeGui  and fadeGui.Parent  then fadeGui:Destroy() end
+        fadeGui=nil; fadeFill=nil
     end
 
-    -- ── LOCK HANDLER ─────────────────────────────────────────────
     local function lockMenu(_finalMenu)
         for _, ref in pairs(checkboxRefs) do
-            ref.row.Active          = false
-            ref.row.AutoButtonColor = false
+            ref.row.Active=false; ref.row.AutoButtonColor=false
         end
-        confirmBtn.Text             = "🔒 Menu Locked!"
-        confirmBtn.BackgroundColor3 = Color3.fromRGB(110, 55, 55)
-        confirmBtn.AutoButtonColor  = false
-        sub.Text                    = "Store is open — today's menu is set!"
-        hintLabel.Text              = ""
-        task.delay(4, function()
-            if sg and sg.Parent then sg:Destroy() end
-        end)
+        confirmBtn.Text="Menu Locked!"; confirmBtn.BackgroundColor3=Color3.fromRGB(60,20,20)
+        confirmBtn.AutoButtonColor=false
+        sub.Text="Store is open \xe2\x80\x94 today's menu is set!"; hintLabel.Text=""
+        task.delay(4, function() if sg and sg.Parent then sg:Destroy() end end)
     end
 
-    -- ── RESULT HANDLER ──────────────────────────────────────────
-    local function handleResult(success, message, updatedMenu)
+    local function handleResult(success, message, _updatedMenu)
         if success then
             doFadeOut()
-            task.delay(0.2, function()
-                if sg and sg.Parent then sg:Destroy() end
-            end)
+            task.delay(0.2, function() if sg and sg.Parent then sg:Destroy() end end)
         else
             doFadeOut()
-            confirmBtn.Text             = message or "Error"
-            confirmBtn.BackgroundColor3 = Color3.fromRGB(160, 55, 55)
-            confirmBtn.Active           = true
+            confirmBtn.Text=message or "Error"; confirmBtn.BackgroundColor3=Color3.fromRGB(100,20,20)
+            confirmBtn.Active=true
             task.delay(2, function()
                 if confirmBtn and confirmBtn.Parent then
-                    confirmBtn.Text             = "Set Menu"
-                    confirmBtn.BackgroundColor3 = Color3.fromRGB(80, 165, 75)
+                    confirmBtn.Text="Set Menu"; confirmBtn.BackgroundColor3=Color3.fromRGB(30,100,40)
                 end
             end)
         end
     end
 
-    onResultCallback = handleResult
-    onLockCallback   = lockMenu
+    onResultCallback=handleResult; onLockCallback=lockMenu
 
     sg.Destroying:Connect(function()
-        if onResultCallback        == handleResult then onResultCallback        = nil end
-        if onLockCallback          == lockMenu     then onLockCallback          = nil end
-        if onPurchaseResultCallback ~= nil         then onPurchaseResultCallback = nil end
+        if onResultCallback==handleResult then onResultCallback=nil end
+        if onLockCallback==lockMenu then onLockCallback=nil end
+        if onPurchaseResultCallback~=nil then onPurchaseResultCallback=nil end
     end)
 
-    -- Confirm button click → fade then fire server
     confirmBtn.MouseButton1Click:Connect(function()
         local ids = {}
         for id in pairs(selected) do table.insert(ids, id) end
         if #ids < 1 then return end
-        confirmBtn.Active = false
-        confirmBtn.Text   = "..."
-        task.spawn(function()
-            doFadeIn()
-            setMenuRemote:FireServer(ids)
-        end)
+        confirmBtn.Active=false; confirmBtn.Text="..."
+        task.spawn(function() doFadeIn(); setMenuRemote:FireServer(ids) end)
     end)
 end
 
--- ── LISTENERS ────────────────────────────────────────────────
+-- ── Listeners ─────────────────────────────────────────────────────────────────
 openMenuBoardRemote.OnClientEvent:Connect(function(payload)
     buildMenuBoard(payload)
 end)
