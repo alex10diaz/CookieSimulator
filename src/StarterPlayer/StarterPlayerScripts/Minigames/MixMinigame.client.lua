@@ -36,6 +36,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     sg.Name = "MixGui"
     sg.ResetOnSpawn = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder = 15
     sg.Parent = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")

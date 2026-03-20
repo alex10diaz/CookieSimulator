@@ -39,6 +39,7 @@ startRemote.OnClientEvent:Connect(function()
     sg.Name           = "DoughGui"
     sg.ResetOnSpawn   = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder   = 15
     sg.Parent         = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")

@@ -38,6 +38,7 @@ local function showCarryIndicator(box)
     local sg = Instance.new("ScreenGui")
     sg.Name         = "CarryIndicator"
     sg.ResetOnSpawn = false
+    sg.DisplayOrder = 2
     sg.Parent       = playerGui
 
     local card = Instance.new("Frame", sg)

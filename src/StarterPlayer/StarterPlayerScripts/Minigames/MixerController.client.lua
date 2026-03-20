@@ -32,6 +32,7 @@ local function showPicker(menuList)
     sg.Name           = "MixPickerGui"
     sg.ResetOnSpawn   = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder   = 15
     sg.Parent         = playerGui
 
     -- ── Main card ──
