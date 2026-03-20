@@ -42,8 +42,8 @@ fadeFrame.Parent                 = sg
 -- ─── Bottom Panel ─────────────────────────────────────────────────────────────
 local panel = Instance.new("Frame")
 panel.Name                   = "TutorialPanel"
-panel.Size                   = UDim2.new(0, 420, 0, 110)
-panel.Position               = UDim2.new(0, 14, 1, -130)
+panel.Size                   = UDim2.new(0, 420, 0, 116)
+panel.Position               = UDim2.new(0, 20, 1, -136)
 panel.BackgroundColor3       = NAVY
 panel.BackgroundTransparency = 0
 panel.BorderSizePixel        = 0
@@ -81,8 +81,8 @@ stepLbl.Parent                 = panel
 
 local skipBtn = Instance.new("TextButton")
 skipBtn.Name             = "SkipButton"
-skipBtn.Size             = UDim2.new(0, 80, 0, 26)
-skipBtn.Position         = UDim2.new(1, -92, 0, 8)
+skipBtn.Size             = UDim2.new(0, 80, 0, 44)
+skipBtn.Position         = UDim2.new(1, -92, 0, 6)
 skipBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 skipBtn.TextColor3       = Color3.fromRGB(160, 160, 185)
 skipBtn.TextScaled       = true
@@ -97,8 +97,8 @@ skipStroke.Thickness = 1
 
 local msgLbl = Instance.new("TextLabel")
 msgLbl.Name                   = "MessageLabel"
-msgLbl.Size                   = UDim2.new(1, -24, 0, 60)
-msgLbl.Position               = UDim2.new(0, 12, 0, 40)
+msgLbl.Size                   = UDim2.new(1, -24, 0, 58)
+msgLbl.Position               = UDim2.new(0, 12, 0, 46)
 msgLbl.BackgroundTransparency = 1
 msgLbl.TextColor3             = Color3.fromRGB(220, 220, 240)
 msgLbl.TextWrapped            = true
@@ -169,7 +169,7 @@ sdStroke.Thickness = 1.5
 
 local replayBtn = Instance.new("TextButton")
 replayBtn.Name             = "ReplayButton"
-replayBtn.Size             = UDim2.new(1, -28, 0, 38)
+replayBtn.Size             = UDim2.new(1, -28, 0, 44)
 replayBtn.Position         = UDim2.new(0, 14, 0, 118)
 replayBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 52)
 replayBtn.TextColor3       = Color3.fromRGB(160, 160, 190)
