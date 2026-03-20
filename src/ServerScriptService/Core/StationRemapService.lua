@@ -103,6 +103,12 @@ function StationRemapService.RemapStations(orderedMenuIds)
                     or display:FindFirstChild("TextLabel", true)
                 if nameLbl then nameLbl.Text = cookie.name end
             end
+
+            -- Update proximity prompt action text
+            local prompt = model:FindFirstChildWhichIsA("ProximityPrompt", true)
+            if prompt then
+                prompt.ActionText = "Pull " .. cookie.name .. " Dough"
+            end
         end
     end
 

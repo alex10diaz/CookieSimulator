@@ -187,21 +187,7 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
     end)
 end)
 
--- ── Warmer Stock Display (shown when no active order) ─────────────────────────
-warmersStockEvent.OnClientEvent:Connect(function(countsByType)
-    -- Only update display when player has no active order
-    if orderLbl.Text ~= "No active order" then return end
-    if not countsByType or next(countsByType) == nil then return end
-    local lines = {}
-    for cookieId, count in pairs(countsByType) do
-        table.insert(lines, cookieName(cookieId) .. ": " .. count)
-    end
-    if #lines > 0 then
-        orderLbl.Text = table.concat(lines, "\n")
-        orderLbl.TextColor3 = Color3.fromRGB(100, 160, 255)
-        TweenService:Create(orderPill, TI(0.2), { BackgroundColor3 = Color3.fromRGB(20, 40, 80) }):Play()
-        orderStroke.Color = Color3.fromRGB(50, 115, 210); orderStroke.Transparency = 0.3
-    end
-end)
+-- warmersStockEvent kept for compatibility but display removed (names shown on warmer models)
+warmersStockEvent.OnClientEvent:Connect(function() end)
 
 print("[HUDController] Ready.")

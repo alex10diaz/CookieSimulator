@@ -153,8 +153,8 @@ local CAR_COLORS = {
     Color3.fromRGB(200,160,  30),
 }
 
-local STREET_Y = 1.75;  local STREET_Z = 44
-local DT_Y     = 2.35;  local DT_Z     = -13
+local STREET_Y = 1.6;   local STREET_Z = 44
+local DT_Y     = 1.6;   local DT_Z     = -13
 
 -- ── STREET CARS ──────────────────────────────────────────────────────────────
 local function spawnStreetCar(colorIdx, goingWest, initDelay)
@@ -192,16 +192,17 @@ local function spawnDTCar(initDelay)
             local car  = makeCar(CAR_COLORS[math.random(#CAR_COLORS)])
             car.Parent = carFolder
             local body = car.PrimaryPart
+            -- Cars approach from the east (+X), driving west toward the window at X=-38
             local rot  = CFrame.Angles(0, math.pi, 0)
-            body.CFrame = CFrame.new(5, DT_Y, DT_Z) * rot
+            body.CFrame = CFrame.new(80, DT_Y, DT_Z) * rot
             local approach = TweenService:Create(body,
-                TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { CFrame = CFrame.new(-28, DT_Y, DT_Z) * rot })
+                TweenInfo.new(7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { CFrame = CFrame.new(-38, DT_Y, DT_Z) * rot })
             approach:Play(); approach.Completed:Wait()
             task.wait(math.random(8, 14))
             local exit = TweenService:Create(body,
-                TweenInfo.new(3.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                { CFrame = CFrame.new(-90, DT_Y, DT_Z) * rot })
+                TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { CFrame = CFrame.new(-110, DT_Y, DT_Z) * rot })
             exit:Play(); exit.Completed:Wait()
             car:Destroy()
             task.wait(math.random(10, 20))
