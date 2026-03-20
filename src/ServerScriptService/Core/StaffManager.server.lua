@@ -62,42 +62,59 @@ local function spawnWorkerRig(workerName, spawnCF, hiringPlayer)
 
 	-- Clone the hiring player's character so the worker looks like them
 	if hiringPlayer and hiringPlayer.Character then
-		rig = hiringPlayer.Character:Clone()
-		rig.Name = workerName
+		local ok, err2 = pcall(function()
+			local clone = hiringPlayer.Character:Clone()
+			clone.Name = workerName
 
-		-- Strip scripts / animators / sounds — keep visuals only
-		for _, obj in ipairs(rig:GetDescendants()) do
-			if obj:IsA("Script") or obj:IsA("LocalScript")
-				or obj:IsA("Animator") or obj:IsA("AnimationController")
-				or obj:IsA("Sound") then
-				obj:Destroy()
+			-- Strip scripts / animators / sounds — keep visuals only
+			for _, obj in ipairs(clone:GetDescendants()) do
+				if obj:IsA("Script") or obj:IsA("LocalScript")
+					or obj:IsA("Animator") or obj:IsA("AnimationController")
+					or obj:IsA("Sound") then
+					obj:Destroy()
+				end
 			end
-		end
 
-		-- Hide default name/health bar
-		local hum = rig:FindFirstChildOfClass("Humanoid")
-		if hum then
-			hum.DisplayDistanceType  = Enum.HumanoidDisplayDistanceType.None
-			hum.HealthDisplayDistance = 0
-		end
-
-		-- Anchor + disable collision on every part
-		for _, part in ipairs(rig:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.Anchored   = true
-				part.CanCollide = false
+			-- Hide default name/health bar
+			local hum2 = clone:FindFirstChildOfClass("Humanoid")
+			if hum2 then
+				hum2.DisplayDistanceType  = Enum.HumanoidDisplayDistanceType.None
+				hum2.HealthDisplayDistance = 0
 			end
-		end
 
-		-- Remove existing shirt/pants so baker uniform is clean
-		for _, obj in ipairs(rig:GetChildren()) do
-			if obj:IsA("Shirt") or obj:IsA("Pants") then obj:Destroy() end
-		end
+			-- Anchor + disable collision on every part
+			for _, part in ipairs(clone:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Anchored   = true
+					part.CanCollide = false
+				end
+			end
 
-		local hrp = rig:FindFirstChild("HumanoidRootPart")
-		if hrp then rig.PrimaryPart = hrp end
-		rig.Parent = workspace
-		if rig.PrimaryPart then rig:PivotTo(spawnCF) end
+			-- Remove existing shirt/pants so baker uniform is clean
+			for _, obj in ipairs(clone:GetChildren()) do
+				if obj:IsA("Shirt") or obj:IsA("Pants") then obj:Destroy() end
+			end
+
+			-- Teleport: move each part relative to HRP offset
+			local hrp2 = clone:FindFirstChild("HumanoidRootPart")
+			if hrp2 then
+				local originCF = hrp2.CFrame
+				for _, part in ipairs(clone:GetDescendants()) do
+					if part:IsA("BasePart") then
+						local offset = originCF:ToObjectSpace(part.CFrame)
+						part.CFrame = spawnCF * offset
+					end
+				end
+				hrp2.CFrame = spawnCF
+				clone.PrimaryPart = hrp2
+			end
+
+			clone.Parent = workspace
+			rig = clone
+		end)
+		if not ok then
+			warn("[StaffManager] Character clone failed, using block rig:", err2)
+		end
 	end
 
 	-- Fallback: simple block rig
