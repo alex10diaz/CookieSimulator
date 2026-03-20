@@ -63,7 +63,10 @@ local function spawnWorkerRig(workerName, spawnCF, hiringPlayer)
 	-- Clone the hiring player's character so the worker looks like them
 	if hiringPlayer and hiringPlayer.Character then
 		local ok, err2 = pcall(function()
-			local clone = hiringPlayer.Character:Clone()
+			local char = hiringPlayer.Character
+			char.Archivable = true
+			local clone = char:Clone()
+			char.Archivable = false
 			clone.Name = workerName
 
 			-- Strip scripts / animators / sounds — keep visuals only
