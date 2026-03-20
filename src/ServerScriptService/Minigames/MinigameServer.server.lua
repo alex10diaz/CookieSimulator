@@ -6,6 +6,7 @@ local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local Players             = game:GetService("Players")
 local Workspace           = game:GetService("Workspace")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage       = game:GetService("ServerStorage")
 
 local RemoteManager          = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager           = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
@@ -155,6 +156,11 @@ local function endSession(player, stationName, score)
     -- Award station mastery XP and record Employee of the Shift stat
     StationMasteryManager.AwardFromScore(player, stationName, score)
     SessionStats.RecordStationScore(player, stationName, score)
+
+    -- M1: fire server-authoritative event so TutorialController advances only on real completions
+    if stationCompletedEvent then
+        stationCompletedEvent:Fire(player, stationName)
+    end
 end
 
 -- ============================================================
