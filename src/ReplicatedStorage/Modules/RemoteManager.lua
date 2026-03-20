@@ -116,6 +116,8 @@ local REMOTES = {
     "LifetimeChallengeComplete",-- Server->Client: a milestone was just completed
     -- NPC order cancellation (patience/leave)
     "NPCOrderCancelledClient", -- Server->All clients: orderId that was cancelled (for HUD update)
+    -- Minigame cancel (player presses Exit button)
+    "CancelMinigame",          -- Client->Server: player chose to exit minigame early
 }
 
 -- Server creates all remotes; client waits for server-created ones.

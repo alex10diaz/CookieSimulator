@@ -359,6 +359,22 @@ for name, config in pairs(MINIGAMES) do
     end)
 end
 
+-- m7: Player pressed Exit button — cancel session, return warmer entry if applicable
+RemoteManager.Get("CancelMinigame").OnServerEvent:Connect(function(player)
+    local session = activeSessions[player]
+    if not session then return end
+    if (session.station == "frost" or session.station == "dress") and session.warmerEntry then
+        OrderManager.ReturnToWarmers(session.warmerEntry)
+        OrderManager.ClearPostOvenScore(session.batchId)
+    end
+    if session.station == "dough" and session.batchId then
+        doughLock[session.batchId] = nil
+    end
+    activeSessions[player] = nil
+    dressPending[player]   = nil
+    print("[MinigameServer] " .. player.Name .. " cancelled " .. tostring(session.station))
+end)
+
 Players.PlayerRemoving:Connect(function(player)
     -- Release any dough lock this player held
     local session = activeSessions[player]
