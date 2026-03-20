@@ -1,4 +1,9 @@
 -- NPCAvatarLoader
+-- DISABLED: Avatar loading caused NPCs to use friends-list models.
+-- NPCSpawner falls back to NPCTemplate with randomized colors instead.
+-- Re-enable only if you want avatar-pool NPCs in the future.
+do return end
+
 -- Builds a pool of 10 R6 NPC avatars from the first player's friends list.
 -- Falls back to hardcoded public user IDs to fill any remaining slots.
 -- Stores models in ServerStorage/NPCAvatars/.

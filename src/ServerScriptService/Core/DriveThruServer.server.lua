@@ -1,5 +1,5 @@
 -- DriveThruServer
--- Drive-thru lane: car animation, NPC order-taking, window delivery.
+-- Drive-thru lane: car animation, order-taking via car prompt, window delivery.
 -- Hidden until workspace.DriveThruUnlocked = true (store upgrade).
 
 local Players             = game:GetService("Players")
@@ -12,7 +12,6 @@ local Workspace           = game:GetService("Workspace")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
-
 local hudUpdate         = RemoteManager.Get("HUDUpdate")
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local EconomyManager    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EconomyManager"))
@@ -21,22 +20,19 @@ local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitF
 local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ── CONSTANTS ────────────────────────────────────────────────────────────────
--- Car travels along Z axis (south→north). Window wall is at X≈-33.5, faces -X.
--- Car rotation 180° Y: local -Z→world +Z (front north), local -X→world +X (driver side faces window)
-local CAR_LANE_X     = -40    -- X lane position; driver side (local -X) ends up at X≈-33.8 (next to window)
+-- Car travels along Z axis. Window wall is at X≈-33.5, faces -X.
+-- Car rotation 180° Y: driver side faces window.
+local CAR_LANE_X     = -40    -- driver side ends up at X≈-33.8 (next to window)
 local CAR_SPAWN_Z    = -80    -- south, off-screen
 local CAR_STOP_Z     = -14    -- stopped at window
-local CAR_EXIT_Z     =  40    -- north, past building off-screen
+local CAR_EXIT_Z     =  40    -- north, past building
 local CAR_Y          = 2.5
 local CAR_ARRIVE_SEC = 6
 local CAR_EXIT_SEC   = 5
 local SPAWN_INTERVAL = 150    -- seconds between cars during Open
-local WINDOW_TIMEOUT = 90     -- seconds before car gives up (after order is taken)
+local WINDOW_TIMEOUT = 90     -- seconds before car leaves after order taken
 local TAKE_TIMEOUT   = 60     -- seconds to take the order before car leaves
 local PACK_SIZES     = { 1, 2, 4 }
-
--- NPC sits at driver-side window (east face), positioned near the window opening
-local NPC_CF = CFrame.new(-34, 3.5, -21) * CFrame.Angles(0, math.rad(-90), 0)
 
 -- ── STUDIO OBJECTS ────────────────────────────────────────────────────────────
 local driveThruFolder = Workspace:WaitForChild("Drive Thru", 10)
@@ -44,20 +40,19 @@ local tvModel         = driveThruFolder and driveThruFolder:FindFirstChild("Driv
 local tvPart          = tvModel and tvModel:FindFirstChildWhichIsA("BasePart")
 local deliveryZone    = nil
 
--- Window 1 animation
-local win1Model      = driveThruFolder
+local win1Model   = driveThruFolder
     and driveThruFolder:FindFirstChild("Drive Thru Window")
     and driveThruFolder:FindFirstChild("Drive Thru Window"):FindFirstChild("Window 1")
-local WIN_SLIDE_Z    = Vector3.new(0, 0, -3.1)
-local WIN_INFO       = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+local WIN_SLIDE_Z = Vector3.new(0, 0, -3.1)
+local WIN_INFO    = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
 -- ── STATE ─────────────────────────────────────────────────────────────────────
-local currentOrder = nil   -- { cookieId, packSize, coins, xp, car, npc }
+local currentOrder = nil   -- { cookieId, packSize, coins, xp, car, npcOrderId }
 local loopRunning  = false
 
 -- ── VISIBILITY ────────────────────────────────────────────────────────────────
-local savedT = {}   -- savedTransparency
-local savedC = {}   -- savedCanCollide
+local savedT = {}
+local savedC = {}
 
 local function setFolderVisible(visible)
     if not driveThruFolder then return end
@@ -178,62 +173,6 @@ local function spawnCar()
     return car
 end
 
--- ── NPC IN CAR ────────────────────────────────────────────────────────────────
-local function spawnCarNPC(onTakeOrder)
-    local template = ServerStorage:FindFirstChild("NPCTemplate")
-    if not template then return nil end
-    local npc = template:Clone()
-    npc.Name   = "DriveThruCustomer"
-    npc.Parent = driveThruFolder
-
-    for _, d in ipairs(npc:GetDescendants()) do
-        if d:IsA("BasePart") then d.Anchored = true; d.CanCollide = false end
-    end
-    local hum = npc:FindFirstChildWhichIsA("Humanoid")
-    if hum then hum.WalkSpeed = 0; hum.JumpPower = 0 end
-
-    local head = npc:FindFirstChild("Head")
-    if head then
-        local pg = head:FindFirstChild("PatienceGui")
-        if pg then pg.Enabled = false end
-    end
-
-    npc:PivotTo(NPC_CF)
-
-    if head then
-        local pp = head:FindFirstChild("OrderPrompt")
-        if not pp then
-            pp = Instance.new("ProximityPrompt")
-            pp.Name   = "OrderPrompt"
-            pp.Parent = head
-        end
-        pp.ActionText            = "Take Order"
-        pp.ObjectText            = "Drive Thru Customer"
-        pp.MaxActivationDistance = 12
-        pp.HoldDuration          = 0
-        pp.RequiresLineOfSight   = false
-        pp.Enabled               = true
-
-        pp.Triggered:Connect(function(player)
-            pp.Enabled = false
-            onTakeOrder(player)
-        end)
-    end
-
-    return npc
-end
-
-local function despawnNPC(npc)
-    if npc and npc.Parent then npc:Destroy() end
-end
-
-local function cleanupNPC()
-    if driveThruFolder then
-        local leftover = driveThruFolder:FindFirstChild("DriveThruCustomer")
-        if leftover then leftover:Destroy() end
-    end
-end
-
 -- ── DELIVERY PROMPT ────────────────────────────────────────────────────────────
 local function createDeliveryZone()
     local p = Instance.new("Part")
@@ -275,20 +214,18 @@ local function generateOrder()
 end
 
 -- ── DISMISS CAR ───────────────────────────────────────────────────────────────
-local function dismissCar(car, npc, reason)
+local function dismissCar(car, _, reason)
     if not currentOrder or currentOrder.car ~= car then return end
     print("[DriveThruServer] Car dismissed: " .. reason)
     clearDeliveryPrompt()
     if currentOrder.npcOrderId then
         OrderManager.CancelNPCOrder(currentOrder.npcOrderId)
     end
-    despawnNPC(npc)
     currentOrder = nil
     updateTV("No Orders", "")
     setWindowOpen(false)
     moveCarToZ(car, CAR_EXIT_Z, CAR_EXIT_SEC, function()
         car:Destroy()
-        cleanupNPC()
     end)
 end
 
@@ -311,7 +248,7 @@ local function handleCarArrival()
 
         local orderTaken = false
 
-        -- Prompt on car itself — no NPC at window
+        -- Prompt on the car itself — no NPC at window
         local carPrimary = car.PrimaryPart
         if carPrimary then
             local pp = Instance.new("ProximityPrompt")
@@ -351,7 +288,6 @@ local function handleCarArrival()
                 print(string.format("[DriveThruServer] %s took drive-thru order | %s x%d",
                     player.Name, name, order.packSize))
 
-                -- Timeout after order is taken (delivery window)
                 task.delay(WINDOW_TIMEOUT, function()
                     if currentOrder and currentOrder.car == car then
                         dismissCar(car, nil, "delivery timeout")
@@ -377,8 +313,6 @@ end
 -- ── BOX DELIVERY HOOK ─────────────────────────────────────────────────────────
 OrderManager.On("BoxCreated", function(box)
     if not currentOrder then return end
-    print(string.format("[DriveThruServer] BoxCreated cookieId=%s | need=%s",
-        tostring(box.cookieId), tostring(currentOrder.cookieId)))
     if box.cookieId ~= currentOrder.cookieId then return end
 
     local order = currentOrder
@@ -387,7 +321,6 @@ OrderManager.On("BoxCreated", function(box)
         if not currentOrder or currentOrder.car ~= order.car then return end
 
         local deliverCar        = order.car
-        local deliverNpc        = order.npc
         local deliverNpcOrderId = order.npcOrderId
         local deliverCoins      = tonumber(order.coins) or 0
         local deliverXp         = tonumber(order.xp) or 0
@@ -396,12 +329,9 @@ OrderManager.On("BoxCreated", function(box)
         updateTV("No Orders", "")
         clearDeliveryPrompt()
 
-        -- Car exit runs first — guaranteed even if reward code errors
-        despawnNPC(deliverNpc)
         setWindowOpen(false)
         moveCarToZ(deliverCar, CAR_EXIT_Z, CAR_EXIT_SEC, function()
             deliverCar:Destroy()
-            cleanupNPC()
         end)
 
         if deliverNpcOrderId then
@@ -412,13 +342,12 @@ OrderManager.On("BoxCreated", function(box)
         PlayerDataManager.AddXP(player, deliverXp)
         SessionStats.RecordDelivery(5, deliverCoins, 0, order.packSize)
 
-        print(string.format("[DriveThruServer] %s delivered | %s x%d | +%d coins",
-            player.Name, order.cookieId, order.packSize, deliverCoins))
-
-        -- Fire to delivering player: triggers order removal + delivery flash in HUDController
         local deliveryResult = RemoteManager.Get("DeliveryResult")
         deliveryResult:FireClient(player, 5, deliverCoins, deliverXp)
         hudUpdate:FireClient(player, deliverCoins, deliverXp, nil)
+
+        print(string.format("[DriveThruServer] %s delivered | %s x%d | +%d coins",
+            player.Name, order.cookieId, order.packSize, deliverCoins))
     end)
 end)
 
@@ -455,11 +384,9 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
         startLoop()
     elseif state ~= "Open" then
         if currentOrder then
-            local car, npc = currentOrder.car, currentOrder.npc
+            local car = currentOrder.car
             currentOrder = nil
             clearDeliveryPrompt()
-            despawnNPC(npc)
-            cleanupNPC()
             setWindowOpen(false)
             updateTV("CLOSED", "")
             if car then car:Destroy() end
@@ -471,4 +398,4 @@ end)
 -- ── INIT ──────────────────────────────────────────────────────────────────────
 ensureTVGui()
 onUnlockChanged()
-print("[DriveThruServer] Ready")
+print("[DriveThruServer] Ready — no NPC, prompt on car")
