@@ -648,7 +648,7 @@ Players.PlayerAdded:Connect(function(player)
 	task.wait(5)  -- wait for PlayerDataManager to load profile
 	if player and player.Parent then
 		PlayerDataManager.AddCoins(player, 500)
-		print("[StaffManager] TEMP: gave", player.Name, "500 test coins")
+		print("[StaffManager] TEMP: gave " .. player.Name .. " 500 test coins")
 	end
 end)
 
