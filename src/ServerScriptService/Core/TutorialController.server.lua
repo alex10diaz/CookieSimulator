@@ -17,14 +17,8 @@ local tutorialDoneRemote = RemoteManager.Get("TutorialComplete")
 local startGameRemote    = RemoteManager.Get("StartGame")
 local replayRemote       = RemoteManager.Get("ReplayTutorial")
 
--- Station result remotes (advance gates)
+-- Step 1 gate: NPC order confirm (client remote — lower risk, NPC system validates state server-side)
 local confirmNPCOrderRemote = RemoteManager.Get("ConfirmNPCOrder")
-local mixResultRemote       = RemoteManager.Get("MixMinigameResult")
-local doughResultRemote     = RemoteManager.Get("DoughMinigameResult")
-local depositDoughRemote    = RemoteManager.Get("DepositDough")
-local ovenResultRemote      = RemoteManager.Get("OvenMinigameResult")
-local frostResultRemote     = RemoteManager.Get("FrostMinigameResult")
-local dressResultRemote     = RemoteManager.Get("DressMinigameResult")
 
 -- ─── State ───────────────────────────────────────────────────────────────────
 local activeTutorials = {}
@@ -136,10 +130,16 @@ end
 
 -- ─── Skip / Start Day / Replay ───────────────────────────────────────────────
 tutorialDoneRemote.OnServerEvent:Connect(function(player)
+	-- M1: only allow completion from the final summary screen (step 10)
+	local session = activeTutorials[player.UserId]
+	if session and session.step ~= 10 then return end
 	completeTutorial(player)
 end)
 
 startGameRemote.OnServerEvent:Connect(function(player)
+	-- M1: only allow starting day from the final summary screen (step 10)
+	local session = activeTutorials[player.UserId]
+	if session and session.step ~= 10 then return end
 	completeTutorial(player)
 end)
 

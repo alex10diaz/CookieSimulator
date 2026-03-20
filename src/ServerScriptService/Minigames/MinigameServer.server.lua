@@ -15,6 +15,10 @@ local MenuManager            = require(ServerScriptService:WaitForChild("Core"):
 local StationMasteryManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("StationMasteryManager"))
 local SessionStats           = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
+-- M1: declared early so endSession() closure can capture it as an upvalue
+-- Assigned asynchronously below once ServerStorage/Events is ready
+local stationCompletedEvent = nil
+
 -- ============================================================
 -- MINIGAME CONFIG
 -- ============================================================
@@ -396,5 +400,21 @@ Players.PlayerRemoving:Connect(function(player)
     dressPending[player]   = nil
 end)
 
+
+-- M1: StationCompleted BindableEvent setup (variable declared at top of file)
+task.spawn(function()
+    local evts = ServerStorage:WaitForChild("Events", 10)
+    if not evts then warn("[MinigameServer] ServerStorage/Events not found"); return end
+    local existing = evts:FindFirstChild("StationCompleted")
+    if existing then
+        stationCompletedEvent = existing
+    else
+        local be = Instance.new("BindableEvent")
+        be.Name   = "StationCompleted"
+        be.Parent = evts
+        stationCompletedEvent = be
+    end
+    print("[MinigameServer] StationCompleted BindableEvent ready")
+end)
 
 print("[MinigameServer] Ready")
