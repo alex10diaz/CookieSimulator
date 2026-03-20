@@ -163,6 +163,8 @@ end
 
 -- DOUGH, FROST, DRESS prompts
 local function handleSimpleStart(player, stationName)
+    local gameState = Workspace:GetAttribute("GameState")
+    if gameState ~= "Open" and gameState ~= "PreOpen" then return end  -- lock during Intermission/EndOfDay/Lobby
     if activeSessions[player] then
         warn("[MinigameServer] " .. player.Name .. " already in a session.")
         return
@@ -237,6 +239,8 @@ local function hookMixerPrompts(model)
     for _, obj in ipairs(model:GetDescendants()) do
         if obj:IsA("ProximityPrompt") and obj.Name == "MixerPrompt" then
             obj.Triggered:Connect(function(player)
+                local gameState = Workspace:GetAttribute("GameState")
+                if gameState ~= "Open" and gameState ~= "PreOpen" then return end
                 if activeSessions[player] then return end
                 ShowMixPicker:FireClient(player, MenuManager.GetActiveMenu())
             end)
@@ -255,6 +259,8 @@ end
 -- MIX COOKIE SELECTION (from client via FireServer)
 local RequestMixStart = RemoteManager.Get("RequestMixStart")
 RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
+    local gameState = Workspace:GetAttribute("GameState")
+    if gameState ~= "Open" and gameState ~= "PreOpen" then return end  -- lock during Intermission/EndOfDay
     if activeSessions[player] then return end
     if not cookieId or cookieId == "" then return end
 
@@ -290,6 +296,8 @@ local function hookFridgeOvenPrompts()
                 end
             end
             prompt.Triggered:Connect(function(player)
+                local gameState = Workspace:GetAttribute("GameState")
+                if gameState ~= "Open" and gameState ~= "PreOpen" then return end
                 if ovenSession[player] or activeSessions[player] then return end
                 -- Read FridgeId dynamically so StationRemap changes are respected (Bug 1 fix)
                 local currentFridgeId = fridge:GetAttribute("FridgeId")
@@ -311,6 +319,8 @@ local function hookFridgeOvenPrompts()
         local prompt = oven:FindFirstChild("OvenPrompt", true)
         if prompt then
             prompt.Triggered:Connect(function(player)
+                local gameState = Workspace:GetAttribute("GameState")
+                if gameState ~= "Open" and gameState ~= "PreOpen" then return end
                 local batchId = ovenSession[player]
                 if not batchId or activeSessions[player] then return end
                 

@@ -15,13 +15,15 @@ local INTERMISSION_DURATION = 3 * 60 -- 3 minutes back room break
 
 local BACK_ROOM_CF = CFrame.new(0, 3, -127)
 
-local FRONT_SPAWN_CF = CFrame.new(55, 4, 31)
+-- Inside-store spawn: near the POS/waiting area (NOT the outside NPC spawn point).
+-- NPCSpawnPoint/FrontSpawn Parts are for NPCs only — players must NOT be sent there.
+-- Adjust FRONT_SPAWN_CF if a FrontSpawn is moved; use PlayerFrontSpawn Part in workspace
+-- to override at runtime without touching code.
+local FRONT_SPAWN_CF = CFrame.new(0, 5, 15)
 
 local function getFrontSpawnCF()
-    -- Use named FrontSpawn if it exists; fall back to hardcoded constant.
-    -- NOTE: Do NOT use FindFirstChild("SpawnLocation") — Roblox default spawns
-    -- or the BackRoomSpawn can be found first and send players outside the store.
-    local sp = workspace:FindFirstChild("FrontSpawn")
+    -- Look for a Part named "PlayerFrontSpawn" (not "FrontSpawn" which is NPC-only).
+    local sp = workspace:FindFirstChild("PlayerFrontSpawn")
     if sp then return sp.CFrame + Vector3.new(0, 3, 0) end
     return FRONT_SPAWN_CF
 end
