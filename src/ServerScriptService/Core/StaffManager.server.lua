@@ -354,10 +354,13 @@ local function getTutorialSpawnCF(partName, fallback)
 	return part and part.CFrame or fallback
 end
 
--- workerSpawnCF: lifts the spawn 3 studs off floor and faces the worker toward their station
+-- workerSpawnCF: raycasts to find exact floor height, then places HRP 3 studs above it
 local function workerSpawnCF(name, fallback, lookDir)
-	local base = getTutorialSpawnCF(name, fallback)
-	local pos  = base.Position + Vector3.new(0, 3, 0)
+	local base   = getTutorialSpawnCF(name, fallback)
+	local origin = base.Position + Vector3.new(0, 10, 0)
+	local result = workspace:Raycast(origin, Vector3.new(0, -20, 0))
+	local floorY = result and result.Position.Y or base.Position.Y
+	local pos    = Vector3.new(base.Position.X, floorY + 3, base.Position.Z)
 	return CFrame.lookAt(pos, pos + lookDir)
 end
 
@@ -430,7 +433,7 @@ local STATIONS = {
 	},
 	frost = {
 		label   = "Frosting",
-		spawnCF = workerSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36), Vector3.new( 0, 0,-1)),
+		spawnCF = workerSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36), Vector3.new( 1, 0, 0)),
 		work = function(proxy)
 			local forFrost = OrderManager.GetWarmerCount()
 			if forFrost == 0 then return false end
