@@ -12,6 +12,8 @@ local Workspace           = game:GetService("Workspace")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+
+local hudUpdate         = RemoteManager.Get("HUDUpdate")
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local EconomyManager    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EconomyManager"))
 local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
@@ -329,6 +331,7 @@ local function handleCarArrival()
             local cookie = CookieData.GetById(order.cookieId)
             local name   = cookie and cookie.name or order.cookieId
             updateTV(name .. " x" .. order.packSize, order.coins .. " coins")
+            hudUpdate:FireClient(player, nil, nil, name .. " x" .. order.packSize)
             print(string.format("[DriveThruServer] %s took drive-thru order | %s x%d → added to Dress TV",
                 player.Name, name, order.packSize))
 
@@ -396,15 +399,10 @@ OrderManager.On("BoxCreated", function(box)
         print(string.format("[DriveThruServer] %s delivered | %s x%d | +%d coins",
             player.Name, order.cookieId, order.packSize, deliverCoins))
 
+        -- Fire to delivering player: triggers order removal + delivery flash in HUDController
         local deliveryResult = RemoteManager.Get("DeliveryResult")
-        for _, p in ipairs(Players:GetPlayers()) do
-            deliveryResult:FireClient(p, {
-                playerName  = player.Name,
-                cookieId    = order.cookieId,
-                reward      = deliverCoins,
-                isDriveThru = true,
-            })
-        end
+        deliveryResult:FireClient(player, 5, deliverCoins, deliverXp)
+        hudUpdate:FireClient(player, deliverCoins, deliverXp, nil)
     end)
 end)
 
