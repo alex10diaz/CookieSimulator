@@ -113,6 +113,8 @@ local REMOTES = {
     -- Lifetime milestones
     "LifetimeChallengesInit",  -- Server->Client: full milestone list on join
     "LifetimeChallengeComplete",-- Server->Client: a milestone was just completed
+    -- NPC order cancellation (patience/leave)
+    "NPCOrderCancelledClient", -- Server->All clients: orderId that was cancelled (for HUD update)
 }
 
 -- Server creates all remotes; client waits for server-created ones.

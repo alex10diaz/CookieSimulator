@@ -515,19 +515,11 @@ end)
 -- ─── Cancel / Cleanup ────────────────────────────────────────────────────────
 cancelOrder.OnServerEvent:Connect(function(player)
     activeKDS[player] = nil
-    local lock = dressLocked[player]
-    if lock and lock.reservedEntry then
-        OrderManager.ReturnToWarmers(lock.reservedEntry)
-    end
     dressLocked[player] = nil
 end)
 
 Players.PlayerRemoving:Connect(function(player)
     activeKDS[player] = nil
-    local lock = dressLocked[player]
-    if lock and lock.reservedEntry then
-        OrderManager.ReturnToWarmers(lock.reservedEntry)
-    end
     dressLocked[player] = nil
 end)
 
