@@ -289,21 +289,27 @@ end)
 warmersStockEvent.OnClientEvent:Connect(function() end)
 
 -- NPC order cancelled (patience run out / NPC left before delivery)
--- Remove the first active-order entry whose display string contains the cookie name
-npcOrderCancelledEvent.OnClientEvent:Connect(function(_orderId, cookieId, packSize)
+npcOrderCancelledEvent.OnClientEvent:Connect(function(orderId, cookieId, packSize)
     if #activeOrders == 0 then return end
-    -- Build the display string the same way acceptedEvent does
-    local targetName = cookieName(cookieId or "")
-    if packSize and packSize > 1 then targetName = targetName .. " x" .. packSize end
-    -- Remove first matching entry (FIFO)
+    -- m4: match by orderId first (reliable), then fall back to display-string match
     for i, entry in ipairs(activeOrders) do
-        if entry == targetName then
+        if (orderId and entry.orderId == orderId) then
             table.remove(activeOrders, i)
             refreshOrderPill()
             return
         end
     end
-    -- Fallback: remove oldest if no string match (e.g. variety orders)
+    -- Fallback: match by display string (for entries inserted via hudUpdateEvent without orderId)
+    local targetName = cookieName(cookieId or "")
+    if packSize and packSize > 1 then targetName = targetName .. " x" .. packSize end
+    for i, entry in ipairs(activeOrders) do
+        if entry.display == targetName then
+            table.remove(activeOrders, i)
+            refreshOrderPill()
+            return
+        end
+    end
+    -- Last resort: remove oldest
     table.remove(activeOrders, 1)
     refreshOrderPill()
 end)
