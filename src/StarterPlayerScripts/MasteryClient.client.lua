@@ -14,7 +14,7 @@ local ROLE_ICONS = {
 local function showToast(data)
     local sg = Instance.new("ScreenGui")
     sg.Name = "MasteryToast"; sg.ResetOnSpawn = false
-    sg.DisplayOrder = 25; sg.Parent = playerGui
+    sg.DisplayOrder = 3; sg.Parent = playerGui
 
     -- Card starts above screen, slides down
     local card = Instance.new("Frame", sg)

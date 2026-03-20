@@ -23,7 +23,7 @@ local sg = Instance.new("ScreenGui")
 sg.Name           = "TutorialGui"
 sg.ResetOnSpawn   = false
 sg.Enabled        = true          -- always enabled; child visibility drives show/hide
-sg.DisplayOrder   = 10
+sg.DisplayOrder   = 5
 sg.IgnoreGuiInset = true          -- needed so FadeFrame covers full screen including top bar
 sg.Parent         = playerGui
 
