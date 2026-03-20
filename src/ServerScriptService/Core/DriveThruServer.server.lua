@@ -34,7 +34,7 @@ local TAKE_TIMEOUT   = 60     -- seconds to take the order before car leaves
 local PACK_SIZES     = { 1, 2, 4 }
 
 -- NPC sits at driver-side window (east face), positioned near the window opening
-local NPC_CF = CFrame.new(-34, 3.5, -16) * CFrame.Angles(0, math.rad(-90), 0)
+local NPC_CF = CFrame.new(-34, 3.5, -21) * CFrame.Angles(0, math.rad(-90), 0)
 
 -- ── STUDIO OBJECTS ────────────────────────────────────────────────────────────
 local driveThruFolder = Workspace:WaitForChild("Drive Thru", 10)
