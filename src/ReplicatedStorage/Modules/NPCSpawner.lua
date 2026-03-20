@@ -8,9 +8,45 @@ local Workspace          = game:GetService("Workspace")
 
 local NPCSpawner = {}
 
-local TEMPLATE_NAME       = "NPCTemplate"
-local NPC_FOLDER          = "NPCs"
-local VIP_LABEL_OFFSET    = Vector3.new(0, 2.5, 0)  -- studs above head for VIP BillboardGui
+local TEMPLATE_NAME    = "NPCTemplate"
+local NPC_FOLDER       = "NPCs"
+local VIP_LABEL_OFFSET = Vector3.new(0, 2.5, 0)
+
+-- Randomised appearance palettes
+local SKIN_TONES = {
+    Color3.fromRGB(255,220,177), Color3.fromRGB(234,192,134),
+    Color3.fromRGB(198,134, 66), Color3.fromRGB(141, 85, 36),
+    Color3.fromRGB( 89, 47, 14),
+}
+local SHIRT_COLORS = {
+    Color3.fromRGB( 60,120,200), Color3.fromRGB(200, 60, 60),
+    Color3.fromRGB( 60,170, 80), Color3.fromRGB(180, 90,200),
+    Color3.fromRGB(220,160, 40), Color3.fromRGB( 50,180,180),
+    Color3.fromRGB(230,230,230), Color3.fromRGB( 40, 40, 60),
+}
+local PANTS_COLORS = {
+    Color3.fromRGB( 50, 50, 80), Color3.fromRGB( 80, 50, 30),
+    Color3.fromRGB( 30, 60, 40), Color3.fromRGB( 70, 70, 70),
+    Color3.fromRGB( 40, 40,100), Color3.fromRGB(100, 80, 60),
+}
+
+local function randomizeAppearance(npc)
+    local skin   = SKIN_TONES  [math.random(#SKIN_TONES)]
+    local shirt  = SHIRT_COLORS[math.random(#SHIRT_COLORS)]
+    local pants  = PANTS_COLORS[math.random(#PANTS_COLORS)]
+    for _, part in ipairs(npc:GetChildren()) do
+        if part:IsA("BasePart") then
+            local n = part.Name
+            if n == "Head" or n == "HumanoidRootPart" then
+                if n == "Head" then part.Color = skin end
+            elseif n == "Torso" or n == "Left Arm" or n == "Right Arm" then
+                part.Color = shirt
+            elseif n == "Left Leg" or n == "Right Leg" then
+                part.Color = pants
+            end
+        end
+    end
+end
 
 -- ─── CreateNPC ────────────────────────────────────────────────────────────────
 -- config: { name, isVIP, spawnCFrame }
@@ -29,7 +65,7 @@ function NPCSpawner.CreateNPC(config)
         end
     end
 
-    -- Fallback: use the original block NPCTemplate
+    -- Fallback: use NPCTemplate
     if not npc then
         local template = ServerStorage:FindFirstChild(TEMPLATE_NAME)
         if not template then
@@ -37,6 +73,7 @@ function NPCSpawner.CreateNPC(config)
             return nil
         end
         npc = template:Clone()
+        randomizeAppearance(npc)  -- random shirt/pants/skin each spawn
     end
 
     npc.Name = config.name or "Customer"
