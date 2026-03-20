@@ -50,6 +50,29 @@ local FridgeUpdated  = RemoteManager.Get("FridgeUpdated")
 local BoxCreated     = RemoteManager.Get("BoxCreated")
 local BoxDelivered   = RemoteManager.Get("BoxDelivered")
 
+local function updateWarmerCountLabels()
+    local stock = OrderManager.GetWarmerStockByCookieId()
+    local folder = Workspace:FindFirstChild("Warmers")
+    if not folder then return end
+    for _, model in ipairs(folder:GetChildren()) do
+        local cookieId = model:GetAttribute("CookieId")
+        local doorPanel = model:FindFirstChild("DoorPanel")
+        if doorPanel then
+            local sg = doorPanel:FindFirstChild("WarmersDisplay")
+            if sg then
+                local countLbl = sg:FindFirstChild("CountLabel", true)
+                if countLbl then
+                    local n = cookieId and (stock[cookieId] or 0) or 0
+                    countLbl.Text = n > 0 and (n .. " ready") or "0 ready"
+                    countLbl.TextColor3 = n > 0
+                        and Color3.fromRGB(80, 220, 100)
+                        or  Color3.fromRGB(160, 160, 180)
+                end
+            end
+        end
+    end
+end
+
 local function broadcastState()
     local batchState  = OrderManager.GetBatchState()
     local fridgeState = OrderManager.GetFridgeState()
@@ -59,6 +82,7 @@ local function broadcastState()
         FridgeUpdated:FireClient(p, fridgeState)
         WarmersUpdated:FireClient(p, warmerState)
     end
+    updateWarmerCountLabels()
 end
 
 OrderManager.On("BatchUpdated",   broadcastState)

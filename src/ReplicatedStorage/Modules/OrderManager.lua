@@ -452,6 +452,16 @@ function OrderManager.GetWarmerState()
     return { forFrost = frostCount, forDress = dressCount }
 end
 
+function OrderManager.GetWarmerStockByCookieId()
+    local counts = {}
+    for _, entry in ipairs(warmers) do
+        if not entry.needsFrost and entry.cookieId then
+            counts[entry.cookieId] = (counts[entry.cookieId] or 0) + (entry.quantity or 1)
+        end
+    end
+    return counts
+end
+
 -- ============================================================
 -- LOOKUP HELPERS
 -- ============================================================
