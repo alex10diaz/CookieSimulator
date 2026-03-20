@@ -324,10 +324,21 @@ local STATIONS = {
 		label   = "Mixing",
 		spawnCF = getTutorialSpawnCF("TutorialMixerSpawn",     CFrame.new(18, 5, -17)),
 		work = function(proxy)
-			local orders = OrderManager.GetNPCOrders and OrderManager.GetNPCOrders() or {}
-			local cookieId = "chocolate_chip"
-			for _, o in ipairs(orders) do
-				if o.cookieId then cookieId = o.cookieId; break end
+			-- Pick from active menu warmers, targeting the lowest-stocked fridge
+			local fridgeState   = OrderManager.GetFridgeState()
+			local warmersFolder = workspace:FindFirstChild("Warmers")
+			local menuCookies   = {}; local _seen = {}
+			if warmersFolder then
+				for _, model in ipairs(warmersFolder:GetChildren()) do
+					local cId = model:GetAttribute("CookieId")
+					if cId and not _seen[cId] then _seen[cId] = true; table.insert(menuCookies, cId) end
+				end
+			end
+			if #menuCookies == 0 then return false end
+			local cookieId = menuCookies[1]; local lowestCount = math.huge
+			for _, cId in ipairs(menuCookies) do
+				local cnt = fridgeState["fridge_" .. cId] or 0
+				if cnt < lowestCount then lowestCount = cnt; cookieId = cId end
 			end
 			local batchId = OrderManager.TryStartBatch(proxy, cookieId)
 			if not batchId then return false end
