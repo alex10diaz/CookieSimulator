@@ -306,6 +306,7 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
                 return
             end
         end
+        orderLockedBy[orderId] = player
         dressLocked[player] = {
             orderId        = orderId,
             isVariety      = true,
@@ -338,6 +339,7 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
             orderLocked:FireClient(player, { state = "error", message = "Not enough " .. name .. " in warmers" })
             return
         end
+        orderLockedBy[orderId] = player
         dressLocked[player] = {
             orderId  = orderId,
             cookieId = targetOrder.cookieId,
@@ -372,7 +374,7 @@ local function hookWarmerPrompt(prompt, model)
             local entry = OrderManager.TakeFromWarmersByType(cookieId, slotQty)
             if not entry then
                 orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
-                dressLocked[player] = nil
+                clearDressLock(player)
                 return
             end
 
@@ -413,7 +415,7 @@ local function hookWarmerPrompt(prompt, model)
             end
             -- No toppings — create box immediately
             local box = OrderManager.CreateVarietyBox(player, lock.collected, DRESS_SCORE)
-            dressLocked[player] = nil
+            clearDressLock(player)
             if box then
                 print(string.format("[DressStation] %s completed variety pickup -- box #%d for %s",
                     player.Name, box.boxId, lock.npcName))
@@ -430,7 +432,7 @@ local function hookWarmerPrompt(prompt, model)
             local entry = OrderManager.TakeFromWarmersByType(cookieId, lock.packSize or 1)
             if not entry then
                 orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
-                dressLocked[player] = nil
+                clearDressLock(player)
                 return
             end
 
@@ -454,7 +456,7 @@ local function hookWarmerPrompt(prompt, model)
             end
             -- No toppings — create box immediately
             local box = OrderManager.CreateBox(player, entry.batchId, DRESS_SCORE, entry)
-            dressLocked[player] = nil
+            clearDressLock(player)
             if box then
                 print(string.format("[DressStation] %s picked up %s — box #%d created for %s",
                     player.Name, cookieId, box.boxId, lock.npcName))
@@ -504,7 +506,7 @@ toppingCompleteRemote.OnServerEvent:Connect(function(player, elapsed)
 
     if lock.isVariety then
         local box = OrderManager.CreateVarietyBox(player, lock.collected, score)
-        dressLocked[player] = nil
+        clearDressLock(player)
         if box then
             print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- variety box #%d",
                 player.Name, elapsed, score, box.boxId))
@@ -516,7 +518,7 @@ toppingCompleteRemote.OnServerEvent:Connect(function(player, elapsed)
     else
         local entry = lock.pendingEntry
         local box   = OrderManager.CreateBox(player, entry.batchId, score, entry)
-        dressLocked[player] = nil
+        clearDressLock(player)
         if box then
             print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- box #%d",
                 player.Name, elapsed, score, box.boxId))
@@ -531,12 +533,12 @@ end)
 -- ─── Cancel / Cleanup ────────────────────────────────────────────────────────
 cancelOrder.OnServerEvent:Connect(function(player)
     activeKDS[player] = nil
-    dressLocked[player] = nil
+    clearDressLock(player)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
     activeKDS[player] = nil
-    dressLocked[player] = nil
+    clearDressLock(player)
 end)
 
 print("[DressStationServer] Ready — KDS v2 (TV display + warmer pickup).")
