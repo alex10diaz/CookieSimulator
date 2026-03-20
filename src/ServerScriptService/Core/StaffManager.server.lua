@@ -372,7 +372,7 @@ local function workerSpawnCF(name, fallback, lookDir)
 	local origin = base.Position + Vector3.new(0, 10, 0)
 	local result = workspace:Raycast(origin, Vector3.new(0, -20, 0))
 	local floorY = result and result.Position.Y or base.Position.Y
-	local pos    = Vector3.new(base.Position.X, floorY + 3.5, base.Position.Z)
+	local pos    = Vector3.new(base.Position.X, floorY + 5, base.Position.Z)
 	return CFrame.lookAt(pos, pos + lookDir)
 end
 
