@@ -71,6 +71,25 @@ local pendingBoxes = {} -- cookieId -> { boxId, carrier, npcId }
 local nextNpcId   = 1
 
 -- ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+-- Build a display label for variety orders: "C&C x2, Pink Sugar, Snickerdoodle"
+local function buildVarietyLabel(items)
+    if not items or #items == 0 then return "Mix" end
+    local counts = {}; local order = {}
+    for _, id in ipairs(items) do
+        if not counts[id] then counts[id] = 0; table.insert(order, id) end
+        counts[id] += 1
+    end
+    local parts = {}
+    for _, id in ipairs(order) do
+        local cookie = CookieData.GetById(id)
+        local name   = cookie and cookie.name or id
+        local cnt    = counts[id]
+        table.insert(parts, cnt > 1 and (name .. " x" .. cnt) or name)
+    end
+    return table.concat(parts, ", ")
+end
+
 local function countNPCs()
     local n = 0
     for _ in pairs(npcs) do n += 1 end
@@ -356,8 +375,10 @@ local function confirmOrder(player, npcId)
 
     -- Update player's HUD active order label
     pcall(function()
-        hudUpdate:FireClient(player, nil, nil,
-            (data.order.isVariety and "Variety Pack" or data.order.cookieName) .. " ×" .. data.order.packSize)
+        local label = data.order.isVariety
+            and buildVarietyLabel(data.order.items)
+            or  (data.order.cookieName .. " x" .. data.order.packSize)
+        hudUpdate:FireClient(player, nil, nil, label)
     end)
 
     -- Walk to a waiting area spot

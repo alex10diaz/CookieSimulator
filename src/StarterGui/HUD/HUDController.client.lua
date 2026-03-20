@@ -120,12 +120,33 @@ end
 -- Returns baseName, quantity (default qty=1 if no suffix found).
 local function parseQty(s)
     local base, n = s:match("^(.-)%s+[xX](%d+)$")
-    if not base then
-        -- Unicode × (UTF-8 0xC3 0x97) — sent by PersistentNPCSpawner
-        base, n = s:match("^(.-)%s+\xC3\x97(%d+)$")
-    end
     if base and n then return base, tonumber(n) end
     return s, 1
+end
+
+-- Short display names for variety order breakdowns
+local SHORT_NAMES = {
+    pink_sugar           = "Pink Sugar",
+    chocolate_chip       = "Choc Chip",
+    birthday_cake        = "Bday Cake",
+    cookies_and_cream    = "C&C",
+    snickerdoodle        = "Snickerdoodle",
+    lemon_blackraspberry = "Lemon Berry",
+}
+local function buildVarietyLabel(items)
+    if not items or #items == 0 then return "Mix" end
+    local counts = {}; local order = {}
+    for _, id in ipairs(items) do
+        if not counts[id] then counts[id] = 0; table.insert(order, id) end
+        counts[id] += 1
+    end
+    local parts = {}
+    for _, id in ipairs(order) do
+        local name = SHORT_NAMES[id] or cookieName(id)
+        local cnt  = counts[id]
+        table.insert(parts, cnt > 1 and (name .. " x" .. cnt) or name)
+    end
+    return table.concat(parts, ", ")
 end
 
 -- ── Event handlers ────────────────────────────────────────────────────────────
@@ -197,11 +218,18 @@ hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
     end
 end)
 
--- POS tablet accept path: server sends cookieId + packSize
+-- POS tablet accept path: server sends cookieId + packSize (or isVariety + items)
 acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
     if orderData and orderData.cookieId then
-        local name = cookieName(orderData.cookieId)
-        if orderData.packSize then name = name .. " x" .. orderData.packSize end
+        local name
+        if orderData.isVariety and orderData.items then
+            name = buildVarietyLabel(orderData.items)
+        else
+            name = cookieName(orderData.cookieId)
+            if orderData.packSize and orderData.packSize > 1 then
+                name = name .. " x" .. orderData.packSize
+            end
+        end
         table.insert(activeOrders, name)
         refreshOrderPill()
     end
