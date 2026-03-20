@@ -93,6 +93,13 @@ local function spawnWorkerRig(workerName, spawnCF, hiringPlayer)
 				end
 			end
 
+			-- Reset all joint transforms to T-pose so the clone isn't frozen mid-walk
+			for _, j in ipairs(clone:GetDescendants()) do
+				if j:IsA("Motor6D") then
+					j.Transform = CFrame.new()
+				end
+			end
+
 			-- Remove existing shirt/pants so baker uniform is clean
 			for _, obj in ipairs(clone:GetChildren()) do
 				if obj:IsA("Shirt") or obj:IsA("Pants") then obj:Destroy() end
@@ -365,7 +372,7 @@ local function workerSpawnCF(name, fallback, lookDir)
 	local origin = base.Position + Vector3.new(0, 10, 0)
 	local result = workspace:Raycast(origin, Vector3.new(0, -20, 0))
 	local floorY = result and result.Position.Y or base.Position.Y
-	local pos    = Vector3.new(base.Position.X, floorY + 1, base.Position.Z)
+	local pos    = Vector3.new(base.Position.X, floorY + 3.5, base.Position.Z)
 	return CFrame.lookAt(pos, pos + lookDir)
 end
 
