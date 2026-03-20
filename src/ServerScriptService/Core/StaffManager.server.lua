@@ -433,7 +433,7 @@ local STATIONS = {
 	},
 	frost = {
 		label   = "Frosting",
-		spawnCF = workerSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36), Vector3.new( 1, 0, 0)),
+		spawnCF = workerSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36), Vector3.new(-1, 0, 0)),
 		work = function(proxy)
 			local forFrost = OrderManager.GetWarmerCount()
 			if forFrost == 0 then return false end
