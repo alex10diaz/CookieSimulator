@@ -42,6 +42,54 @@ local function getSortedFridges()
     return list
 end
 
+-- Disable all prompts and hide UI on a warmer model (unused slot)
+local function hideWarmerSlot(model)
+    model:SetAttribute("CookieId", "")
+    for _, desc in ipairs(model:GetDescendants()) do
+        if desc:IsA("ProximityPrompt") then
+            desc.Enabled = false
+        elseif desc:IsA("BillboardGui") then
+            desc.Enabled = false
+        end
+    end
+    local doorPanel = model:FindFirstChild("DoorPanel")
+    if doorPanel then
+        local sg = doorPanel:FindFirstChild("WarmersDisplay")
+        if sg then
+            local lbl = sg:FindFirstChild("TextLabel", true)
+            if lbl then lbl.Text = "" end
+        end
+        doorPanel.Color = Color3.fromRGB(90, 90, 90)
+    end
+end
+
+-- Re-enable prompts and UI for an active warmer slot
+local function showWarmerSlot(model, cookie)
+    local shell = model:FindFirstChild("Shell")
+    if shell then
+        for _, desc in ipairs(shell:GetDescendants()) do
+            if desc:IsA("BillboardGui") then desc.Enabled = true end
+        end
+        -- WarmerPickupPrompt: always enabled, shows cookie name
+        local wpp = shell:FindFirstChild("WarmerPickupPrompt")
+        if wpp then
+            wpp.ActionText = "Take " .. cookie.name
+            wpp.Enabled    = true
+        end
+        -- WarmerPrompt: ActionText updated; Enabled is managed by StaffManager per GameState
+        local wp = shell:FindFirstChild("WarmerPrompt")
+        if wp then wp.ActionText = "Deposit " .. cookie.name end
+
+        -- WarmerNameGui BillboardGui
+        local nameBB = shell:FindFirstChild("WarmerNameGui")
+        if nameBB then
+            nameBB.Enabled = true
+            local nameLbl = nameBB:FindFirstChild("NameLabel", true)
+            if nameLbl then nameLbl.Text = cookie.name end
+        end
+    end
+end
+
 function StationRemapService.RemapStations(orderedMenuIds)
     if not orderedMenuIds or #orderedMenuIds == 0 then
         warn("[StationRemapService] No menu ids provided — skipping remap")
@@ -57,6 +105,9 @@ function StationRemapService.RemapStations(orderedMenuIds)
     for _, wEntry in ipairs(warmers) do
         oldCookieIdBySlot[wEntry.slot] = wEntry.model:GetAttribute("CookieId") or ""
     end
+
+    -- Track which fridge IDs are active (for hiding unused fridges)
+    local activeFridgeIds = {}
 
     for slotIndex, cookieId in ipairs(orderedMenuIds) do
         local cookie = CookieData.GetById(cookieId)
@@ -78,23 +129,14 @@ function StationRemapService.RemapStations(orderedMenuIds)
             if doorPanel then
                 local sg = doorPanel:FindFirstChild("WarmersDisplay")
                 if sg then
-                    -- TextLabel is nested: WarmersDisplay > Frame > TextLabel
                     local lbl = sg:FindFirstChild("TextLabel", true)
                     if lbl then lbl.Text = cookie.name end
                 end
-                -- Accent color from cookie's dough color (already a Color3)
                 doorPanel.Color = cookie.doughColor
             end
 
-            -- Update WarmerNameGui BillboardGui on Shell part
-            local shell = model:FindFirstChild("Shell")
-            if shell then
-                local nameBB = shell:FindFirstChild("WarmerNameGui")
-                if nameBB then
-                    local nameLbl = nameBB:FindFirstChild("NameLabel", true)
-                    if nameLbl then nameLbl.Text = cookie.name end
-                end
-            end
+            -- Re-enable UI and update prompt titles
+            showWarmerSlot(model, cookie)
         end
 
         -- ── Remap fridge ─────────────────────────────────────────
@@ -102,19 +144,49 @@ function StationRemapService.RemapStations(orderedMenuIds)
         if fridgeEntry then
             local model = fridgeEntry.model
             model:SetAttribute("FridgeId", cookie.fridgeId)
+            activeFridgeIds[cookie.fridgeId] = true
 
             local display = model:FindFirstChild("FridgeDisplay", true)
             if display then
-                -- Label may be named "CookieName" or plain "TextLabel"
                 local nameLbl = display:FindFirstChild("CookieName", true)
                     or display:FindFirstChild("TextLabel", true)
                 if nameLbl then nameLbl.Text = cookie.name end
             end
 
-            -- Update proximity prompt action text
-            local prompt = model:FindFirstChildWhichIsA("ProximityPrompt", true)
-            if prompt then
-                prompt.ActionText = "Pull " .. cookie.name .. " Dough"
+            -- Update proximity prompt action text and re-enable
+            for _, desc in ipairs(model:GetDescendants()) do
+                if desc:IsA("ProximityPrompt") then
+                    desc.ActionText = "Pull " .. cookie.name .. " Dough"
+                    desc.Enabled    = true
+                end
+            end
+        end
+
+        if cookie.fridgeId then activeFridgeIds[cookie.fridgeId] = true end
+    end
+
+    -- ── Hide unused warmer slots ──────────────────────────────────
+    for i = #orderedMenuIds + 1, #warmers do
+        local wEntry = warmers[i]
+        if wEntry then hideWarmerSlot(wEntry.model) end
+    end
+
+    -- ── Hide unused fridge slots (any fridge whose FridgeId is not in active menu) ──
+    local fridgesFolder = Workspace:FindFirstChild("Fridges")
+    if fridgesFolder then
+        for _, model in ipairs(fridgesFolder:GetChildren()) do
+            local fId = model:GetAttribute("FridgeId") or ""
+            if fId ~= "" and not activeFridgeIds[fId] then
+                -- Clear and hide
+                for _, desc in ipairs(model:GetDescendants()) do
+                    if desc:IsA("ProximityPrompt") then desc.Enabled = false end
+                end
+                local display = model:FindFirstChild("FridgeDisplay", true)
+                if display then
+                    local lbl = display:FindFirstChild("CookieName", true)
+                        or display:FindFirstChild("TextLabel", true)
+                    if lbl then lbl.Text = "" end
+                end
             end
         end
     end

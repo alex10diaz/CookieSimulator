@@ -334,10 +334,14 @@ local function setWarmersEnabled(enabled)
 	local warmersFolder = workspace:FindFirstChild("Warmers")
 	if not warmersFolder then return end
 	for _, warmer in ipairs(warmersFolder:GetChildren()) do
-		local shell  = warmer:FindFirstChild("Shell")
-		local prompt = shell and shell:FindFirstChild("WarmerPrompt")
-		if prompt then
-			prompt.Enabled = enabled
+		-- Only enable prompts on warmers that have an active cookie assignment
+		local cookieId = warmer:GetAttribute("CookieId") or ""
+		if cookieId ~= "" then
+			local shell  = warmer:FindFirstChild("Shell")
+			local prompt = shell and shell:FindFirstChild("WarmerPrompt")
+			if prompt then
+				prompt.Enabled = enabled
+			end
 		end
 	end
 	print("[StaffManager] WarmerPrompts", enabled and "enabled" or "disabled")
