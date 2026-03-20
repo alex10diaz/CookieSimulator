@@ -176,7 +176,8 @@ skipBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ── Active order tracking (supports multiple simultaneous orders) ─────────────
-local activeOrders = {}  -- FIFO list of cookieId strings
+-- m4: entries are {orderId=N|nil, display="..."} so cancellation can match by ID
+local activeOrders = {}  -- FIFO list of {orderId, display}
 
 local function clearOrder()
     orderLbl.Text = "No active order"; orderLbl.TextColor3 = C.MUTED
@@ -194,8 +195,8 @@ local function refreshOrderPill()
     -- Parse each entry into (baseName, qty) then aggregate totals by baseName
     local totals = {}   -- baseName -> total qty
     local order  = {}   -- insertion-order list of baseNames
-    for _, s in ipairs(activeOrders) do
-        local base, qty = parseQty(s)
+    for _, entry in ipairs(activeOrders) do
+        local base, qty = parseQty(entry.display)  -- m4: read from entry.display
         if not totals[base] then totals[base] = 0; table.insert(order, base) end
         totals[base] += qty
     end
@@ -213,7 +214,7 @@ hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
     if activeOrderName ~= nil then
         -- Normalize unicode × to ASCII x so parseQty works uniformly
         local normalized = tostring(activeOrderName):gsub("\xC3\x97", "x")
-        table.insert(activeOrders, normalized)
+        table.insert(activeOrders, { orderId = nil, display = normalized })  -- m4: no orderId from hudUpdate
         refreshOrderPill()
     end
 end)
@@ -230,7 +231,7 @@ acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
                 name = name .. " x" .. orderData.packSize
             end
         end
-        table.insert(activeOrders, name)
+        table.insert(activeOrders, { orderId = orderId, display = name })  -- m4: store orderId for cancel matching
         refreshOrderPill()
     end
 end)
