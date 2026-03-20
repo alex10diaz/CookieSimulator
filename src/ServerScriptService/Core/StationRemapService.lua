@@ -84,7 +84,7 @@ function StationRemapService.RemapStations(orderedMenuIds)
             if shell then
                 local nameBB = shell:FindFirstChild("WarmerNameGui")
                 if nameBB then
-                    local nameLbl = nameBB:FindFirstChild("NameLabel")
+                    local nameLbl = nameBB:FindFirstChild("NameLabel", true)
                     if nameLbl then nameLbl.Text = cookie.name end
                 end
             end
