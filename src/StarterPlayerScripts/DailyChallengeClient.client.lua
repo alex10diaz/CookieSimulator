@@ -38,7 +38,7 @@ local function makeHudWidget()
         frame = Instance.new("Frame")
         frame.Name              = "DailyChallengesWidget"
         frame.Size              = UDim2.new(0, 230, 0, 84)
-        frame.Position          = UDim2.new(0, 10, 1, -94)
+        frame.Position          = UDim2.new(0, 20, 1, -104)
         frame.BackgroundColor3  = Color3.fromRGB(15, 15, 15)
         frame.BackgroundTransparency = 0.25
         frame.BorderSizePixel   = 0

@@ -36,8 +36,10 @@ local function showOrderCutscene(payload)
     -- ── Main card ──
     local modal = Instance.new("Frame")
     modal.Name                   = "OrderModal"
-    modal.Size                   = UDim2.new(0, 440, 0, 310)
-    modal.Position               = UDim2.new(0.5, -220, 0.5, -155)
+    local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 500
+    local _mw  = math.min(440, _vpW - 20)
+    modal.Size                   = UDim2.new(0, _mw, 0, 310)
+    modal.Position               = UDim2.new(0.5, -math.floor(_mw/2), 0.5, -155)
     modal.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
     modal.BackgroundTransparency = 0
     modal.BorderSizePixel        = 0
@@ -61,7 +63,7 @@ local function showOrderCutscene(payload)
     hFlat.BorderSizePixel  = 0
 
     local titleLbl = Instance.new("TextLabel", headerBar)
-    titleLbl.Size                   = UDim2.new(1, -56, 1, 0)
+    titleLbl.Size                   = UDim2.new(1, -60, 1, 0)
     titleLbl.Position               = UDim2.new(0, 14, 0, 0)
     titleLbl.BackgroundTransparency = 1
     titleLbl.TextColor3             = Color3.fromRGB(20, 14, 4)
@@ -73,8 +75,8 @@ local function showOrderCutscene(payload)
     -- ── X close button (sits in header) ──
     local closeBtn = Instance.new("TextButton", modal)
     closeBtn.Name              = "CloseBtn"
-    closeBtn.Size              = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position          = UDim2.new(1, -38, 0, 8)
+    closeBtn.Size              = UDim2.new(0, 44, 0, 44)
+    closeBtn.Position          = UDim2.new(1, -48, 0, 1)
     closeBtn.BackgroundColor3  = Color3.fromRGB(200, 55, 55)
     closeBtn.TextColor3        = Color3.fromRGB(255, 255, 255)
     closeBtn.Font              = Enum.Font.GothamBold
