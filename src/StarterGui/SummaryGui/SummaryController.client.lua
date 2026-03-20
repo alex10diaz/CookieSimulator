@@ -28,8 +28,8 @@ if frame then frame:Destroy() end
 
 frame = Instance.new("Frame")
 frame.Name             = "SummaryFrame"
-frame.Size             = UDim2.new(0, 430, 0, 480)
-frame.Position         = UDim2.new(0.5, -215, 0.5, -240)
+frame.Size             = UDim2.new(0, 430, 0, 506)
+frame.Position         = UDim2.new(0.5, -215, 0.5, -253)
 frame.BackgroundColor3 = C.BG
 frame.BackgroundTransparency = 0
 frame.BorderSizePixel  = 0
@@ -151,7 +151,44 @@ for idx, def in ipairs(ROLE_DEFS) do
     valL.TextXAlignment = Enum.TextXAlignment.Right; valL.Text = ""
 end
 
+-- ── Countdown + Continue button ───────────────────────────────────────────────
+local countdownLabel = Instance.new("TextLabel", frame)
+countdownLabel.Name = "Countdown"
+countdownLabel.Size = UDim2.new(1, -20, 0, 20)
+countdownLabel.Position = UDim2.new(0, 10, 0, 428)
+countdownLabel.BackgroundTransparency = 1
+countdownLabel.TextColor3 = Color3.fromRGB(120, 120, 150)
+countdownLabel.Font = Enum.Font.Gotham
+countdownLabel.TextSize = 13
+countdownLabel.TextScaled = false
+countdownLabel.Text = ""
+
+local continueBtn = Instance.new("TextButton", frame)
+continueBtn.Name = "ContinueBtn"
+continueBtn.Size = UDim2.new(1, -40, 0, 38)
+continueBtn.Position = UDim2.new(0, 20, 0, 454)
+continueBtn.BackgroundColor3 = Color3.fromRGB(30, 100, 40)
+continueBtn.BorderSizePixel = 0
+continueBtn.Font = Enum.Font.GothamBold
+continueBtn.TextSize = 15
+continueBtn.TextColor3 = Color3.fromRGB(200, 255, 210)
+continueBtn.Text = "Continue"
+Instance.new("UICorner", continueBtn).CornerRadius = UDim.new(0, 10)
+local btnStroke = Instance.new("UIStroke", continueBtn)
+btnStroke.Color = Color3.fromRGB(60, 180, 80); btnStroke.Thickness = 1.5
+
 gui.Enabled = false
+
+-- ── Dismiss logic ─────────────────────────────────────────────────────────────
+local dismissThread = nil
+local function dismiss()
+    if dismissThread then task.cancel(dismissThread) dismissThread = nil end
+    countdownLabel.Text = ""
+    TweenService:Create(frame, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+    task.delay(0.25, function() gui.Enabled = false end)
+end
+
+continueBtn.Activated:Connect(dismiss)
 
 -- ── Events ────────────────────────────────────────────────────────────────────
 summaryEvent.OnClientEvent:Connect(function(data)
