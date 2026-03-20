@@ -8,6 +8,8 @@ local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChi
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local DEV_SKIP_PREOPEN    = false     -- false = always run PreOpen (production)
+local skipPreOpenFlag     = false
+local skipPreOpenRemote   = RemoteManager.Get("SkipPreOpen")
 local PREOPEN_DURATION    = 3 * 60   -- 3 minutes: enough time to prep dough before first customers
 local OPEN_DURATION       = 10 * 60  -- 10 minutes (M6)
 local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
@@ -68,11 +70,20 @@ local function runPhase(duration, stateName)
     local remaining = duration
     broadcast(stateName, remaining)
     while remaining > 0 do
+        if stateName == "PreOpen" and skipPreOpenFlag then
+            skipPreOpenFlag = false
+            stateChangedRemote:FireAllClients(stateName, 0)
+            break
+        end
         task.wait(1)
         remaining -= 1
         stateChangedRemote:FireAllClients(stateName, remaining)
     end
 end
+
+skipPreOpenRemote.OnServerEvent:Connect(function()
+    skipPreOpenFlag = true
+end)
 
 local function runCycle()
     while true do
