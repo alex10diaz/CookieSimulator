@@ -67,7 +67,9 @@ local COOKIE_COLORS = {
 }
 
 -- ─── TV Display ───────────────────────────────────────────────────────────────
-local tvSurfaceGui = nil
+local tvSurfaceGui    = nil
+local tvLastOrderCount = -1   -- m3: dirty flag; -1 forces first build
+local tvLastWarmerKey  = ""
 
 local function formatWait(secs)
     local m = math.floor(secs / 60)
@@ -103,14 +105,23 @@ local function getOrCreateTVGui()
 end
 
 local function updateTV()
+    -- m3: skip rebuild if nothing changed
+    local orders      = OrderManager.GetNPCOrders()
+    local warmerCounts = OrderManager.GetWarmerCountsByType()
+    local warmerKey   = ""
+    for k, v in pairs(warmerCounts) do warmerKey = warmerKey .. k .. tostring(v) end
+    local orderCount  = #orders
+    if orderCount == tvLastOrderCount and warmerKey == tvLastWarmerKey then return end
+    tvLastOrderCount = orderCount
+    tvLastWarmerKey  = warmerKey
+
     local sg = getOrCreateTVGui()
     if not sg then return end
 
     -- Clear
     for _, c in ipairs(sg:GetChildren()) do c:Destroy() end
 
-    local orders = OrderManager.GetNPCOrders()
-    local now    = tick()
+    local now = tick()
 
     -- Root background
     local bg = Instance.new("Frame", sg)

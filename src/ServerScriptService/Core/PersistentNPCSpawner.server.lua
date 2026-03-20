@@ -302,6 +302,7 @@ takeOrder = function(player, npcId)
                 local c = CookieData.GetById(t)
                 price += (c and c.price or 5) * cnt
             end
+            end -- close stockOk else
         else
             -- ── Single-type order ─────────────────────────────────────────────
             cookie   = CookieData.GetRandomFromMenu(MenuManager.GetActiveMenu())
