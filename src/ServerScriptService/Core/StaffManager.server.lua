@@ -650,13 +650,6 @@ end)
 createStagingTable()
 setWarmersEnabled(false)  -- disabled until GameState == "Open"
 
--- TEMP: 500 debug coins on join — remove before launch
-Players.PlayerAdded:Connect(function(player)
-	task.wait(5)  -- wait for PlayerDataManager to load profile
-	if player and player.Parent then
-		PlayerDataManager.AddCoins(player, 500)
-		print("[StaffManager] TEMP: gave " .. player.Name .. " 500 test coins")
-	end
-end)
+
 
 print("[StaffManager] Loaded")

@@ -264,6 +264,17 @@ RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
     if activeSessions[player] then return end
     if not cookieId or cookieId == "" then return end
 
+    -- C5: Validate cookieId is in the active menu (prevent spoofing unowned/invalid recipes)
+    local activeMenu = MenuManager.GetActiveMenu()
+    local inMenu = false
+    for _, id in ipairs(activeMenu) do
+        if id == cookieId then inMenu = true; break end
+    end
+    if not inMenu then
+        warn("[AntiExploit] " .. player.Name .. " sent cookieId not in active menu: " .. tostring(cookieId))
+        return
+    end
+
     local batchId = OrderManager.TryStartBatch(player, cookieId)
     if not batchId then
         warn("[MinigameServer] Could not start batch for " .. player.Name)

@@ -87,6 +87,7 @@ local function runPhase(duration, stateName)
 end
 
 skipPreOpenRemote.OnServerEvent:Connect(function()
+    if not game:GetService("RunService"):IsStudio() then return end
     skipPreOpenFlag = true
 end)
 
