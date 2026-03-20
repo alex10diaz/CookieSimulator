@@ -11,14 +11,19 @@ local DEV_SKIP_PREOPEN    = true      -- DEV: set false for production
 local PREOPEN_DURATION    = 20       -- TEMP: 20s for testing (restore to 5 * 60)
 local OPEN_DURATION       = 10 * 60  -- 10 minutes (M6)
 local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
-local INTERMISSION_DURATION = 5 * 60 -- 5 minutes back room break
+local INTERMISSION_DURATION = 3 * 60 -- 3 minutes back room break
 
 local BACK_ROOM_CF = CFrame.new(0, 3, -127)
 
+local FRONT_SPAWN_CF = CFrame.new(55, 4, 31)
+
 local function getFrontSpawnCF()
-    local sp = workspace:FindFirstChild("SpawnLocation")
+    -- Use named FrontSpawn if it exists; fall back to hardcoded constant.
+    -- NOTE: Do NOT use FindFirstChild("SpawnLocation") — Roblox default spawns
+    -- or the BackRoomSpawn can be found first and send players outside the store.
+    local sp = workspace:FindFirstChild("FrontSpawn")
     if sp then return sp.CFrame + Vector3.new(0, 3, 0) end
-    return CFrame.new(55, 4, 31)
+    return FRONT_SPAWN_CF
 end
 
 -- ─── State ────────────────────────────────────────────────────────────────────

@@ -228,12 +228,23 @@ summaryEvent.OnClientEvent:Connect(function(data)
     TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
         { BackgroundTransparency = 0 }):Play()
     TweenService:Create(outerStroke, TweenInfo.new(0.3), { Transparency = 0.3 }):Play()
+
+    -- 15-second auto-dismiss
+    if dismissThread then task.cancel(dismissThread) dismissThread = nil end
+    dismissThread = task.spawn(function()
+        local t = 15
+        while t > 0 do
+            countdownLabel.Text = "Auto-closing in " .. t .. "s"
+            task.wait(1)
+            t -= 1
+        end
+        dismiss()
+    end)
 end)
 
 stateRemote.OnClientEvent:Connect(function(state)
-    if state == "PreOpen" then
-        TweenService:Create(frame, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
-        task.delay(0.25, function() gui.Enabled = false end)
+    if state == "Intermission" or state == "PreOpen" then
+        dismiss()
     end
 end)
 
