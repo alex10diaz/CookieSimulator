@@ -120,6 +120,9 @@ player:GetAttributeChangedSignal("InTutorial"):Connect(function()
     if not player:GetAttribute("InTutorial") then timerPill.Visible = true end
 end)
 
+-- ── Active order tracking (supports multiple simultaneous orders) ─────────────
+local activeOrders = {}  -- FIFO list of cookieId strings
+
 local function clearOrder()
     orderLbl.Text = "No active order"; orderLbl.TextColor3 = C.MUTED
     TweenService:Create(orderPill, TI(0.2), { BackgroundColor3 = C.PANEL }):Play()
@@ -131,18 +134,41 @@ local function setOrder(name)
     orderStroke.Color = C.GREEN; orderStroke.Transparency = 0.2
 end
 
+local function refreshOrderPill()
+    if #activeOrders == 0 then clearOrder(); return end
+    local counts = {}; local order = {}
+    for _, id in ipairs(activeOrders) do
+        if not counts[id] then counts[id] = 0; table.insert(order, id) end
+        counts[id] += 1
+    end
+    local lines = {}
+    for _, id in ipairs(order) do
+        local n = cookieName(id)
+        table.insert(lines, counts[id] > 1 and (n .. " \xC3\x97" .. counts[id]) or n)
+    end
+    setOrder(table.concat(lines, "\n"))
+end
+
 hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
     coinsLbl.Text = tostring(coins or 0)
-    if activeOrderName then setOrder(activeOrderName) else clearOrder() end
+    -- If server explicitly clears (nil name after delivery), sync by removing one entry
+    if activeOrderName == nil and #activeOrders > 0 then
+        table.remove(activeOrders, 1)
+    end
+    refreshOrderPill()
 end)
 
 acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
-    if orderData and orderData.cookieId then setOrder(cookieName(orderData.cookieId)) end
+    if orderData and orderData.cookieId then
+        table.insert(activeOrders, orderData.cookieId)
+        refreshOrderPill()
+    end
 end)
 
 -- ── Delivery Flash ────────────────────────────────────────────────────────────
 deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
-    clearOrder()
+    if #activeOrders > 0 then table.remove(activeOrders, 1) end
+    refreshOrderPill()
     local s      = math.clamp(stars or 0, 0, 5)
     local isGood = s >= 4
     local bgCol  = isGood and Color3.fromRGB(28,85,35) or Color3.fromRGB(90,28,28)
