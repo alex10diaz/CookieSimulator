@@ -7,6 +7,23 @@ local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):Wait
 
 local MAX_STOCK = 4
 
+-- Raise & center every FridgeDisplay BillboardGui so it floats above the model cleanly.
+-- Called once at startup; safe to re-run (idempotent property writes).
+local function fixBillboardLayout()
+    local fridgesFolder = workspace:FindFirstChild("Fridges")
+    if not fridgesFolder then return end
+    for _, fridge in ipairs(fridgesFolder:GetChildren()) do
+        for _, desc in ipairs(fridge:GetDescendants()) do
+            if desc:IsA("BillboardGui") and desc.Name == "FridgeDisplay" then
+                desc.StudsOffset    = Vector3.new(0, 5, 0)   -- float well above the top of the model
+                desc.Size           = UDim2.new(0, 220, 0, 64)
+                desc.AlwaysOnTop    = true
+                desc.LightInfluence = 0
+            end
+        end
+    end
+end
+
 local function updateBillboards(state)
     local fridgesFolder = workspace:FindFirstChild("Fridges")
     if not fridgesFolder then return end
@@ -51,6 +68,7 @@ end)
 
 -- Initial state on server start
 task.defer(function()
+    fixBillboardLayout()
     updateBillboards(OrderManager.GetFridgeState())
 end)
 

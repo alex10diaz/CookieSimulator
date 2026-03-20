@@ -8,7 +8,7 @@ local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChi
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local DEV_SKIP_PREOPEN    = false     -- false = always run PreOpen (production)
-local PREOPEN_DURATION    = 20       -- TEMP: 20s for testing (restore to 5 * 60)
+local PREOPEN_DURATION    = 3 * 60   -- 3 minutes: enough time to prep dough before first customers
 local OPEN_DURATION       = 10 * 60  -- 10 minutes (M6)
 local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
 local INTERMISSION_DURATION = 3 * 60 -- 3 minutes back room break
