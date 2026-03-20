@@ -423,7 +423,7 @@ local STATIONS = {
 	},
 	oven = {
 		label   = "Baking",
-		spawnCF = workerSpawnCF("TutorialOvenSpawn",       CFrame.new(-2, 8, -85),  Vector3.new( 0, 0,-1)),
+		spawnCF = workerSpawnCF("TutorialOvenSpawn",       CFrame.new(-2, 8, -85),  Vector3.new( 1, 0,-1)),
 		work = function(proxy)
 			-- Pre-check: any fridge has stock before polling each one
 			local fridgeState = OrderManager.GetFridgeState()
