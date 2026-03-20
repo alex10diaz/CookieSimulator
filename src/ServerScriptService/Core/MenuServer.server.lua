@@ -123,6 +123,8 @@ setMenuRemote.OnServerEvent:Connect(function(player, cookieIds)
             menuResultRemote:FireClient(p, true, "Menu updated!", updatedMenu)
         end
         print("[MenuServer]", player.Name, "set menu to:", table.concat(updatedMenu, ", "))
+        -- Remap physical stations immediately so PreOpen baking uses correct fridge/warmer IDs
+        task.defer(function() StationRemapService.RemapStations(updatedMenu) end)
     else
         menuResultRemote:FireClient(player, false, result)
     end
