@@ -9,6 +9,7 @@ local RunService        = game:GetService("RunService")
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local startRemote   = RemoteManager.Get("StartOvenMinigame")
 local resultRemote  = RemoteManager.Get("OvenMinigameResult")
+local cancelRemote  = RemoteManager.Get("CancelMinigame")
 
 local player = Players.LocalPlayer
 
@@ -116,6 +117,31 @@ startRemote.OnClientEvent:Connect(function()
         humanoid.JumpHeight = 7.2
         sg:Destroy()
         resultRemote:FireServer(math.clamp(score, 0, 100))
+    end
+
+    -- m7: exit button
+    do
+        local exitBtn = Instance.new("TextButton")
+        exitBtn.Size             = UDim2.new(0, 36, 0, 28)
+        exitBtn.Position         = UDim2.new(1, -40, 0, 8)
+        exitBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+        exitBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
+        exitBtn.TextScaled       = true
+        exitBtn.Font             = Enum.Font.GothamBold
+        exitBtn.Text             = "✕"
+        exitBtn.BorderSizePixel  = 0
+        exitBtn.ZIndex           = 5
+        exitBtn.Parent           = headerBar
+        Instance.new("UICorner", exitBtn).CornerRadius = UDim.new(0, 6)
+        exitBtn.MouseButton1Click:Connect(function()
+            if finished then return end
+            finished = true
+            if phaseConn then phaseConn:Disconnect() end
+            humanoid.WalkSpeed  = 16
+            humanoid.JumpHeight = 7.2
+            sg:Destroy()
+            cancelRemote:FireServer()
+        end)
     end
 
     -- PHASE 2: BAKE
