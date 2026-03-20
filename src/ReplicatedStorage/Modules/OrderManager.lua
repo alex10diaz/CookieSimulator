@@ -594,4 +594,12 @@ function OrderManager.GetWarmerCountsByType()
     return counts
 end
 
+-- Returns a previously-reserved warmer entry back to the warmers list.
+-- Called when a player cancels a locked dress order.
+function OrderManager.ReturnToWarmers(entry)
+    if not entry then return end
+    table.insert(warmers, entry)
+    notify("WarmersUpdated", OrderManager.GetWarmerState())
+end
+
 return OrderManager
