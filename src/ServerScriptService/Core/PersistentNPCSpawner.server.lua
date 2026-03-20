@@ -560,7 +560,7 @@ addDeliverPrompt = function(npcId)
             if _be then _be:Fire({ playerName = player.Name, coins = coins }) end
         end
         SessionStats.RecordDelivery(stars, payout.coins, comboStreak, d.order.packSize or 1)
-        SessionStats.RecordStationScore(player, "dress", 1)  -- track box deliveries for Employee of the Shift
+        SessionStats.RecordStationScore(player, "dress", 1)  -- track deliveries for Employee of the Shift
         DailyChallengeManager.RecordDelivery(player, {
             stars       = stars,
             cookieId    = d.order.cookieId,
