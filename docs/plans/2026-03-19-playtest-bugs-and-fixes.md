@@ -34,7 +34,8 @@ Organized by priority — work top to bottom each session.
 | FadeFrame (inside TutorialGui) | ZIndex 20 | Already set |
 
 - **Fix:** Set `.DisplayOrder` on every ScreenGui consistently. Minigame GUIs must be higher than HUD. SummaryGui highest. DeliveryFlash card inside HUD needs `ZIndex = 50` (already set — verify it's not being clipped by a parent with lower ZIndex).
-- **Files:** All `.client.lua` files that create ScreenGuis dynamically (MixMinigame, DoughMinigame, OvenMinigame, FrostMinigame, MixerController, DressStationClient, DeliveryClient, POSClient, SummaryController, HUDController, TutorialUI)
+- **Also check:** Starting screen (MainMenuGui / lobby screen), Tutorial UI, and the 3 in-store/back-room screen displays — any of these could conflict if DisplayOrder is unset.
+- **Files:** All `.client.lua` files that create ScreenGuis dynamically (MixMinigame, DoughMinigame, OvenMinigame, FrostMinigame, MixerController, DressStationClient, DeliveryClient, POSClient, SummaryController, HUDController, TutorialUI, MainMenuGui/LobbyClient)
 
 ---
 
@@ -65,6 +66,21 @@ Organized by priority — work top to bottom each session.
 - **Bug:** After an Open phase with deliveries made, the player does not appear in the "Employee of the Shift" section of the end-of-shift SummaryGui.
 - **Fix:** Check `SessionStats.GetSummary()` — confirm it returns `topPlayer` data. Check `SummaryController` reads and renders the `employeeOfShift` field. Likely a nil-check or field-name mismatch.
 - **Files:** `src/ServerScriptService/Core/SessionStats.lua`, `src/StarterGui/SummaryGui/SummaryController.client.lua`
+
+### P1-6 · Starting Screen / MainMenuGui Not Polished
+- **Bug:** The starting screen (lobby/main menu before joining the game) has not been styled to match the M7 dark navy + gold design system.
+- **Fix:** Apply the same polish pass: dark navy `(14,14,26)` background, gold UIStroke 1.5px, gold header bar, gold accent buttons. Ensure it does not overlap HUD elements when dismissed (DisplayOrder must be high while active, then hidden cleanly).
+- **Files:** MainMenuGui or LobbyClient script (wherever the starting screen is managed)
+
+### P1-7 · Tutorial UI Not Polished
+- **Bug:** Tutorial UI panels have not been updated to match the M7 design system — likely using old flat dark backgrounds with no UIStroke.
+- **Fix:** Apply dark navy + gold UIStroke + gold header bar to all tutorial UI panels, step counters, and progress indicators. Keep layout unchanged — visual polish only.
+- **Files:** `src/StarterPlayerScripts/TutorialUI.client.lua` (or equivalent)
+
+### P1-8 · 3 In-Store Screen Displays Need UI Polish
+- **Bug:** There are 3 screen/TV Part SurfaceGuis in the store (lobby area + back room area) that have not been styled. These are the decorative/informational screens visible to players inside the store.
+- **Fix:** Identify all 3 screen Parts in Studio (likely "LobbyScreen", "BackScreen", or similar). Apply dark navy background + gold accent header on each SurfaceGui. Confirm each one is displaying the intended content (leaderboard, daily specials, tips, etc.).
+- **Studio:** 3 Screen Parts in Workspace (store floor + back room)
 
 ---
 
@@ -125,6 +141,23 @@ Organized by priority — work top to bottom each session.
 
 ---
 
+## P3-5 · Mobile Integration — Full Game Audit
+- **Scope:** Full game has not been tested or designed for mobile. Roblox has a significant mobile player base — need to ensure the game is at minimum playable on touch devices.
+- **Audit checklist:**
+  - [ ] All ProximityPrompts: `MaxActivationDistance` large enough for mobile (touch range is shorter)
+  - [ ] All ScreenGui elements: use `{Scale}` UDim not fixed pixel sizes, or test at phone resolution (375×667)
+  - [ ] No keyboard-only controls — all actions reachable via ProximityPrompt or on-screen button
+  - [ ] Minigame UIs (Mix, Dough, Oven, Frost, Dress): tap targets minimum 44px tall, not too close together
+  - [ ] HUD pills (coin/timer/order): positioned away from phone notch/home indicator (SafeAreaInsets)
+  - [ ] ScrollingFrame scrollbars: hidden on mobile (set `ScrollBarThickness = 0` on touch, or just hide them)
+  - [ ] Text: minimum 14px equivalent — nothing smaller, especially on BillboardGuis/SurfaceGuis
+  - [ ] No hover-state-only feedback (mobile has no hover) — press states must give visual feedback
+  - [ ] Chat/GUI overlap: Roblox chat button is bottom-left on mobile — HUD elements must not clash
+- **Fix approach:** Address in a dedicated mobile pass session after P0-P2 are clean. Note which UIs fail first.
+- **Files:** All client UI scripts + all ScreenGui instances in StarterGui
+
+---
+
 ## P4 — Balance
 
 ### P4-1 · Lifetime Challenges Too Easy / Too Few
@@ -142,10 +175,12 @@ Organized by priority — work top to bottom each session.
 
 ```
 Session 1: P0-1, P0-2, P0-3 (summary dismiss + teleport + full UI z-order audit)
+           → P0-3 includes: starting screen, tutorial UI, 3 store screens (P1-6, P1-7, P1-8)
 Session 2: P1-2, P1-4, P1-5, P2-3 (spawning + patience timer + employee + break time)
 Session 3: P1-3 (station remap / menu change correctness)
 Session 4: P1-1 (drive-thru timeout), P3-1 (NPC in car)
 Session 5: P2-1, P2-2, P2-4, P2-5, P2-6 (HUD + visual fixes)
 Session 6: P3-2 (R6 customer models)
 Session 7: P3-3, P3-4, P4-1 (jump block + environment + lifetime balance)
+Session 8: P3-5 (full mobile integration audit + fixes)
 ```
