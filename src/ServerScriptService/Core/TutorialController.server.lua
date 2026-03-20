@@ -152,32 +152,39 @@ replayRemote.OnServerEvent:Connect(function(player)
 end)
 
 -- ─── Station Advance Gates ────────────────────────────────────────────────────
-local function makeGate(expectedStep)
-	return function(player, ...)
-		local session = activeTutorials[player.UserId]
-		if session and session.step == expectedStep then
-			advance(player)
-		end
-	end
-end
-
-confirmNPCOrderRemote.OnServerEvent:Connect(makeGate(1))
-mixResultRemote.OnServerEvent:Connect(makeGate(2))
-
--- Step 3: dough complete → skip step 4 (auto-deposit) → jump to step 5 (pull from fridge)
--- Skipping step 4 prevents the fridge camera transition from playing twice.
-doughResultRemote.OnServerEvent:Connect(function(player, ...)
+-- Step 1: NPC order confirmed at POS (client remote; NPC system validates state separately)
+confirmNPCOrderRemote.OnServerEvent:Connect(function(player)
 	local session = activeTutorials[player.UserId]
-	if not session or session.step ~= 3 then return end
-	session.step = 5
-	sendStep(player, 5)
+	if session and session.step == 1 then advance(player) end
 end)
 
--- Step 4 kept for safety but will not fire in normal tutorial flow (skipped above)
-depositDoughRemote.OnServerEvent:Connect(makeGate(4))
+-- Steps 2, 3, 6, 7, 8: M1 — listen to StationCompleted BindableEvent fired by MinigameServer
+-- after validated endSession(), NOT raw client remotes (which can be spoofed).
+task.spawn(function()
+	local evts = ServerStorage:WaitForChild("Events", 10)
+	local sc   = evts and evts:WaitForChild("StationCompleted", 15)
+	if not sc then warn("[TutorialController] StationCompleted event not found"); return end
+	sc.Event:Connect(function(player, stationName)
+		local session = activeTutorials[player.UserId]
+		if not session then return end
+		if stationName == "mix" and session.step == 2 then
+			advance(player)                          -- 2 → 3
+		elseif stationName == "dough" and session.step == 3 then
+			-- Skip step 4 (auto-deposit already done); jump straight to step 5 (pull fridge)
+			session.step = 5
+			sendStep(player, 5)
+		elseif stationName == "oven"  and session.step == 6 then
+			advance(player)                          -- 6 → 7
+		elseif stationName == "frost" and session.step == 7 then
+			advance(player)                          -- 7 → 8
+		elseif stationName == "dress" and session.step == 8 then
+			advance(player)                          -- 8 → 9
+		end
+	end)
+	print("[TutorialController] StationCompleted gate wired for steps 2,3,6,7,8")
+end)
 
--- Step 5 gate: FridgePulled BindableEvent (fired by MinigameServer after fridge pull)
--- PullFromFridgeResult is server→client only — OnServerEvent would never fire.
+-- Step 5 gate: FridgePulled BindableEvent (server-authoritative — cannot be spoofed)
 task.spawn(function()
 	local evts = ServerStorage:WaitForChild("Events", 10)
 	local fe   = evts and evts:WaitForChild("FridgePulled", 10)
@@ -190,10 +197,6 @@ task.spawn(function()
 	end)
 	print("[TutorialController] FridgePulled gate wired for step 5")
 end)
-
-ovenResultRemote.OnServerEvent:Connect(makeGate(6))
-frostResultRemote.OnServerEvent:Connect(makeGate(7))
-dressResultRemote.OnServerEvent:Connect(makeGate(8))
 
 -- Step 9 gate: TutorialDelivered BindableEvent (fired by TestNPCSpawner after delivery)
 -- DeliveryResult is server→client only — OnServerEvent would never fire here.
