@@ -314,7 +314,9 @@ local function handleCarArrival()
         updateTV("Customer waiting...", "Walk up to take order")
 
         -- Spawn NPC in car
+        local orderTaken = false
         local npc = spawnCarNPC(function(player)
+            orderTaken = true
             -- Add to Dress TV queue so player can box it at the dress station
             local dressEntry = OrderManager.AddNPCOrder("Drive Thru", order.cookieId, {
                 packSize    = order.packSize,
@@ -338,7 +340,7 @@ local function handleCarArrival()
             print(string.format("[DriveThruServer] %s took drive-thru order | %s x%d → added to Dress TV",
                 player.Name, name, order.packSize))
 
-            -- Timeout after order is taken
+            -- Timeout after order is taken (delivery window)
             task.delay(WINDOW_TIMEOUT, function()
                 if currentOrder and currentOrder.car == car then
                     dismissCar(car, npc, "delivery timeout")
@@ -346,13 +348,17 @@ local function handleCarArrival()
             end)
         end)
 
-        -- Timeout if nobody takes the order
+        -- Timeout if nobody takes the order at all
         task.delay(TAKE_TIMEOUT, function()
-            if not currentOrder or currentOrder.car ~= car then return end
-            -- Order was not taken yet (currentOrder would have car set after take)
-            -- Check if currentOrder cookieId is set (means order was taken)
-            if currentOrder and currentOrder.cookieId then return end
-            dismissCar(car, npc, "take-order timeout")
+            if orderTaken then return end           -- order was already taken
+            if not car or not car.Parent then return end  -- car already gone
+            setWindowOpen(false)
+            updateTV("No Orders", "")
+            despawnNPC(npc)
+            moveCarToZ(car, CAR_EXIT_Z, CAR_EXIT_SEC, function()
+                if car.Parent then car:Destroy() end
+            end)
+            print("[DriveThruServer] Car dismissed: take-order timeout")
         end)
     end)
 end
