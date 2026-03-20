@@ -25,7 +25,7 @@ local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitF
 -- Car rotation 180° Y: local -Z→world +Z (front north), local -X→world +X (driver side faces window)
 local CAR_LANE_X     = -40    -- X lane position; driver side (local -X) ends up at X≈-33.8 (next to window)
 local CAR_SPAWN_Z    = -80    -- south, off-screen
-local CAR_STOP_Z     = -20    -- stopped: car front (local -Z end, +6.2 offset) reaches Z≈-13.8
+local CAR_STOP_Z     = -14    -- stopped at window
 local CAR_EXIT_Z     =  40    -- north, past building off-screen
 local CAR_Y          = 2.5
 local CAR_ARRIVE_SEC = 6
