@@ -30,9 +30,11 @@ frame = Instance.new("Frame")
 frame.Name             = "SummaryFrame"
 -- Use 45% of screen width (min 400px, max 560px) for a fuller panel on all screens
 local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 800
+local _vpH = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.Y or 900
 local _fw  = math.clamp(math.floor(_vpW * 0.45), 400, 560)
-frame.Size             = UDim2.new(0, _fw, 0, 520)
-frame.Position         = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -260)
+local _fh  = math.min(520, math.floor(_vpH * 0.90))
+frame.Size             = UDim2.new(0, _fw, 0, _fh)
+frame.Position         = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -math.floor(_fh/2))
 frame.BackgroundColor3 = C.BG
 frame.BackgroundTransparency = 0
 frame.BorderSizePixel  = 0
