@@ -29,6 +29,8 @@ end
     @param isVIP         boolean
 ]]
 function EconomyManager.CalculatePayout(cookieId, quantity, stars, timeRemaining, totalTime, comboStreak, isVIP)
+    stars       = math.clamp(stars or 1, 1, 5)           -- m5: clamp inputs
+    comboStreak = math.max(0, comboStreak or 0)
     local recipe  = EconomyManager.GetRecipeValue(cookieId)
     local base    = recipe.coins * math.max(1, quantity)
 

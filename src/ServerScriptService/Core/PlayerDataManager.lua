@@ -215,6 +215,9 @@ end
 function PlayerDataManager.SetBakeryName(player, name)
     local p = profiles[player.UserId]
     if not p then return end
+    name = tostring(name or ""):gsub("%s+", " "):match("^%s*(.-)%s*$")  -- trim
+    if #name == 0 then return end                                         -- m6: reject empty
+    name = string.sub(name, 1, 24)                                       -- m6: max 24 chars
     p.bakeryName = name
 end
 

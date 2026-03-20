@@ -75,6 +75,7 @@ end
 local function advance(player)
 	local session = activeTutorials[player.UserId]
 	if not session then return end
+	if session.step >= TOTAL_STEPS then return end  -- m10: prevent overrun
 	session.step += 1
 	sendStep(player, session.step)
 end
