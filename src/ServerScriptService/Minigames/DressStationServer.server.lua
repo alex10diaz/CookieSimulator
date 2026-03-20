@@ -27,7 +27,7 @@ local dressLocked = {}  -- player -> { orderId, cookieId, npcName }
 local DRESS_SCORE = 85
 
 -- CFrame players are teleported to before the topping minigame starts (Bug 4 fix)
-local DRESS_STATION_CF = CFrame.new(-28, 5, -33)
+local DRESS_STATION_CF = CFrame.new(-20.09, 5, -33.38) * CFrame.Angles(0, math.rad(90), 0) -- face -X toward dress table
 
 -- Returns topping label and color if any cookie in the id list has a dress field.
 -- Single unique label → that label; multiple → "Add Toppings"
