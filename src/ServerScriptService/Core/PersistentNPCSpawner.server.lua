@@ -266,6 +266,18 @@ takeOrder = function(player, npcId)
                 rem -= 1
             end
 
+            -- m8: validate warmer has enough stock to cover each type's slot count
+            local stockOk = true
+            for t, need in pairs(slotCounts) do
+                if (warmerCounts[t] or 0) < need then stockOk = false; break end
+            end
+            if not stockOk then
+                -- Not enough stock for this variety distribution — fall back to single-type
+                cookie   = CookieData.GetRandomFromMenu(MenuManager.GetActiveMenu())
+                packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
+                price    = calcPrice(cookie.id, packSize)
+            else
+
             -- Build & shuffle items array
             varItems = {}
             for _, t in ipairs(chosenTypes) do
@@ -629,9 +641,10 @@ local function startPatienceTicker(npcId)
             local data = npcs[npcId]
             if not data then break end
 
-            if data.state == "waiting_in_queue" or data.state == "seated" then
+            if data.state == "waiting_in_queue" or data.state == "seated" or data.state == "at_counter" then
+                -- m1: tick patience in all active wait states so the bar drives actual NPC leave
                 data.patience -= 1
-                if data.state == "seated" then
+                if data.state == "seated" or data.state == "at_counter" then
                     NPCSpawner.SetTimerText(data.model, formatTime(data.patience))
                 end
                 if data.patience <= 0 then
