@@ -57,78 +57,93 @@ end
 -- spawnWorkerRig(workerName, spawnCF)
 -- Builds a minimal NPC model and parents it to workspace.
 -- Returns the Model instance.
-local function spawnWorkerRig(workerName, spawnCF)
-	local rig = Instance.new("Model")
-	rig.Name = workerName
+local function spawnWorkerRig(workerName, spawnCF, hiringPlayer)
+	local rig
 
-	-- HumanoidRootPart ─────────────────────────────────────────────────────
-	local hrp = Instance.new("Part")
-	hrp.Name        = "HumanoidRootPart"
-	hrp.Size        = Vector3.new(2, 2, 1)
-	hrp.Anchored    = true
-	hrp.BrickColor  = BrickColor.new("Pastel brown")
-	hrp.TopSurface  = Enum.SurfaceType.Smooth
-	hrp.BottomSurface = Enum.SurfaceType.Smooth
-	hrp.CFrame      = spawnCF
-	hrp.Parent      = rig
+	-- Clone the hiring player's character so the worker looks like them
+	if hiringPlayer and hiringPlayer.Character then
+		rig = hiringPlayer.Character:Clone()
+		rig.Name = workerName
 
-	-- Head ─────────────────────────────────────────────────────────────────
-	local head = Instance.new("Part")
-	head.Name        = "Head"
-	head.Size        = Vector3.new(2, 1, 1)
-	head.Anchored    = true
-	head.BrickColor  = BrickColor.new("Pastel yellow")
-	head.TopSurface  = Enum.SurfaceType.Smooth
-	head.BottomSurface = Enum.SurfaceType.Smooth
-	head.CFrame      = spawnCF * CFrame.new(0, 1.5, 0)
-	head.Parent      = rig
+		-- Strip scripts / animators / sounds — keep visuals only
+		for _, obj in ipairs(rig:GetDescendants()) do
+			if obj:IsA("Script") or obj:IsA("LocalScript")
+				or obj:IsA("Animator") or obj:IsA("AnimationController")
+				or obj:IsA("Sound") then
+				obj:Destroy()
+			end
+		end
 
-	-- Humanoid ─────────────────────────────────────────────────────────────
-	local humanoid = Instance.new("Humanoid")
-	humanoid.Parent = rig
+		-- Hide default name/health bar
+		local hum = rig:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.DisplayDistanceType  = Enum.HumanoidDisplayDistanceType.None
+			hum.HealthDisplayDistance = 0
+		end
 
-	-- PrimaryPart must be set before parenting to workspace
-	rig.PrimaryPart = hrp
+		-- Anchor + disable collision on every part
+		for _, part in ipairs(rig:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Anchored   = true
+				part.CanCollide = false
+			end
+		end
 
-	-- NameTag BillboardGui ─────────────────────────────────────────────────
-	local nameBillboard = Instance.new("BillboardGui")
-	nameBillboard.Name          = "NameTag"
-	nameBillboard.Size          = UDim2.new(0, 140, 0, 36)
-	nameBillboard.StudsOffset   = Vector3.new(0, 3, 0)
-	nameBillboard.AlwaysOnTop   = true
-	nameBillboard.Parent        = hrp
+		-- Remove existing shirt/pants so baker uniform is clean
+		for _, obj in ipairs(rig:GetChildren()) do
+			if obj:IsA("Shirt") or obj:IsA("Pants") then obj:Destroy() end
+		end
 
-	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Name            = "NameLabel"
-	nameLabel.Size            = UDim2.new(1, 0, 1, 0)
-	nameLabel.BackgroundTransparency = 1
-	nameLabel.Text            = workerName
-	nameLabel.TextColor3      = Color3.new(1, 1, 1)
-	nameLabel.Font            = Enum.Font.GothamBold
-	nameLabel.TextScaled      = true
-	nameLabel.Parent          = nameBillboard
+		local hrp = rig:FindFirstChild("HumanoidRootPart")
+		if hrp then rig.PrimaryPart = hrp end
+		rig.Parent = workspace
+		if rig.PrimaryPart then rig:PivotTo(spawnCF) end
+	end
 
-	-- StatusBillboard BillboardGui ─────────────────────────────────────────
-	local statusBillboard = Instance.new("BillboardGui")
-	statusBillboard.Name        = "StatusBillboard"
-	statusBillboard.Size        = UDim2.new(0, 120, 0, 24)
-	statusBillboard.StudsOffset = Vector3.new(0, 2.2, 0)
-	statusBillboard.AlwaysOnTop = true
-	statusBillboard.Parent      = hrp
+	-- Fallback: simple block rig
+	if not rig then
+		rig = Instance.new("Model")
+		rig.Name = workerName
+		local hrp = Instance.new("Part")
+		hrp.Name = "HumanoidRootPart"; hrp.Size = Vector3.new(2,2,1)
+		hrp.Anchored = true; hrp.CanCollide = false
+		hrp.BrickColor = BrickColor.new("Pastel brown")
+		hrp.TopSurface = Enum.SurfaceType.Smooth; hrp.BottomSurface = Enum.SurfaceType.Smooth
+		hrp.CFrame = spawnCF; hrp.Parent = rig
+		local head = Instance.new("Part")
+		head.Name = "Head"; head.Size = Vector3.new(2,1,1)
+		head.Anchored = true; head.CanCollide = false
+		head.BrickColor = BrickColor.new("Pastel yellow")
+		head.TopSurface = Enum.SurfaceType.Smooth; head.BottomSurface = Enum.SurfaceType.Smooth
+		head.CFrame = spawnCF * CFrame.new(0,1.5,0); head.Parent = rig
+		local hum = Instance.new("Humanoid")
+		hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		hum.Parent = rig
+		rig.PrimaryPart = hrp
+		rig.Parent = workspace
+	end
 
-	local statusLabel = Instance.new("TextLabel")
-	statusLabel.Name            = "StatusLabel"
-	statusLabel.Size            = UDim2.new(1, 0, 1, 0)
-	statusLabel.BackgroundTransparency = 1
-	statusLabel.Text            = "Idle"
-	statusLabel.TextColor3      = Color3.fromRGB(180, 180, 180)
-	statusLabel.Font            = Enum.Font.Gotham
-	statusLabel.TextScaled      = true
-	statusLabel.Parent          = statusBillboard
-
-	-- Parent rig to workspace, then apply uniform ──────────────────────────
-	rig.Parent = workspace
 	applyBakerUniform(rig)
+
+	-- NameTag + StatusBillboard on HRP
+	local hrp = rig:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		local nb = Instance.new("BillboardGui")
+		nb.Name="NameTag"; nb.Size=UDim2.new(0,140,0,36)
+		nb.StudsOffset=Vector3.new(0,3,0); nb.AlwaysOnTop=true; nb.Parent=hrp
+		local nl = Instance.new("TextLabel", nb)
+		nl.Name="NameLabel"; nl.Size=UDim2.new(1,0,1,0)
+		nl.BackgroundTransparency=1; nl.Text=workerName
+		nl.TextColor3=Color3.new(1,1,1); nl.Font=Enum.Font.GothamBold; nl.TextScaled=true
+
+		local sb = Instance.new("BillboardGui")
+		sb.Name="StatusBillboard"; sb.Size=UDim2.new(0,120,0,24)
+		sb.StudsOffset=Vector3.new(0,2.2,0); sb.AlwaysOnTop=true; sb.Parent=hrp
+		local sl = Instance.new("TextLabel", sb)
+		sl.Name="StatusLabel"; sl.Size=UDim2.new(1,0,1,0)
+		sl.BackgroundTransparency=1; sl.Text="Idle"
+		sl.TextColor3=Color3.fromRGB(180,180,180); sl.Font=Enum.Font.Gotham; sl.TextScaled=true
+	end
 
 	return rig
 end
@@ -465,7 +480,7 @@ local function hireWorker(player, stationId)
 	local workerName = "Baker #" .. workerCount
 	local stationDef = STATIONS[stationId]
 	local proxy = makeProxy(workerName)
-	local rig   = spawnWorkerRig(workerName, stationDef.spawnCF)
+	local rig   = spawnWorkerRig(workerName, stationDef.spawnCF, player)
 
 	workers[stationId] = { rig = rig, proxy = proxy, active = true }
 	task.spawn(runWorkerLoop, stationId, rig, proxy)

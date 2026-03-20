@@ -15,7 +15,7 @@ local function fixBillboardLayout()
     for _, fridge in ipairs(fridgesFolder:GetChildren()) do
         for _, desc in ipairs(fridge:GetDescendants()) do
             if desc:IsA("BillboardGui") and desc.Name == "FridgeDisplay" then
-                desc.StudsOffset    = Vector3.new(0, 5, 0)   -- float well above the top of the model
+                desc.StudsOffset    = Vector3.new(0, 3, -2)  -- sit slightly above and back from the model
                 desc.Size           = UDim2.new(0, 240, 0, 80)
                 desc.AlwaysOnTop    = true
                 desc.LightInfluence = 0
