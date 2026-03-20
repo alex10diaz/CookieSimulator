@@ -103,8 +103,10 @@ local function setWinner(winner)
     local avatar    = bg:FindFirstChild("Avatar")
     local stars     = bg:FindFirstChild("Stars")
 
+    local sub = bg:FindFirstChild("Subtitle")
     if winner then
         if nameLabel then nameLabel.Text = winner.name end
+        if sub       then sub.Text = winner.station and ("Best " .. winner.station) or "Top Baker This Shift" end
         if stars     then stars.Text = "★ ★ ★ ★ ★" end
         if avatar then
             task.spawn(function()
@@ -122,6 +124,7 @@ local function setWinner(winner)
         end
     else
         if nameLabel then nameLabel.Text = "—" end
+        if sub       then sub.Text = "This shift's top baker" end
         if avatar    then avatar.Image   = "" end
         if stars     then stars.Text     = "" end
     end
