@@ -310,46 +310,62 @@ local function handleCarArrival()
         updateTV("Customer waiting...", "Walk up to take order")
 
         local orderTaken = false
-        local npc = spawnCarNPC(function(player)
-            orderTaken = true
-            local dressEntry = OrderManager.AddNPCOrder("Drive Thru", order.cookieId, {
-                packSize    = order.packSize,
-                price       = order.coins,
-                isDriveThru = true,
-            })
 
-            currentOrder = {
-                cookieId   = order.cookieId,
-                packSize   = order.packSize,
-                coins      = order.coins,
-                xp         = order.xp,
-                car        = car,
-                npc        = npc,
-                npcOrderId = dressEntry and dressEntry.orderId,
-            }
+        -- Prompt on car itself — no NPC at window
+        local carPrimary = car.PrimaryPart
+        if carPrimary then
+            local pp = Instance.new("ProximityPrompt")
+            pp.Name                  = "DriveThruOrderPrompt"
+            pp.ActionText            = "Take Order"
+            pp.ObjectText            = "Drive Thru"
+            pp.MaxActivationDistance = 14
+            pp.HoldDuration          = 0
+            pp.RequiresLineOfSight   = false
+            pp.Parent                = carPrimary
 
-            local cookie = CookieData.GetById(order.cookieId)
-            local name   = cookie and cookie.name or order.cookieId
-            updateTV(name .. " x" .. order.packSize, order.coins .. " coins")
-            hudUpdate:FireClient(player, nil, nil, name .. " x" .. order.packSize)
-            print(string.format("[DriveThruServer] %s took drive-thru order | %s x%d → added to Dress TV",
-                player.Name, name, order.packSize))
+            pp.Triggered:Connect(function(player)
+                if orderTaken then return end
+                orderTaken = true
+                pp:Destroy()
 
-            -- Timeout after order is taken (delivery window)
-            task.delay(WINDOW_TIMEOUT, function()
-                if currentOrder and currentOrder.car == car then
-                    dismissCar(car, npc, "delivery timeout")
-                end
+                local dressEntry = OrderManager.AddNPCOrder("Drive Thru", order.cookieId, {
+                    packSize    = order.packSize,
+                    price       = order.coins,
+                    isDriveThru = true,
+                })
+
+                currentOrder = {
+                    cookieId   = order.cookieId,
+                    packSize   = order.packSize,
+                    coins      = order.coins,
+                    xp         = order.xp,
+                    car        = car,
+                    npc        = nil,
+                    npcOrderId = dressEntry and dressEntry.orderId,
+                }
+
+                local cookie = CookieData.GetById(order.cookieId)
+                local name   = cookie and cookie.name or order.cookieId
+                updateTV(name .. " x" .. order.packSize, order.coins .. " coins")
+                hudUpdate:FireClient(player, nil, nil, name .. " x" .. order.packSize)
+                print(string.format("[DriveThruServer] %s took drive-thru order | %s x%d",
+                    player.Name, name, order.packSize))
+
+                -- Timeout after order is taken (delivery window)
+                task.delay(WINDOW_TIMEOUT, function()
+                    if currentOrder and currentOrder.car == car then
+                        dismissCar(car, nil, "delivery timeout")
+                    end
+                end)
             end)
-        end)
+        end
 
         -- Timeout if nobody takes the order at all
         task.delay(TAKE_TIMEOUT, function()
-            if orderTaken then return end           -- order was already taken
-            if not car or not car.Parent then return end  -- car already gone
+            if orderTaken then return end
+            if not car or not car.Parent then return end
             setWindowOpen(false)
             updateTV("No Orders", "")
-            despawnNPC(npc)
             moveCarToZ(car, CAR_EXIT_Z, CAR_EXIT_SEC, function()
                 if car.Parent then car:Destroy() end
             end)
