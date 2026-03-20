@@ -137,36 +137,39 @@ end
 local function refreshOrderPill()
     if #activeOrders == 0 then clearOrder(); return end
     local counts = {}; local order = {}
-    for _, id in ipairs(activeOrders) do
-        if not counts[id] then counts[id] = 0; table.insert(order, id) end
-        counts[id] += 1
+    for _, s in ipairs(activeOrders) do
+        if not counts[s] then counts[s] = 0; table.insert(order, s) end
+        counts[s] += 1
     end
     local lines = {}
-    for _, id in ipairs(order) do
-        local n = cookieName(id)
-        table.insert(lines, counts[id] > 1 and (n .. " \xC3\x97" .. counts[id]) or n)
+    for _, s in ipairs(order) do
+        table.insert(lines, counts[s] > 1 and (s .. " x" .. counts[s]) or s)
     end
     setOrder(table.concat(lines, "\n"))
 end
 
 hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
-    coinsLbl.Text = tostring(coins or 0)
-    -- If server explicitly clears (nil name after delivery), sync by removing one entry
-    if activeOrderName == nil and #activeOrders > 0 then
-        table.remove(activeOrders, 1)
+    if coins then coinsLbl.Text = tostring(coins) end
+    -- Server sends (nil,nil,name) when new order confirmed via cutscene
+    if activeOrderName ~= nil then
+        table.insert(activeOrders, activeOrderName)
+        refreshOrderPill()
     end
-    refreshOrderPill()
 end)
 
+-- POS tablet accept path: server sends cookieId + packSize
 acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
     if orderData and orderData.cookieId then
-        table.insert(activeOrders, orderData.cookieId)
+        local name = cookieName(orderData.cookieId)
+        if orderData.packSize then name = name .. " x" .. orderData.packSize end
+        table.insert(activeOrders, name)
         refreshOrderPill()
     end
 end)
 
 -- ── Delivery Flash ────────────────────────────────────────────────────────────
 deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
+    -- deliveryEvent is the single source of truth for removal
     if #activeOrders > 0 then table.remove(activeOrders, 1) end
     refreshOrderPill()
     local s      = math.clamp(stars or 0, 0, 5)
