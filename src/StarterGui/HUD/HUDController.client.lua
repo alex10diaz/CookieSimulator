@@ -190,7 +190,9 @@ hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
     if coins then coinsLbl.Text = tostring(coins) end
     -- Server sends (nil,nil,name) when new order confirmed via cutscene
     if activeOrderName ~= nil then
-        table.insert(activeOrders, activeOrderName)
+        -- Normalize unicode × to ASCII x so parseQty works uniformly
+        local normalized = tostring(activeOrderName):gsub("\xC3\x97", "x")
+        table.insert(activeOrders, normalized)
         refreshOrderPill()
     end
 end)

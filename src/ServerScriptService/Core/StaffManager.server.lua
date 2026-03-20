@@ -450,18 +450,11 @@ local STATIONS = {
 	dress = {
 		label   = "Packing",
 		spawnCF = workerSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32), Vector3.new(-1, 0, 0)),
-		work = function(proxy)
-			if workspace:GetAttribute("GameState") ~= "Open" then return false end
-			-- Only pack if an NPC has actually placed an order (prevents over-production)
-			local orders = OrderManager.GetNPCOrders()
-			if #orders == 0 then return false end
-			local _, forDress = OrderManager.GetWarmerCount()
-			if forDress == 0 then return false end
-			local entry = OrderManager.TakeFromWarmers(false)
-			if not entry then return false end
-			task.wait(6)
-			OrderManager.CreateBox(proxy, entry.batchId, WORKER_QUALITY, entry)
-			return true
+		work = function(_proxy)
+			-- Dress packing is handled by human players via the KDS screen.
+			-- AI dress worker is intentionally disabled to prevent it from consuming
+			-- warmer entries that players are about to pick up for locked orders.
+			return false
 		end,
 	},
 }
