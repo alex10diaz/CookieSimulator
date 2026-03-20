@@ -602,4 +602,17 @@ function OrderManager.ReturnToWarmers(entry)
     notify("WarmersUpdated", OrderManager.GetWarmerState())
 end
 
+-- RemapWarmerCookieIds(oldToNew)
+-- Called by StationRemapService after each shift remap.
+-- Updates cookieId on every pending warmer entry so TakeFromWarmersByType
+-- matches the physical warmer's new CookieId attribute.
+function OrderManager.RemapWarmerCookieIds(oldToNew)
+    for _, entry in ipairs(warmers) do
+        local newId = oldToNew[entry.cookieId]
+        if newId then
+            entry.cookieId = newId
+        end
+    end
+end
+
 return OrderManager

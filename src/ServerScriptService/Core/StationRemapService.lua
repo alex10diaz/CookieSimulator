@@ -8,6 +8,7 @@ local Workspace         = game:GetService("Workspace")
 
 local CookieData    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local OrderManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
 
 local stationRemappedRemote = RemoteManager.Get("StationRemapped")
 
@@ -50,6 +51,12 @@ function StationRemapService.RemapStations(orderedMenuIds)
     local warmers = getSortedWarmers()
     local fridges = getSortedFridges()
     local slotMap = {}  -- slot index -> cookieId (for remote broadcast)
+
+    -- Snapshot old CookieId per slot BEFORE overwriting (for warmer entry remap)
+    local oldCookieIdBySlot = {}
+    for _, wEntry in ipairs(warmers) do
+        oldCookieIdBySlot[wEntry.slot] = wEntry.model:GetAttribute("CookieId") or ""
+    end
 
     for slotIndex, cookieId in ipairs(orderedMenuIds) do
         local cookie = CookieData.GetById(cookieId)
@@ -110,6 +117,19 @@ function StationRemapService.RemapStations(orderedMenuIds)
                 prompt.ActionText = "Pull " .. cookie.name .. " Dough"
             end
         end
+    end
+
+    -- Sync OrderManager's internal warmer entries to the new CookieIds
+    local oldToNew = {}
+    for _, wEntry in ipairs(warmers) do
+        local oldId = oldCookieIdBySlot[wEntry.slot] or ""
+        local newId = wEntry.model:GetAttribute("CookieId") or ""
+        if oldId ~= "" and newId ~= "" and oldId ~= newId then
+            oldToNew[oldId] = newId
+        end
+    end
+    if next(oldToNew) then
+        OrderManager.RemapWarmerCookieIds(oldToNew)
     end
 
     -- Broadcast to all clients
