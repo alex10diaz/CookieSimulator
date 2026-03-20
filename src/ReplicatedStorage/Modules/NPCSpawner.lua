@@ -12,6 +12,32 @@ local TEMPLATE_NAME    = "NPCTemplate"
 local NPC_FOLDER       = "NPCs"
 local VIP_LABEL_OFFSET = Vector3.new(0, 2.5, 0)
 
+-- R6 default animation IDs
+local ANIM_IDLE = "rbxassetid://180435571"
+local ANIM_WALK = "rbxassetid://180426354"
+
+local function getAnimator(npcModel)
+    local hum = npcModel:FindFirstChildOfClass("Humanoid")
+    if not hum then return nil end
+    local existing = hum:FindFirstChildOfClass("Animator")
+    if existing then return existing end
+    return Instance.new("Animator", hum)
+end
+
+local function loadTrack(animator, assetId)
+    local anim = Instance.new("Animation")
+    anim.AnimationId = assetId
+    local ok, track = pcall(function() return animator:LoadAnimation(anim) end)
+    return ok and track or nil
+end
+
+local function playIdle(npcModel)
+    local animator = getAnimator(npcModel)
+    if not animator then return end
+    local track = loadTrack(animator, ANIM_IDLE)
+    if track then track.Looped = true; track:Play() end
+end
+
 -- Randomised appearance palettes
 local SKIN_TONES = {
     Color3.fromRGB(255,220,177), Color3.fromRGB(234,192,134),
