@@ -79,6 +79,16 @@ timerLbl.Size = UDim2.new(1,-12,1,0); timerLbl.Position = UDim2.new(0,6,0,0)
 timerLbl.BackgroundTransparency = 1; timerLbl.TextColor3 = C.WHITE
 timerLbl.Font = Enum.Font.GothamBold; timerLbl.TextScaled = true; timerLbl.Text = "PRE-OPEN  5:00"
 
+local skipBtn = Instance.new("TextButton", hudFrame)
+skipBtn.Name = "SkipPreOpenBtn"; skipBtn.Size = UDim2.new(0,148,0,26)
+skipBtn.Position = UDim2.new(0.5,-74,0,48); skipBtn.ZIndex = 5
+skipBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
+skipBtn.TextColor3 = Color3.fromRGB(160,160,170)
+skipBtn.Font = Enum.Font.Gotham; skipBtn.TextSize = 13
+skipBtn.Text = "Skip to Open  →"; skipBtn.Visible = false
+Instance.new("UICorner", skipBtn).CornerRadius = UDim.new(0,8)
+local _sk = Instance.new("UIStroke", skipBtn); _sk.Color = Color3.fromRGB(70,70,85); _sk.Thickness = 1
+
 -- ── ORDER PILL ────────────────────────────────────────────────────────────────
 local orderPill, orderStroke = pill("OrderPill", 215, {1,-225}, {0,10})
 orderPill.Size = UDim2.new(0, 215, 0, 94)
@@ -115,6 +125,7 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     timerStroke.Color = (key and key ~= "") and col or C.MUTED
     timerLbl.Text = (STATE_LABELS[state] or state) .. "  " .. formatTime(timeRemaining or 0)
     timerPill.Visible = not (state == "PreOpen" and player:GetAttribute("InTutorial"))
+    skipBtn.Visible = (state == "PreOpen" and not player:GetAttribute("InTutorial"))
     -- Clear active order pill when entering break or end-of-day
     if state == "Intermission" or state == "EndOfDay" then
         activeOrders = {}
@@ -124,6 +135,12 @@ end)
 
 player:GetAttributeChangedSignal("InTutorial"):Connect(function()
     if not player:GetAttribute("InTutorial") then timerPill.Visible = true end
+end)
+
+local skipRemote = RemoteManager.Get("SkipPreOpen")
+skipBtn.MouseButton1Click:Connect(function()
+    skipBtn.Visible = false
+    skipRemote:FireServer()
 end)
 
 -- ── Active order tracking (supports multiple simultaneous orders) ─────────────
