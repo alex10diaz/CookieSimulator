@@ -60,6 +60,7 @@ local hudUpdate                = RemoteManager.Get("HUDUpdate")
 local startOrderCutsceneRemote = RemoteManager.Get("StartOrderCutscene")
 local confirmOrderRemote       = RemoteManager.Get("ConfirmNPCOrder")
 local forceDropBoxRemote       = RemoteManager.Get("ForceDropBox")
+local npcOrderCancelledRemote  = RemoteManager.Get("NPCOrderCancelledClient")
 
 -- ─── STATE ────────────────────────────────────────────────────────────────────
 local rushHourActive = false  -- set by RushHourStart/End BindableEvents
@@ -418,9 +419,11 @@ npcLeave = function(npcId, reason)
         pendingBoxes[pendingKey] = nil
     end
 
-    -- Remove this NPC's order from the KDS queue
+    -- Remove this NPC's order from the KDS queue and notify all clients
     if data.order and data.order.orderId then
         OrderManager.CancelNPCOrder(data.order.orderId)
+        -- Tell HUDController to remove this order from the active-order pill
+        npcOrderCancelledRemote:FireAllClients(data.order.orderId, data.order.cookieId, data.order.packSize)
     end
 
     npcs[npcId] = nil

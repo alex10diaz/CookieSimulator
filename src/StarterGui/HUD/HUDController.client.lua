@@ -7,8 +7,9 @@ local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitFor
 local stateRemote    = RemoteManager.Get("GameStateChanged")
 local acceptedEvent  = RemoteManager.Get("OrderAccepted")
 local deliveryEvent  = RemoteManager.Get("DeliveryResult")
-local hudUpdateEvent    = RemoteManager.Get("HUDUpdate")
-local warmersStockEvent = RemoteManager.Get("WarmersStockUpdate")
+local hudUpdateEvent          = RemoteManager.Get("HUDUpdate")
+local warmersStockEvent       = RemoteManager.Get("WarmersStockUpdate")
+local npcOrderCancelledEvent  = RemoteManager.Get("NPCOrderCancelledClient")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -114,6 +115,11 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     timerStroke.Color = (key and key ~= "") and col or C.MUTED
     timerLbl.Text = (STATE_LABELS[state] or state) .. "  " .. formatTime(timeRemaining or 0)
     timerPill.Visible = not (state == "PreOpen" and player:GetAttribute("InTutorial"))
+    -- Clear active order pill when entering break or end-of-day
+    if state == "Intermission" or state == "EndOfDay" then
+        activeOrders = {}
+        clearOrder()
+    end
 end)
 
 player:GetAttributeChangedSignal("InTutorial"):Connect(function()
@@ -218,5 +224,25 @@ end)
 
 -- warmersStockEvent kept for compatibility but display removed (names shown on warmer models)
 warmersStockEvent.OnClientEvent:Connect(function() end)
+
+-- NPC order cancelled (patience run out / NPC left before delivery)
+-- Remove the first active-order entry whose display string contains the cookie name
+npcOrderCancelledEvent.OnClientEvent:Connect(function(_orderId, cookieId, packSize)
+    if #activeOrders == 0 then return end
+    -- Build the display string the same way acceptedEvent does
+    local targetName = cookieName(cookieId or "")
+    if packSize and packSize > 1 then targetName = targetName .. " x" .. packSize end
+    -- Remove first matching entry (FIFO)
+    for i, entry in ipairs(activeOrders) do
+        if entry == targetName then
+            table.remove(activeOrders, i)
+            refreshOrderPill()
+            return
+        end
+    end
+    -- Fallback: remove oldest if no string match (e.g. variety orders)
+    table.remove(activeOrders, 1)
+    refreshOrderPill()
+end)
 
 print("[HUDController] Ready.")
