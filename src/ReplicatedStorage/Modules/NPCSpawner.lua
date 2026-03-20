@@ -142,6 +142,7 @@ function NPCSpawner.CreateNPC(config)
         npcFolder.Parent = Workspace
     end
     npc.Parent = npcFolder
+    playIdle(npc)
     return npc
 end
 
@@ -157,8 +158,23 @@ function NPCSpawner.MoveTo(npcModel, targetPos, onArrived)
     end
 
     local cancelled = false
+    local walkTrack = nil
+    do
+        local animator = getAnimator(npcModel)
+        if animator then
+            walkTrack = loadTrack(animator, ANIM_WALK)
+            if walkTrack then walkTrack.Looped = true; walkTrack:Play() end
+        end
+    end
+
+    local function stopWalk()
+        if walkTrack then pcall(function() walkTrack:Stop() end); walkTrack = nil end
+        playIdle(npcModel)
+    end
+
     local function cancel()
         cancelled = true
+        stopWalk()
         pcall(function() humanoid:MoveTo(hrp.Position) end)
     end
 
@@ -184,6 +200,7 @@ function NPCSpawner.MoveTo(npcModel, targetPos, onArrived)
         local conn
         conn = humanoid.MoveToFinished:Connect(function(reached)
             conn:Disconnect()
+            stopWalk()
             if not cancelled and onArrived then onArrived(reached) end
         end)
         return cancel
@@ -199,6 +216,7 @@ function NPCSpawner.MoveTo(npcModel, targetPos, onArrived)
         idx += 1
         if not reached or idx > #waypoints then
             conn:Disconnect()
+            stopWalk()
             if onArrived then onArrived(reached) end
             return
         end
