@@ -354,10 +354,17 @@ local function getTutorialSpawnCF(partName, fallback)
 	return part and part.CFrame or fallback
 end
 
+-- workerSpawnCF: lifts the spawn 3 studs off floor and faces the worker toward their station
+local function workerSpawnCF(name, fallback, lookDir)
+	local base = getTutorialSpawnCF(name, fallback)
+	local pos  = base.Position + Vector3.new(0, 3, 0)
+	return CFrame.lookAt(pos, pos + lookDir)
+end
+
 local STATIONS = {
 	mix = {
 		label   = "Mixing",
-		spawnCF = getTutorialSpawnCF("TutorialMixerSpawn",     CFrame.new(18, 5, -17)),
+		spawnCF = workerSpawnCF("TutorialMixerSpawn",     CFrame.new(18, 5, -17),  Vector3.new( 0, 0,-1)),
 		work = function(proxy)
 			-- Pick from active menu warmers, targeting the lowest-stocked fridge
 			local fridgeState   = OrderManager.GetFridgeState()
@@ -384,7 +391,7 @@ local STATIONS = {
 	},
 	dough = {
 		label   = "Shaping",
-		spawnCF = getTutorialSpawnCF("TutorialDoughTableSpawn", CFrame.new(0, 5, -34)),
+		spawnCF = workerSpawnCF("TutorialDoughTableSpawn", CFrame.new(0, 5, -34),  Vector3.new(-1, 0, 0)),
 		work = function(proxy)
 			local batch = OrderManager.GetBatchAtStage("dough")
 			if not batch then return false end
@@ -395,7 +402,7 @@ local STATIONS = {
 	},
 	oven = {
 		label   = "Baking",
-		spawnCF = getTutorialSpawnCF("TutorialOvenSpawn",       CFrame.new(-2, 8, -85)),
+		spawnCF = workerSpawnCF("TutorialOvenSpawn",       CFrame.new(-2, 8, -85),  Vector3.new( 0, 0,-1)),
 		work = function(proxy)
 			-- Pre-check: any fridge has stock before polling each one
 			local fridgeState = OrderManager.GetFridgeState()
@@ -423,7 +430,7 @@ local STATIONS = {
 	},
 	frost = {
 		label   = "Frosting",
-		spawnCF = getTutorialSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36)),
+		spawnCF = workerSpawnCF("TutorialFrostTableSpawn", CFrame.new(20, 6, -36), Vector3.new( 0, 0,-1)),
 		work = function(proxy)
 			local forFrost = OrderManager.GetWarmerCount()
 			if forFrost == 0 then return false end
@@ -439,7 +446,7 @@ local STATIONS = {
 	},
 	dress = {
 		label   = "Packing",
-		spawnCF = getTutorialSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32)),
+		spawnCF = workerSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32), Vector3.new(-1, 0, 0)),
 		work = function(proxy)
 			if workspace:GetAttribute("GameState") ~= "Open" then return false end
 			-- Only pack if an NPC has actually placed an order (prevents over-production)
