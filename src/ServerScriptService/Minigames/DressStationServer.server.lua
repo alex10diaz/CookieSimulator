@@ -313,27 +313,28 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
             player.Name, orderId, #uniqueTypes))
     else
         -- ── Single-type order ──────────────────────────────────────────────────
-        -- Reserve the warmer entry NOW to prevent the AI worker racing the player
-        local reservedEntry = OrderManager.TakeFromWarmersByType(targetOrder.cookieId, targetOrder.packSize or 1)
-        if not reservedEntry then
+        -- Validate stock exists (don't deduct yet — deduction happens at physical pickup
+        -- so the warmer count stays accurate on the display while player walks over).
+        local available = warmerCounts[targetOrder.cookieId] or 0
+        local needed    = targetOrder.packSize or 1
+        if available < needed then
             local name = COOKIE_NAMES[targetOrder.cookieId] or targetOrder.cookieId
-            orderLocked:FireClient(player, { state = "error", message = "No " .. name .. " in warmers" })
+            orderLocked:FireClient(player, { state = "error", message = "Not enough " .. name .. " in warmers" })
             return
         end
         dressLocked[player] = {
-            orderId       = orderId,
-            cookieId      = targetOrder.cookieId,
-            npcName       = targetOrder.npcName,
-            packSize      = targetOrder.packSize,
-            reservedEntry = reservedEntry,
+            orderId  = orderId,
+            cookieId = targetOrder.cookieId,
+            npcName  = targetOrder.npcName,
+            packSize = needed,
         }
         orderLocked:FireClient(player, {
             state      = "locked",
             cookieId   = targetOrder.cookieId,
             cookieName = COOKIE_NAMES[targetOrder.cookieId] or targetOrder.cookieId,
         })
-        print(string.format("[DressStation] %s locked order #%d (%s) — warmer entry reserved",
-            player.Name, orderId, targetOrder.cookieId))
+        print(string.format("[DressStation] %s locked order #%d (%s x%d) — awaiting warmer pickup",
+            player.Name, orderId, targetOrder.cookieId, needed))
     end
 end)
 
@@ -409,14 +410,13 @@ local function hookWarmerPrompt(prompt, model)
             -- ── Single-type order ──────────────────────────────────────────────
             if lock.cookieId ~= cookieId then return end
 
-            -- Use the pre-reserved entry (taken at lock time to prevent AI racing)
-            local entry = lock.reservedEntry or OrderManager.TakeFromWarmersByType(cookieId, lock.packSize or 1)
+            -- Deduct from warmers now at actual physical pickup (not at lock time)
+            local entry = OrderManager.TakeFromWarmersByType(cookieId, lock.packSize or 1)
             if not entry then
                 orderLocked:FireClient(player, { state = "error", message = "Warmer is empty" })
                 dressLocked[player] = nil
                 return
             end
-            lock.reservedEntry = nil  -- clear so cancel doesn't double-return
 
             -- Check for toppings before creating the box
             local toppingLabel, toppingColor = getToppingInfo({ cookieId })

@@ -553,6 +553,10 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
 		setWarmersEnabled(false)
 	elseif state == "Open" then
 		setWarmersEnabled(true)
+	elseif state == "Intermission" then
+		-- Players are in the back room — disable warmer access and pause AI workers
+		dismissAllWorkers()
+		setWarmersEnabled(false)
 	elseif state == "EndOfDay" or state == "Lobby" then
 		destroyHirePrompts()
 		dismissAllWorkers()
