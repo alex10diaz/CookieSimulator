@@ -172,8 +172,6 @@ local function spawnCar()
             if d:IsA("BasePart") then car.PrimaryPart = d; break end
         end
     end
-    -- 180° Y rotation: front (local -Z) faces world +Z (north toward building)
-    -- driver side (local -X / Head) faces world +X (east, toward window at X≈-33.5)
     car:PivotTo(CFrame.new(CAR_LANE_X, CAR_Y, CAR_SPAWN_Z) * CFrame.Angles(0, math.rad(180), 0))
     return car
 end
@@ -186,24 +184,20 @@ local function spawnCarNPC(onTakeOrder)
     npc.Name   = "DriveThruCustomer"
     npc.Parent = driveThruFolder
 
-    -- Anchor and disable AI
     for _, d in ipairs(npc:GetDescendants()) do
         if d:IsA("BasePart") then d.Anchored = true; d.CanCollide = false end
     end
     local hum = npc:FindFirstChildWhichIsA("Humanoid")
     if hum then hum.WalkSpeed = 0; hum.JumpPower = 0 end
 
-    -- Hide patience/face guis that don't apply
     local head = npc:FindFirstChild("Head")
     if head then
         local pg = head:FindFirstChild("PatienceGui")
         if pg then pg.Enabled = false end
     end
 
-    -- Position NPC seated at window side of car (PivotTo moves entire model)
     npc:PivotTo(NPC_CF)
 
-    -- Set up "Take Order" prompt (reuse existing OrderPrompt)
     if head then
         local pp = head:FindFirstChild("OrderPrompt")
         if not pp then
@@ -229,6 +223,13 @@ end
 
 local function despawnNPC(npc)
     if npc and npc.Parent then npc:Destroy() end
+end
+
+local function cleanupNPC()
+    if driveThruFolder then
+        local leftover = driveThruFolder:FindFirstChild("DriveThruCustomer")
+        if leftover then leftover:Destroy() end
+    end
 end
 
 -- ── DELIVERY PROMPT ────────────────────────────────────────────────────────────
@@ -276,7 +277,6 @@ local function dismissCar(car, npc, reason)
     if not currentOrder or currentOrder.car ~= car then return end
     print("[DriveThruServer] Car dismissed: " .. reason)
     clearDeliveryPrompt()
-    -- Remove the drive-thru entry from the Dress TV queue
     if currentOrder.npcOrderId then
         OrderManager.CancelNPCOrder(currentOrder.npcOrderId)
     end
@@ -286,17 +286,13 @@ local function dismissCar(car, npc, reason)
     setWindowOpen(false)
     moveCarToZ(car, CAR_EXIT_Z, CAR_EXIT_SEC, function()
         car:Destroy()
-        if driveThruFolder then
-            local leftover = driveThruFolder:FindFirstChild("DriveThruCustomer")
-            if leftover then leftover:Destroy() end
-        end
+        cleanupNPC()
     end)
 end
 
 -- ── CAR ARRIVAL FLOW ──────────────────────────────────────────────────────────
 local function handleCarArrival()
     if currentOrder then return end
-    -- Also block if a car from a previous cycle is still physically present
     if driveThruFolder and driveThruFolder:FindFirstChild("ActiveDriveThruCar") then return end
 
     local order = generateOrder()
@@ -305,19 +301,15 @@ local function handleCarArrival()
     local car = spawnCar()
     if not car then return end
 
-    -- Drive to window
     moveCarToZ(car, CAR_STOP_Z, CAR_ARRIVE_SEC, function()
         if currentOrder then car:Destroy(); return end
 
-        -- Window slides open
         setWindowOpen(true)
         updateTV("Customer waiting...", "Walk up to take order")
 
-        -- Spawn NPC in car
         local orderTaken = false
         local npc = spawnCarNPC(function(player)
             orderTaken = true
-            -- Add to Dress TV queue so player can box it at the dress station
             local dressEntry = OrderManager.AddNPCOrder("Drive Thru", order.cookieId, {
                 packSize    = order.packSize,
                 price       = order.coins,
@@ -375,14 +367,12 @@ OrderManager.On("BoxCreated", function(box)
     addDeliveryPrompt(function(player)
         if not currentOrder or currentOrder.car ~= order.car then return end
 
-        -- Capture locals before clearing state
-        local deliverCar = order.car
-        local deliverNpc = order.npc
+        local deliverCar        = order.car
+        local deliverNpc        = order.npc
         local deliverNpcOrderId = order.npcOrderId
-        local deliverCoins = tonumber(order.coins) or 0
-        local deliverXp    = tonumber(order.xp) or 0
+        local deliverCoins      = tonumber(order.coins) or 0
+        local deliverXp         = tonumber(order.xp) or 0
 
-        -- Clear state and close window immediately so no double-delivery
         currentOrder = nil
         updateTV("No Orders", "")
         clearDeliveryPrompt()
@@ -392,19 +382,13 @@ OrderManager.On("BoxCreated", function(box)
         setWindowOpen(false)
         moveCarToZ(deliverCar, CAR_EXIT_Z, CAR_EXIT_SEC, function()
             deliverCar:Destroy()
-            -- Safety net: destroy any NPC that wasn't cleaned up
-            if driveThruFolder then
-                local leftover = driveThruFolder:FindFirstChild("DriveThruCustomer")
-                if leftover then leftover:Destroy() end
-            end
+            cleanupNPC()
         end)
 
-        -- Remove from Dress TV queue
         if deliverNpcOrderId then
             OrderManager.CancelNPCOrder(deliverNpcOrderId)
         end
 
-        -- Award rewards
         PlayerDataManager.AddCoins(player, deliverCoins)
         PlayerDataManager.AddXP(player, deliverXp)
         SessionStats.RecordDelivery(5, deliverCoins, 0, order.packSize)
@@ -461,6 +445,7 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
             currentOrder = nil
             clearDeliveryPrompt()
             despawnNPC(npc)
+            cleanupNPC()
             setWindowOpen(false)
             updateTV("CLOSED", "")
             if car then car:Destroy() end
