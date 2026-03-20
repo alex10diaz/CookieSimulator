@@ -365,6 +365,10 @@ Players.PlayerRemoving:Connect(function(player)
     if session and session.station == "dough" and session.batchId then
         doughLock[session.batchId] = nil
     end
+    -- m2: clear postOvenScores for abandoned frost/dress sessions
+    if session and (session.station == "frost" or session.station == "dress") and session.batchId then
+        OrderManager.ClearPostOvenScore(session.batchId)
+    end
     activeSessions[player] = nil
     ovenSession[player]    = nil
     dressPending[player]   = nil

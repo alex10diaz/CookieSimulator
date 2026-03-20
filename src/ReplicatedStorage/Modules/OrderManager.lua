@@ -615,4 +615,9 @@ function OrderManager.RemapWarmerCookieIds(oldToNew)
     end
 end
 
+-- m2: clear postOvenScores entry when a session is abandoned (player disconnect mid-frost/dress)
+function OrderManager.ClearPostOvenScore(batchId)
+    postOvenScores[batchId] = nil
+end
+
 return OrderManager
