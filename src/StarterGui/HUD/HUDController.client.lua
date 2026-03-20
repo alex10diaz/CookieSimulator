@@ -79,9 +79,9 @@ timerLbl.Size = UDim2.new(1,-12,1,0); timerLbl.Position = UDim2.new(0,6,0,0)
 timerLbl.BackgroundTransparency = 1; timerLbl.TextColor3 = C.WHITE
 timerLbl.Font = Enum.Font.GothamBold; timerLbl.TextScaled = true; timerLbl.Text = "PRE-OPEN  5:00"
 
-local skipBtn = Instance.new("TextButton", hudFrame)
+local skipBtn = Instance.new("TextButton", hud)
 skipBtn.Name = "SkipPreOpenBtn"; skipBtn.Size = UDim2.new(0,148,0,26)
-skipBtn.Position = UDim2.new(0.5,-74,0,48); skipBtn.ZIndex = 5
+skipBtn.Position = UDim2.new(0.5,-74,0,60); skipBtn.ZIndex = 5
 skipBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
 skipBtn.TextColor3 = Color3.fromRGB(160,160,170)
 skipBtn.Font = Enum.Font.Gotham; skipBtn.TextSize = 13
@@ -115,6 +115,17 @@ end
 local function cookieName(id)
     if not id then return "" end
     return (id:gsub("_"," "):gsub("(%a)([%w]*)", function(a,b) return a:upper()..b end))
+end
+-- Strips trailing quantity suffix (" x4", " ×4", " X4") from a display string.
+-- Returns baseName, quantity (default qty=1 if no suffix found).
+local function parseQty(s)
+    local base, n = s:match("^(.-)%s+[xX](%d+)$")
+    if not base then
+        -- Unicode × (UTF-8 0xC3 0x97) — sent by PersistentNPCSpawner
+        base, n = s:match("^(.-)%s+\xC3\x97(%d+)$")
+    end
+    if base and n then return base, tonumber(n) end
+    return s, 1
 end
 
 -- ── Event handlers ────────────────────────────────────────────────────────────
@@ -159,14 +170,18 @@ end
 
 local function refreshOrderPill()
     if #activeOrders == 0 then clearOrder(); return end
-    local counts = {}; local order = {}
+    -- Parse each entry into (baseName, qty) then aggregate totals by baseName
+    local totals = {}   -- baseName -> total qty
+    local order  = {}   -- insertion-order list of baseNames
     for _, s in ipairs(activeOrders) do
-        if not counts[s] then counts[s] = 0; table.insert(order, s) end
-        counts[s] += 1
+        local base, qty = parseQty(s)
+        if not totals[base] then totals[base] = 0; table.insert(order, base) end
+        totals[base] += qty
     end
     local lines = {}
-    for _, s in ipairs(order) do
-        table.insert(lines, counts[s] > 1 and (s .. " x" .. counts[s]) or s)
+    for _, base in ipairs(order) do
+        local t = totals[base]
+        table.insert(lines, t > 1 and (base .. " x" .. t) or base)
     end
     setOrder(table.concat(lines, "\n"))
 end
