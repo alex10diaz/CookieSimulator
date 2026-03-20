@@ -35,10 +35,11 @@ startRemote.OnClientEvent:Connect(function(settings, label)
 
     local sg = Instance.new("ScreenGui")
     sg.Name = "MixGui"
-    sg.ResetOnSpawn = false
-    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder = 15
-    sg.Parent = player:WaitForChild("PlayerGui")
+    sg.ResetOnSpawn          = false
+    sg.ZIndexBehavior        = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder          = 15
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension  -- m9
+    sg.Parent                = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
     local _fw = math.min(380, workspace.CurrentCamera.ViewportSize.X - 20)

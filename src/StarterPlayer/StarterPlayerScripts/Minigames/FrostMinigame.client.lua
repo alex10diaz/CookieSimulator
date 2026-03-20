@@ -37,10 +37,11 @@ startRemote.OnClientEvent:Connect(function()
 
     local sg = Instance.new("ScreenGui")
     sg.Name           = "FrostGui"
-    sg.ResetOnSpawn   = false
-    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder   = 15
-    sg.Parent         = player:WaitForChild("PlayerGui")
+    sg.ResetOnSpawn          = false
+    sg.ZIndexBehavior        = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder          = 15
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension  -- m9
+    sg.Parent                = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
     local _fw = math.min(420, workspace.CurrentCamera.ViewportSize.X - 20)
