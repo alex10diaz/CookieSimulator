@@ -334,17 +334,18 @@ local function setWarmersEnabled(enabled)
 	local warmersFolder = workspace:FindFirstChild("Warmers")
 	if not warmersFolder then return end
 	for _, warmer in ipairs(warmersFolder:GetChildren()) do
-		-- Only enable prompts on warmers that have an active cookie assignment
+		-- Only toggle prompts on warmers that have an active cookie assignment
 		local cookieId = warmer:GetAttribute("CookieId") or ""
 		if cookieId ~= "" then
-			local shell  = warmer:FindFirstChild("Shell")
-			local prompt = shell and shell:FindFirstChild("WarmerPrompt")
-			if prompt then
-				prompt.Enabled = enabled
-			end
+			-- WarmerPickupPrompt: used by players picking up for KDS orders (Open only)
+			local wpp = warmer:FindFirstChild("WarmerPickupPrompt", true)
+			if wpp then wpp.Enabled = enabled end
 		end
+		-- WarmerPrompt is never used by human players — always keep disabled
+		local wp = warmer:FindFirstChild("WarmerPrompt", true)
+		if wp then wp.Enabled = false end
 	end
-	print("[StaffManager] WarmerPrompts", enabled and "enabled" or "disabled")
+	print("[StaffManager] Warmer pickup prompts " .. (enabled and "enabled" or "disabled"))
 end
 
 -- ── TASK 2: STATIONS + runWorkerLoop ─────────────────────────────────────────
@@ -373,22 +374,35 @@ local STATIONS = {
 		label   = "Mixing",
 		spawnCF = workerSpawnCF("TutorialMixerSpawn",     CFrame.new(18, 5, -17),  Vector3.new( 0, 0,-1)),
 		work = function(proxy)
-			-- Pick from active menu warmers, targeting the lowest-stocked fridge
-			local fridgeState   = OrderManager.GetFridgeState()
+			-- Build list of active menu cookies from warmer CookieId attributes
 			local warmersFolder = workspace:FindFirstChild("Warmers")
-			local menuCookies   = {}; local _seen = {}
+			local menuCookies = {}; local _seen = {}
 			if warmersFolder then
 				for _, model in ipairs(warmersFolder:GetChildren()) do
 					local cId = model:GetAttribute("CookieId")
-					if cId and not _seen[cId] then _seen[cId] = true; table.insert(menuCookies, cId) end
+					if cId and cId ~= "" and not _seen[cId] then
+						_seen[cId] = true; table.insert(menuCookies, cId)
+					end
 				end
 			end
 			if #menuCookies == 0 then return false end
-			local cookieId = menuCookies[1]; local lowestCount = math.huge
+
+			-- Balance by combined warmer + fridge stock so no one type piles up.
+			-- Cookie with the lowest total gets priority; ties broken by menu order.
+			local warmerCounts = OrderManager.GetWarmerCountsByType()
+			local fridgeState  = OrderManager.GetFridgeState()
+			local cookieId     = menuCookies[1]
+			local lowestTotal  = math.huge
 			for _, cId in ipairs(menuCookies) do
-				local cnt = fridgeState["fridge_" .. cId] or 0
-				if cnt < lowestCount then lowestCount = cnt; cookieId = cId end
+				local warmerStock = warmerCounts[cId] or 0
+				local fridgeStock = fridgeState["fridge_" .. cId] or 0
+				local total = warmerStock + fridgeStock
+				if total < lowestTotal then
+					lowestTotal = total
+					cookieId    = cId
+				end
 			end
+
 			local batchId = OrderManager.TryStartBatch(proxy, cookieId)
 			if not batchId then return false end
 			task.wait(8)

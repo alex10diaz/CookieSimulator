@@ -50,6 +50,8 @@ local function hideWarmerSlot(model)
             desc.Enabled = false
         elseif desc:IsA("BillboardGui") then
             desc.Enabled = false
+        elseif desc:IsA("SurfaceGui") then
+            desc.Enabled = false
         end
     end
     local doorPanel = model:FindFirstChild("DoorPanel")
@@ -65,20 +67,22 @@ end
 
 -- Re-enable prompts and UI for an active warmer slot
 local function showWarmerSlot(model, cookie)
+    -- WarmerPrompt is NEVER used by human players (pipeline fills warmers automatically).
+    -- Disable it on all active slots so it never appears.
+    local warmerPrompt = model:FindFirstChild("WarmerPrompt", true)
+    if warmerPrompt then warmerPrompt.Enabled = false end
+
     local shell = model:FindFirstChild("Shell")
     if shell then
         for _, desc in ipairs(shell:GetDescendants()) do
             if desc:IsA("BillboardGui") then desc.Enabled = true end
         end
-        -- WarmerPickupPrompt: always enabled, shows cookie name
-        local wpp = shell:FindFirstChild("WarmerPickupPrompt")
+        -- WarmerPickupPrompt: update title; Enabled state managed by setWarmersEnabled per phase
+        local wpp = shell:FindFirstChild("WarmerPickupPrompt", true)
         if wpp then
             wpp.ActionText = "Take " .. cookie.name
-            wpp.Enabled    = true
+            -- Leave Enabled as-is here; StaffManager.setWarmersEnabled controls it per phase
         end
-        -- WarmerPrompt: ActionText updated; Enabled is managed by StaffManager per GameState
-        local wp = shell:FindFirstChild("WarmerPrompt")
-        if wp then wp.ActionText = "Deposit " .. cookie.name end
 
         -- WarmerNameGui BillboardGui
         local nameBB = shell:FindFirstChild("WarmerNameGui")
