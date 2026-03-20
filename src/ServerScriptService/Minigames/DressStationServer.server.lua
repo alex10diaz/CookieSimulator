@@ -21,8 +21,9 @@ local startToppingRemote    = RemoteManager.Get("StartToppingMinigame")
 local toppingCompleteRemote = RemoteManager.Get("ToppingComplete")
 
 -- ─── State ────────────────────────────────────────────────────────────────────
-local activeKDS   = {}  -- player -> true  (KDS UI is open)
-local dressLocked = {}  -- player -> { orderId, cookieId, npcName }
+local activeKDS     = {}  -- player -> true  (KDS UI is open)
+local dressLocked   = {}  -- player -> { orderId, cookieId, npcName }
+local orderLockedBy = {}  -- orderId -> player; prevents two players locking same order
 
 local DRESS_SCORE = 85
 
@@ -256,10 +257,25 @@ end
 for _, desc in ipairs(Workspace:GetDescendants()) do hookDressPrompt(desc) end
 Workspace.DescendantAdded:Connect(hookDressPrompt)
 
+-- Release both dressLocked and orderLockedBy in one call
+local function clearDressLock(player)
+    local lock = dressLocked[player]
+    if lock and lock.orderId then
+        orderLockedBy[lock.orderId] = nil
+    end
+    dressLocked[player] = nil
+end
+
 -- ─── Order Lock (player selects order from KDS) ───────────────────────────────
 lockOrder.OnServerEvent:Connect(function(player, orderId)
     if not activeKDS[player] then return end
     if type(orderId) ~= "number" then return end
+
+    -- C4: Prevent two players locking the same order simultaneously
+    if orderLockedBy[orderId] then
+        orderLocked:FireClient(player, { state = "error", message = "Order already being handled" })
+        return
+    end
 
     local targetOrder = nil
     for _, o in ipairs(OrderManager.GetNPCOrders()) do
