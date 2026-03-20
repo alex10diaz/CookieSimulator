@@ -87,7 +87,19 @@ function SessionStats.GetTopEmployee()
         local score = d.boxes * 30 + d.dough * 20 + mixAvg + ovenAvg + frostAvg
         if score > bestScore then
             bestScore = score
-            best = { name = d.name, userId = uid }
+            -- Find which station contributed most to this player's score.
+            local stationScores = {
+                Mixer     = mixAvg,
+                Baller    = d.dough * 20,
+                Baker     = ovenAvg,
+                Glazer    = frostAvg,
+                Decorator = d.boxes * 30,
+            }
+            local topStation, topVal = "Baker", -1
+            for sName, sVal in pairs(stationScores) do
+                if sVal > topVal then topStation = sName; topVal = sVal end
+            end
+            best = { name = d.name, userId = uid, station = topStation }
         end
     end
     return best

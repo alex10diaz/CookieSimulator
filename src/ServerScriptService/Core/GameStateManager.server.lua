@@ -24,9 +24,14 @@ local BACK_ROOM_CF = CFrame.new(0, 3, -127)
 local FRONT_SPAWN_CF = CFrame.new(0, 5, 15)
 
 local function getFrontSpawnCF()
-    -- Look for a Part named "PlayerFrontSpawn" (not "FrontSpawn" which is NPC-only).
+    -- Prefer an explicit PlayerFrontSpawn part if placed in workspace.
     local sp = workspace:FindFirstChild("PlayerFrontSpawn")
     if sp then return sp.CFrame + Vector3.new(0, 3, 0) end
+    -- Fall back to the GameSpawn SpawnLocation (used by TutorialController).
+    local gs = workspace:FindFirstChild("GameSpawn")
+    if gs and gs:IsA("BasePart") then
+        return CFrame.new(gs.Position + Vector3.new(0, 3.5, 0))
+    end
     return FRONT_SPAWN_CF
 end
 
