@@ -39,8 +39,9 @@ startRemote.OnClientEvent:Connect(function()
     sg.Parent         = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
-    bg.Size                   = UDim2.new(0, 360, 0, 440)
-    bg.Position               = UDim2.new(0.5, -180, 0.5, -220)
+    local _fw = math.min(360, workspace.CurrentCamera.ViewportSize.X - 20)
+    bg.Size                   = UDim2.new(0, _fw, 0, 440)
+    bg.Position               = UDim2.new(0.5, -_fw/2, 0.5, -220)
     bg.BackgroundColor3       = Color3.fromRGB(16, 12, 8)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
