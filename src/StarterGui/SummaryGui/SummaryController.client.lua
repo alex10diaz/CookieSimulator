@@ -28,10 +28,11 @@ if frame then frame:Destroy() end
 
 frame = Instance.new("Frame")
 frame.Name             = "SummaryFrame"
-local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 500
-local _fw   = math.min(430, _vpW - 20)
-frame.Size             = UDim2.new(0, _fw, 0, 506)
-frame.Position         = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -253)
+-- Use 45% of screen width (min 400px, max 560px) for a fuller panel on all screens
+local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 800
+local _fw  = math.clamp(math.floor(_vpW * 0.45), 400, 560)
+frame.Size             = UDim2.new(0, _fw, 0, 520)
+frame.Position         = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -260)
 frame.BackgroundColor3 = C.BG
 frame.BackgroundTransparency = 0
 frame.BorderSizePixel  = 0
