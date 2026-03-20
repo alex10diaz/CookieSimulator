@@ -64,6 +64,11 @@ function NPCSpawner.CreateNPC(config)
         end
     end
 
+    -- Hide patience timer immediately — will be shown only when NPC is seated.
+    local head0 = npc:FindFirstChild("Head")
+    local pg0   = head0 and head0:FindFirstChild("PatienceGui")
+    if pg0 then pg0.Enabled = false end
+
     local spawnCF = config.spawnCFrame or CFrame.new(Vector3.new(-5, 2, 30))
     npc:SetPrimaryPartCFrame(spawnCF)
 
@@ -147,6 +152,9 @@ function NPCSpawner.SetTimerText(npcModel, text)
     if not head then return end
     local gui   = head:FindFirstChild("PatienceGui")
     if not gui then return end
+    -- Hide the entire BillboardGui when there is no text to show.
+    -- This prevents the gray frame appearing during walk-in and queuing.
+    gui.Enabled = (text ~= "")
     local frame = gui:FindFirstChildOfClass("Frame")
     if not frame then return end
     local lbl   = frame:FindFirstChild("TimerLabel")
