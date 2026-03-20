@@ -103,6 +103,8 @@ local REMOTES = {
     -- Topping minigame
     "StartToppingMinigame",   -- Server->Client: begin topping minigame session
     "ToppingComplete",        -- Client->Server: player finished topping minigame
+    -- Warmer stock HUD
+    "WarmersStockUpdate",     -- Server->All: per-type warmer counts after any delivery or remap
     -- Station Mastery
     "MasteryLevelUp",         -- Server->Client: player leveled up a role
     -- Weekly challenges

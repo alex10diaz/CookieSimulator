@@ -7,7 +7,8 @@ local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitFor
 local stateRemote    = RemoteManager.Get("GameStateChanged")
 local acceptedEvent  = RemoteManager.Get("OrderAccepted")
 local deliveryEvent  = RemoteManager.Get("DeliveryResult")
-local hudUpdateEvent = RemoteManager.Get("HUDUpdate")
+local hudUpdateEvent    = RemoteManager.Get("HUDUpdate")
+local warmersStockEvent = RemoteManager.Get("WarmersStockUpdate")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -78,13 +79,16 @@ timerLbl.BackgroundTransparency = 1; timerLbl.TextColor3 = C.WHITE
 timerLbl.Font = Enum.Font.GothamBold; timerLbl.TextScaled = true; timerLbl.Text = "PRE-OPEN  5:00"
 
 -- ── ORDER PILL ────────────────────────────────────────────────────────────────
-local orderPill, orderStroke = pill("OrderPill", 205, {1,-215}, {0,10})
+local orderPill, orderStroke = pill("OrderPill", 215, {1,-225}, {0,10})
+orderPill.Size = UDim2.new(0, 215, 0, 94)
 
 local orderLbl = Instance.new("TextLabel", orderPill)
 orderLbl.Name = "ActiveOrderLabel"
 orderLbl.Size = UDim2.new(1,-14,1,0); orderLbl.Position = UDim2.new(0,7,0,0)
 orderLbl.BackgroundTransparency = 1; orderLbl.TextColor3 = C.MUTED
-orderLbl.Font = Enum.Font.Gotham; orderLbl.TextScaled = true; orderLbl.Text = "No active order"
+orderLbl.Font = Enum.Font.Gotham; orderLbl.TextScaled = false
+orderLbl.TextSize = 12; orderLbl.TextWrapped = true
+orderLbl.Text = "No active order"
 
 -- ── State helpers ─────────────────────────────────────────────────────────────
 local STATE_COLOR = {
@@ -181,6 +185,23 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
         TweenService:Create(coinRow, TI(0.35), { TextTransparency=1 }):Play()
         t:Play(); t.Completed:Connect(function() if card.Parent then card:Destroy() end end)
     end)
+end)
+
+-- ── Warmer Stock Display (shown when no active order) ─────────────────────────
+warmersStockEvent.OnClientEvent:Connect(function(countsByType)
+    -- Only update display when player has no active order
+    if orderLbl.Text ~= "No active order" then return end
+    if not countsByType or next(countsByType) == nil then return end
+    local lines = {}
+    for cookieId, count in pairs(countsByType) do
+        table.insert(lines, cookieName(cookieId) .. ": " .. count)
+    end
+    if #lines > 0 then
+        orderLbl.Text = table.concat(lines, "\n")
+        orderLbl.TextColor3 = Color3.fromRGB(100, 160, 255)
+        TweenService:Create(orderPill, TI(0.2), { BackgroundColor3 = Color3.fromRGB(20, 40, 80) }):Play()
+        orderStroke.Color = Color3.fromRGB(50, 115, 210); orderStroke.Transparency = 0.3
+    end
 end)
 
 print("[HUDController] Ready.")

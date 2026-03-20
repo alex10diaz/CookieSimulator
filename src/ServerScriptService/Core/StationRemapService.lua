@@ -71,11 +71,22 @@ function StationRemapService.RemapStations(orderedMenuIds)
             if doorPanel then
                 local sg = doorPanel:FindFirstChild("WarmersDisplay")
                 if sg then
-                    local lbl = sg:FindFirstChild("TextLabel")
+                    -- TextLabel is nested: WarmersDisplay > Frame > TextLabel
+                    local lbl = sg:FindFirstChild("TextLabel", true)
                     if lbl then lbl.Text = cookie.name end
                 end
                 -- Accent color from cookie's dough color (already a Color3)
                 doorPanel.Color = cookie.doughColor
+            end
+
+            -- Update WarmerNameGui BillboardGui on Shell part
+            local shell = model:FindFirstChild("Shell")
+            if shell then
+                local nameBB = shell:FindFirstChild("WarmerNameGui")
+                if nameBB then
+                    local nameLbl = nameBB:FindFirstChild("NameLabel")
+                    if nameLbl then nameLbl.Text = cookie.name end
+                end
             end
         end
 
@@ -87,7 +98,9 @@ function StationRemapService.RemapStations(orderedMenuIds)
 
             local display = model:FindFirstChild("FridgeDisplay", true)
             if display then
-                local nameLbl = display:FindFirstChild("CookieName")
+                -- Label may be named "CookieName" or plain "TextLabel"
+                local nameLbl = display:FindFirstChild("CookieName", true)
+                    or display:FindFirstChild("TextLabel", true)
                 if nameLbl then nameLbl.Text = cookie.name end
             end
         end
