@@ -39,7 +39,7 @@ startRemote.OnClientEvent:Connect(function()
     sg.Name           = "FrostGui"
     sg.ResetOnSpawn          = false
     sg.ZIndexBehavior        = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder          = 15
+    sg.DisplayOrder          = 22
     sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension  -- m9
     sg.Parent                = player:WaitForChild("PlayerGui")
 
