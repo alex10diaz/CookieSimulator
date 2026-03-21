@@ -280,6 +280,25 @@ Remove the character-clone branch; keep only the block-rig fallback and upgrade 
 ### [ ] m-4 — Fix script name typo
 - `No Collison.server.lua` → `NoCollision.server.lua`
 
+### [ ] m-5 — HireAnchor Parts may leak into Workspace
+**File:** `StaffManager.server.lua:576-608`
+`spawnHirePrompts()` has a `next(hirePrompts) ~= nil` guard but `destroyHirePrompts()` clears the table — if called twice fast or on error, anchor Parts could remain in Workspace.
+**Fix:** Add `workspace:FindFirstChild("HireAnchor_"..stationId)` check before creating each anchor.
+
+### [ ] m-6 — EconomyManager in ReplicatedStorage exposes payout math to clients
+**File:** `src/ReplicatedStorage/Modules/EconomyManager.lua`
+Clients can require this and inspect payout formulas. Not an active exploit but poor practice.
+**Decision needed:** Move to SSS (server-only) or accept as read-only display logic. If clients never need to calculate payouts themselves, move it. If HUD needs to show estimated reward, keep it.
+
+### [ ] m-7 — Architecture: SSS/Core mixes Scripts and ModuleScripts in one flat folder
+20+ files in `Core/` with no separation between top-level Scripts (`.server.lua`) and library Modules (`.lua`). Makes dependency graph hard to read for Codex.
+**Recommended structure:**
+```
+Core/
+  Scripts/    ← .server.lua files
+  Modules/    ← .lua ModuleScript files
+```
+
 ---
 
 ## SYSTEMS TO ADD (post-critical, pre-Codex)
@@ -294,6 +313,28 @@ Fire a remote to clients when session starts/ends; client updates the billboard.
 
 ### [ ] S-3 — Drive-thru HUD alert
 When a car arrives, fire a remote to all clients. HUDController shows a "🚗 Drive Thru!" pill for 5 seconds.
+
+### [ ] S-4 — Order fail state (NPC leaves without delivery)
+When NPC patience expires and they leave, show a visible "Order Failed!" flash on the KDS screen and decrement star rating. Currently NPCs just quietly leave.
+
+### [ ] S-5 — Sound effects (game feel critical)
+At minimum 3 sounds: mixer whir during Mix, oven ding on completion, cash register on delivery. Without these, playtester sessions feel silent and flat.
+
+### [ ] S-6 — NPC patience bar replicated to all players
+Currently patience bar is only visible to whoever took the order. All players should see it so they can coordinate.
+**Fix:** Server fires a remote every few seconds with NPC patience % to all clients; HUD or KDS shows it.
+
+### [ ] S-7 — "Next Step" coach mark for first 3 orders
+One-sentence hint at bottom of screen guiding player to next station ("Walk to Dough Table →"). Show only first 3 orders per session, then auto-hide. Reduces new-player confusion post-tutorial.
+
+### [ ] S-8 — Box quality preview on pickup
+When player triggers dress station completion and box is created, briefly show quality stars (e.g. "★★★★☆ 82%") before delivery. Gives feedback loop.
+
+### [ ] S-9 — Combo streak display in HUD
+`comboStreak` is tracked in PlayerDataManager but never shown to the player. Add a small streak counter to HUD (e.g. "🔥 x3") visible during Open phase.
+
+### [ ] S-10 — Leaderboard live update during Open (every 30s)
+Currently leaderboard only updates end-of-shift. Show live rankings during Open to drive competition.
 
 ---
 
