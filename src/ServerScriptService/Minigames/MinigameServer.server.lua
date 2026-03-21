@@ -82,10 +82,11 @@ local function broadcastState()
     local batchState  = OrderManager.GetBatchState()
     local fridgeState = OrderManager.GetFridgeState()
     local warmerState = OrderManager.GetWarmerState()
+    local stockByType = OrderManager.GetWarmerStockByCookieId()  -- P2-1: per-type stock for HUD
     for _, p in ipairs(Players:GetPlayers()) do
         BatchUpdated:FireClient(p, batchState)
         FridgeUpdated:FireClient(p, fridgeState)
-        WarmersUpdated:FireClient(p, warmerState)
+        WarmersUpdated:FireClient(p, warmerState, stockByType)
     end
     updateWarmerCountLabels()
 end

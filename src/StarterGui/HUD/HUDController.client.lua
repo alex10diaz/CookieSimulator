@@ -8,7 +8,7 @@ local stateRemote    = RemoteManager.Get("GameStateChanged")
 local acceptedEvent  = RemoteManager.Get("OrderAccepted")
 local deliveryEvent  = RemoteManager.Get("DeliveryResult")
 local hudUpdateEvent          = RemoteManager.Get("HUDUpdate")
-local warmersStockEvent       = RemoteManager.Get("WarmersStockUpdate")
+local warmersStockEvent       = RemoteManager.Get("WarmersUpdated")  -- P2-1: per-type stock
 local npcOrderCancelledEvent  = RemoteManager.Get("NPCOrderCancelledClient")
 
 local player    = Players.LocalPlayer
@@ -101,6 +101,46 @@ orderLbl.Font = Enum.Font.Gotham; orderLbl.TextScaled = false
 orderLbl.TextSize = 12; orderLbl.TextWrapped = true
 orderLbl.Text = "No active order"
 
+-- ── WARMER STOCK PILL (P2-1) ──────────────────────────────────────────────────
+local stockPill, _ = pill("StockPill", 215, {1,-225}, {1,-60})
+stockPill.Size     = UDim2.new(0, 215, 0, 42)
+stockPill.Visible  = false  -- shown only during Open
+
+local stockLbl = Instance.new("TextLabel", stockPill)
+stockLbl.Name              = "StockLabel"
+stockLbl.Size              = UDim2.new(1,-10,1,0)
+stockLbl.Position          = UDim2.new(0,5,0,0)
+stockLbl.BackgroundTransparency = 1
+stockLbl.TextColor3        = C.MUTED
+stockLbl.Font              = Enum.Font.Gotham
+stockLbl.TextScaled        = false
+stockLbl.TextSize          = 11
+stockLbl.TextWrapped       = true
+stockLbl.TextXAlignment    = Enum.TextXAlignment.Left
+stockLbl.Text              = ""
+
+local SHORT = {
+    pink_sugar="Pink",chocolate_chip="Choc",birthday_cake="Bday",
+    cookies_and_cream="C&C",snickerdoodle="Snick",lemon_blackraspberry="Lemon",
+}
+local function updateStockPill(stockByType)
+    if not stockByType then stockPill.Visible = false; return end
+    local parts = {}
+    for id, n in pairs(stockByType) do
+        if n > 0 then
+            table.insert(parts, (SHORT[id] or id) .. ":" .. n)
+        end
+    end
+    if #parts == 0 then
+        stockLbl.Text = "Warmers empty"
+        stockLbl.TextColor3 = C.MUTED
+    else
+        table.sort(parts)
+        stockLbl.Text = table.concat(parts, "  ·  ")
+        stockLbl.TextColor3 = C.WHITE
+    end
+end
+
 -- ── State helpers ─────────────────────────────────────────────────────────────
 local STATE_COLOR = {
     Open="GREEN", Intermission="BLUE", EndOfDay="ORANGE", PreOpen="", Lobby=""
@@ -158,10 +198,12 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     timerLbl.Text = (STATE_LABELS[state] or state) .. "  " .. formatTime(timeRemaining or 0)
     timerPill.Visible = not (state == "PreOpen" and player:GetAttribute("InTutorial"))
     skipBtn.Visible = (state == "PreOpen" and not player:GetAttribute("InTutorial"))
+    stockPill.Visible = (state == "Open")  -- P2-1: only show warmer stock during Open
     -- Clear active order pill when entering break or end-of-day
     if state == "Intermission" or state == "EndOfDay" then
         activeOrders = {}
         clearOrder()
+        stockPill.Visible = false
     end
 end)
 
@@ -285,8 +327,10 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
     end)
 end)
 
--- warmersStockEvent kept for compatibility but display removed (names shown on warmer models)
-warmersStockEvent.OnClientEvent:Connect(function() end)
+-- P2-1: update per-type warmer stock pill (second arg added by MinigameServer broadcastState)
+warmersStockEvent.OnClientEvent:Connect(function(_warmerState, stockByType)
+    if stockByType then updateStockPill(stockByType) end
+end)
 
 -- NPC order cancelled (patience run out / NPC left before delivery)
 npcOrderCancelledEvent.OnClientEvent:Connect(function(orderId, cookieId, packSize)
