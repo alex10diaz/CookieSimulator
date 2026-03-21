@@ -118,7 +118,7 @@ local function showToppingMinigame(data)
     sg.Name           = "ToppingMinigameGui"
     sg.ResetOnSpawn   = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder   = 15
+    sg.DisplayOrder   = 22
     sg.Parent         = playerGui
 
     local bg = Instance.new("Frame", sg)
@@ -259,7 +259,7 @@ local function flashMsg(text, success)
     local sg = Instance.new("ScreenGui")
     sg.Name         = "DressFlash"
     sg.ResetOnSpawn = false
-    sg.DisplayOrder = 15
+    sg.DisplayOrder = 22
     sg.Parent       = playerGui
     local lbl = Instance.new("TextLabel", sg)
     lbl.Size             = UDim2.new(0, 380, 0, 60)
@@ -286,7 +286,7 @@ local function showWarmerOverlay(cookieName, cookieId, step, total)
     local sg = Instance.new("ScreenGui")
     sg.Name         = "DressWarmerGui"
     sg.ResetOnSpawn = false
-    sg.DisplayOrder = 15
+    sg.DisplayOrder = 22
     sg.Parent       = playerGui
 
     local bg = Instance.new("Frame", sg)
@@ -350,7 +350,7 @@ local function showKDS(payload)
     sg.Name           = "DressKDSGui"
     sg.ResetOnSpawn   = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder   = 15
+    sg.DisplayOrder   = 22
     sg.Parent         = playerGui
 
     local bg = Instance.new("Frame", sg)
