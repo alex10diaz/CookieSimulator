@@ -303,7 +303,7 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
     starRow.BackgroundTransparency = 1; starRow.ZIndex = 51
     starRow.TextColor3 = C.GOLD; starRow.Font = Enum.Font.GothamBold
     starRow.TextScaled = true; starRow.TextTransparency = 1
-    starRow.Text = string.rep("★",s) .. string.rep("☆",5-s)
+    starRow.Text = string.rep("★",s) .. string.rep("☆",5-s) .. "  " .. s .. "/5"
 
     local coinRow = Instance.new("TextLabel", card)
     coinRow.Size = UDim2.new(1,0,0,30); coinRow.Position = UDim2.new(0,0,0,46)
