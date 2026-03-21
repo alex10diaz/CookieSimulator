@@ -18,7 +18,8 @@ local menuLockedRemote        = RemoteManager.Get("MenuLocked")
 local purchaseCookieRemote    = RemoteManager.Get("PurchaseCookie")
 local purchaseCookieResultRemote = RemoteManager.Get("PurchaseCookieResult")
 
-local MAX_MENU_SIZE = 6
+local MAX_MENU_SIZE  = 6
+local _remapToken    = 0  -- P1-3: debounce PreOpen remaps so only the latest fires
 
 local function buildCookiePayload()
     local result = {}
@@ -123,8 +124,15 @@ setMenuRemote.OnServerEvent:Connect(function(player, cookieIds)
             menuResultRemote:FireClient(p, true, "Menu updated!", updatedMenu)
         end
         print("[MenuServer]", player.Name, "set menu to:", table.concat(updatedMenu, ", "))
-        -- Remap physical stations immediately so PreOpen baking uses correct fridge/warmer IDs
-        task.defer(function() StationRemapService.RemapStations(updatedMenu) end)
+        -- P1-3: debounced remap — cancel any pending remap from a prior selection,
+        -- read live GetActiveMenu() at fire-time, skip if Open already locked+remapped.
+        _remapToken += 1
+        local token = _remapToken
+        task.defer(function()
+            if _remapToken ~= token then return end          -- superseded by a later SetMenu
+            if MenuManager.IsLocked() then return end        -- Open transition already remapped
+            StationRemapService.RemapStations(MenuManager.GetActiveMenu())
+        end)
     else
         menuResultRemote:FireClient(player, false, result)
     end
