@@ -245,6 +245,15 @@ local SPAWN_INTERVAL = 45  -- was 150s
 
 ---
 
+### [ ] M-8 — NPC delivery has no box-carrying check; activation distance too generous
+**File:** `DeliveryHandler.server.lua` / NPC ProximityPrompts
+**Bug:** `MaxActivationDistance=20` lets players trigger delivery from anywhere within 20 studs — they don't need to actually walk to the NPC. No server-side check that the player is carrying a box at time of delivery.
+**Fix:**
+- Reduce `MaxActivationDistance` to 8–10 for NPC delivery prompts
+- Server-side: before awarding delivery reward, confirm player has a pending box (check `boxes` table for player as carrier)
+
+---
+
 ### [ ] M-10 — StaffManager clones hiring player's character for worker rig
 **File:** `StaffManager.server.lua:63-124`
 **Bug:** If player has heavy accessories, clone replicates all of it to all clients. Fails visually on complex rigs.
