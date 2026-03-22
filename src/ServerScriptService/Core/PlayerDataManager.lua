@@ -5,8 +5,11 @@
 local Players           = game:GetService("Players")
 local DataStoreService  = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService       = game:GetService("HttpService")
 
 local playerStore = DataStoreService:GetDataStore("PlayerData_v1")
+-- C-2: unique ID for this server instance — used to detect cross-server save conflicts
+local SESSION_ID  = HttpService:GenerateGUID(false)
 
 -- Lazy-loaded to avoid require-at-load-time issues
 local function getRemoteManager()
@@ -56,35 +59,39 @@ local DEFAULT_PROFILE = {
 local profiles = {}  -- userId -> profile table
 
 -- ── HELPERS ────────────────────────────────────────────────────
-local function newProfile()
-    local p = {}
-    for k, v in pairs(DEFAULT_PROFILE) do
-        if type(v) == "table" then
-            local copy = {}
-            for k2, v2 in pairs(v) do copy[k2] = v2 end
-            p[k] = copy
-        else
-            p[k] = v
-        end
-    end
-    return p
-end
 
-local function mergeDefaults(saved)
-    -- Fill any missing keys added after a player's first save
-    local p = newProfile()
-    for k, v in pairs(saved) do
-        p[k] = v
-    end
-    return p
-end
-
+-- C-1: deepCopy defined first so newProfile() can reference it
 local function deepCopy(t)
     local copy = {}
     for k, v in pairs(t) do
         copy[k] = type(v) == "table" and deepCopy(v) or v
     end
     return copy
+end
+
+-- C-1: use deepCopy so nested arrays (dailyChallenges.progress etc.)
+-- are never shared with DEFAULT_PROFILE across player instances
+local function newProfile()
+    return deepCopy(DEFAULT_PROFILE)
+end
+
+-- M-1: recursive merge so new sub-table fields added to DEFAULT_PROFILE
+-- after a player's first save are not silently lost for existing players
+local function mergeDeep(defaults, saved)
+    local out = {}
+    for k, dv in pairs(defaults) do
+        local sv = saved[k]
+        if type(dv) == "table" and type(sv) == "table" then
+            out[k] = mergeDeep(dv, sv)
+        else
+            out[k] = sv ~= nil and sv or dv
+        end
+    end
+    return out
+end
+
+local function mergeDefaults(saved)
+    return mergeDeep(DEFAULT_PROFILE, saved)
 end
 
 -- ── DATASTORE ──────────────────────────────────────────────────
@@ -104,14 +111,25 @@ end
 local function saveProfile(userId)
     local profile = profiles[userId]
     if not profile then return end
-    local key = "Player_" .. userId
+    local key    = "Player_" .. userId
     local toSave = deepCopy(profile)
     -- math.huge is not JSON-safe; replace with 0
     if toSave.stats and toSave.stats.fastestOrderTime == math.huge then
         toSave.stats.fastestOrderTime = 0
     end
+    -- C-2: UpdateAsync with session lock — if another server has the lock, skip save
+    -- to prevent a stale server overwriting fresher data from the new server
     local ok, err = pcall(function()
-        playerStore:SetAsync(key, toSave)
+        playerStore:UpdateAsync(key, function(current)
+            if current and current._serverLock
+                and current._serverLock ~= SESSION_ID then
+                warn("[PlayerDataManager] Save skipped for", userId,
+                    "— locked by another server")
+                return nil  -- nil = no change written
+            end
+            toSave._serverLock = SESSION_ID
+            return toSave
+        end)
     end)
     if not ok then
         warn("[PlayerDataManager] Save failed for", userId, err)
@@ -272,10 +290,13 @@ Players.PlayerRemoving:Connect(function(player)
 end)
 
 -- Ensure all profiles save before server shuts down
+-- M-3: spawn saves in parallel so budget exhaustion doesn't drop later players
 game:BindToClose(function()
-    for userId, _ in pairs(profiles) do
-        saveProfile(userId)
+    local threads = {}
+    for userId in pairs(profiles) do
+        threads[#threads + 1] = task.spawn(saveProfile, userId)
     end
+    task.wait(8)  -- give parallel saves time to complete (~30s server window)
 end)
 
 -- Handle players already in game when first required
