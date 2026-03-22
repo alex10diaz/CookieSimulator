@@ -279,6 +279,7 @@ local function handleCarArrival()
                     car        = car,
                     npc        = nil,
                     npcOrderId = dressEntry and dressEntry.orderId,
+                    takenBy    = player,  -- C-4: track who took the order
                 }
 
                 local cookie = CookieData.GetById(order.cookieId)
@@ -314,11 +315,23 @@ end
 OrderManager.On("BoxCreated", function(box)
     if not currentOrder then return end
     if box.cookieId ~= currentOrder.cookieId then return end
+    -- C-4: pack size must match the ordered quantity exactly
+    if box.packSize and box.packSize ~= currentOrder.packSize then
+        warn(string.format("[AntiExploit] BoxCreated packSize mismatch: got %d, need %d",
+            box.packSize, currentOrder.packSize))
+        return
+    end
 
     local order = currentOrder
 
     addDeliveryPrompt(function(player)
         if not currentOrder or currentOrder.car ~= order.car then return end
+        -- C-4: only the player who took the order may deliver it
+        if order.takenBy and player ~= order.takenBy then
+            warn(string.format("[AntiExploit] %s tried to deliver drive-thru order taken by %s",
+                player.Name, order.takenBy.Name))
+            return
+        end
 
         local deliverCar        = order.car
         local deliverNpcOrderId = order.npcOrderId
