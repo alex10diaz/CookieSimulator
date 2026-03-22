@@ -201,7 +201,8 @@ summaryEvent.OnClientEvent:Connect(function(data)
     if statLabels.combo  then statLabels.combo.Text  = "x" .. tostring(data.combo or 0) end
     if statLabels.stars  then
         local s = math.clamp(math.round(data.avgStars or 3), 1, 5)
-        statLabels.stars.Text = string.rep("★",s) .. string.rep("☆",5-s)
+        -- UI-7: include numeric so players can read their rating clearly
+        statLabels.stars.Text = string.rep("★",s) .. string.rep("☆",5-s) .. "  " .. s .. "/5"
         statLabels.stars.TextColor3 = C.GOLD
     end
 

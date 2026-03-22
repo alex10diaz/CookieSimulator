@@ -432,4 +432,118 @@ comboUpdateEvent.OnClientEvent:Connect(function(streak)
     end
 end)
 
+-- ── S-6: Patience bar in order pill ─────────────────────────────────────────
+local patienceBar = Instance.new("Frame", orderPill)
+patienceBar.Name = "PatienceBar"
+patienceBar.Size = UDim2.new(1,-10,0,4)
+patienceBar.Position = UDim2.new(0,5,1,-6)
+patienceBar.BackgroundColor3 = Color3.fromRGB(60,60,80)
+patienceBar.BackgroundTransparency = 0.3; patienceBar.BorderSizePixel = 0
+Instance.new("UICorner", patienceBar).CornerRadius = UDim.new(1,0)
+
+local patienceFill = Instance.new("Frame", patienceBar)
+patienceFill.Name = "PatienceFill"
+patienceFill.Size = UDim2.new(1,0,1,0)
+patienceFill.BackgroundColor3 = C.GREEN; patienceFill.BorderSizePixel = 0
+Instance.new("UICorner", patienceFill).CornerRadius = UDim.new(1,0)
+
+local patienceMap = {}  -- orderId -> ratio (0-1)
+
+npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP)
+    if not orderId then return end
+    local ratio = math.clamp((current or 0) / math.max(maxP or 1, 1), 0, 1)
+    patienceMap[orderId] = ratio
+    -- Show for first active order
+    if #activeOrders > 0 and activeOrders[1].orderId == orderId then
+        local col = ratio > 0.5 and C.GREEN or (ratio > 0.25 and C.ORANGE or C.RED)
+        TweenService:Create(patienceFill, TI(0.5), { Size = UDim2.new(ratio,0,1,0), BackgroundColor3 = col }):Play()
+    end
+end)
+
+-- ── S-7: Coach mark (workflow hint for first 3 orders) ───────────────────────
+local coachMark = Instance.new("Frame", hud)
+coachMark.Name = "CoachMark"
+coachMark.Size = UDim2.new(0,340,0,30)
+coachMark.Position = UDim2.new(0.5,-170,1,-96)
+coachMark.BackgroundColor3 = Color3.fromRGB(20,20,36)
+coachMark.BackgroundTransparency = 0.15; coachMark.BorderSizePixel = 0
+coachMark.ZIndex = 20; coachMark.Visible = false
+Instance.new("UICorner", coachMark).CornerRadius = UDim.new(1,0)
+local coachStroke = Instance.new("UIStroke", coachMark)
+coachStroke.Color = C.MUTED; coachStroke.Thickness = 1; coachStroke.Transparency = 0.5
+local coachLbl = Instance.new("TextLabel", coachMark)
+coachLbl.Size = UDim2.new(1,-10,1,0); coachLbl.Position = UDim2.new(0,5,0,0)
+coachLbl.BackgroundTransparency = 1; coachLbl.TextColor3 = C.MUTED
+coachLbl.Font = Enum.Font.Gotham; coachLbl.TextScaled = true; coachLbl.ZIndex = 21
+coachLbl.Text = "Mix  →  Dough  →  Oven  →  Warmers  →  Dress  →  Deliver"
+
+local coachOrderCount = 0
+local function showCoachMark()
+    if coachOrderCount >= 3 then return end
+    coachMark.Visible = true
+end
+local function hideCoachMark()
+    coachOrderCount += 1
+    if coachOrderCount >= 3 then
+        coachMark.Visible = false
+    end
+end
+
+-- Show on first Open, hide after 3 deliveries
+stateRemote.OnClientEvent:Connect(function(state)
+    if state == "Open" then showCoachMark()
+    elseif state ~= "Open" then coachMark.Visible = false end
+end)
+deliveryEvent.OnClientEvent:Connect(function() hideCoachMark() end)
+
+-- ── S-8: Box quality preview on dress completion ─────────────────────────────
+local function showBoxQuality(quality)
+    local pct = math.clamp(math.round(quality or 0), 0, 100)
+    local stars = math.clamp(math.round(pct / 20), 1, 5)
+    local existing = hud:FindFirstChild("QualityPreview")
+    if existing then existing:Destroy() end
+
+    local card = Instance.new("Frame", hud)
+    card.Name = "QualityPreview"
+    card.Size = UDim2.new(0,220,0,56); card.Position = UDim2.new(0.5,-110,0.5,20)
+    card.BackgroundColor3 = Color3.fromRGB(20,20,36); card.BackgroundTransparency = 1
+    card.BorderSizePixel = 0; card.ZIndex = 45
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,12)
+    local cs = Instance.new("UIStroke", card)
+    cs.Color = C.GOLD; cs.Thickness = 1.5; cs.Transparency = 1
+
+    local row1 = Instance.new("TextLabel", card)
+    row1.Size = UDim2.new(1,0,0,28); row1.Position = UDim2.new(0,0,0,4)
+    row1.BackgroundTransparency = 1; row1.TextColor3 = C.GOLD
+    row1.Font = Enum.Font.GothamBold; row1.TextScaled = true; row1.ZIndex = 46
+    row1.Text = string.rep("★",stars) .. string.rep("☆",5-stars) .. "  " .. pct .. "%"
+    row1.TextTransparency = 1
+
+    local row2 = Instance.new("TextLabel", card)
+    row2.Size = UDim2.new(1,0,0,20); row2.Position = UDim2.new(0,0,0,32)
+    row2.BackgroundTransparency = 1; row2.TextColor3 = C.MUTED
+    row2.Font = Enum.Font.Gotham; row2.TextScaled = true; row2.ZIndex = 46
+    row2.Text = "Box Ready! Deliver it."; row2.TextTransparency = 1
+
+    TweenService:Create(card,  TI(0.2), { BackgroundTransparency = 0.05 }):Play()
+    TweenService:Create(cs,    TI(0.2), { Transparency = 0.2 }):Play()
+    TweenService:Create(row1,  TI(0.2), { TextTransparency = 0 }):Play()
+    TweenService:Create(row2,  TI(0.25),{ TextTransparency = 0 }):Play()
+
+    task.delay(3, function()
+        if not card.Parent then return end
+        TweenService:Create(card,  TI(0.3), { BackgroundTransparency = 1 }):Play()
+        TweenService:Create(cs,    TI(0.3), { Transparency = 1 }):Play()
+        TweenService:Create(row1,  TI(0.3), { TextTransparency = 1 }):Play()
+        local t = TweenService:Create(row2, TI(0.3), { TextTransparency = 1 })
+        t:Play(); t.Completed:Connect(function() if card.Parent then card:Destroy() end end)
+    end)
+end
+
+boxCreatedEvent.OnClientEvent:Connect(function(box)
+    if box and box.carrier == player.Name then
+        showBoxQuality(box.quality)
+    end
+end)
+
 print("[HUDController] Ready.")
