@@ -124,7 +124,7 @@ local function showToppingMinigame(data)
     local bg = Instance.new("Frame", sg)
     bg.Size                   = UDim2.new(0, 400, 0, 200)
     bg.Position               = UDim2.new(0.5, -200, 0.5, -100)
-    bg.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
+    bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
@@ -216,7 +216,7 @@ local function showToppingMinigame(data)
         local rating = elapsed <= 2 and "Perfect!" or (elapsed <= 4 and "Good!" or "OK")
         local flashLbl = Instance.new("TextLabel", bg)
         flashLbl.Size                   = UDim2.new(1, 0, 1, 0)
-        flashLbl.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
+        flashLbl.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
         flashLbl.BackgroundTransparency = 0
         flashLbl.TextColor3             = Color3.fromRGB(255, 255, 255)
         flashLbl.Font                   = Enum.Font.GothamBold
@@ -292,7 +292,7 @@ local function showWarmerOverlay(cookieName, cookieId, step, total)
     local bg = Instance.new("Frame", sg)
     bg.Size                   = UDim2.new(0, 420, 0, 70)
     bg.Position               = UDim2.new(0.5, -210, 1, -110)
-    bg.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
+    bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 12)
@@ -356,7 +356,7 @@ local function showKDS(payload)
     local bg = Instance.new("Frame", sg)
     bg.Size                   = UDim2.new(0, 450, 0, panelH)
     bg.Position               = UDim2.new(0.5, -225, 0.5, -panelH / 2)
-    bg.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
+    bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)

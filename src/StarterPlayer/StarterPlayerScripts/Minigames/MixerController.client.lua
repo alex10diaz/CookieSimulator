@@ -39,7 +39,7 @@ local function showPicker(menuList)
     local bg = Instance.new("Frame", sg)
     bg.Size                   = UDim2.new(0, 300, 0, 320)
     bg.Position               = UDim2.new(0.5, -150, 0.5, -160)
-    bg.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
+    bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)

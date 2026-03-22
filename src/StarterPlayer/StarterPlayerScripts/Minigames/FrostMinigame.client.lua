@@ -47,7 +47,7 @@ startRemote.OnClientEvent:Connect(function()
     local _fw = math.min(420, workspace.CurrentCamera.ViewportSize.X - 20)
     bg.Size                   = UDim2.new(0, _fw, 0, 460)
     bg.Position               = UDim2.new(0.5, -_fw/2, 0.5, -230)
-    bg.BackgroundColor3       = Color3.fromRGB(12, 16, 30)
+    bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
     bg.Parent                 = sg

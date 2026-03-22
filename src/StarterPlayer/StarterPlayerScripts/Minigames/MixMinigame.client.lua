@@ -45,7 +45,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     local _fw = math.min(380, workspace.CurrentCamera.ViewportSize.X - 20)
     bg.Size = UDim2.new(0, _fw, 0, 440)
     bg.Position = UDim2.new(0.5, -_fw/2, 0.5, -220)
-    bg.BackgroundColor3 = Color3.fromRGB(14, 14, 26)
+    bg.BackgroundColor3 = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel = 0
     bg.Parent = sg
@@ -108,7 +108,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     local ringInner = Instance.new("Frame")
     ringInner.Size = UDim2.new(0, 190, 0, 190)
     ringInner.Position = UDim2.new(0.5, -95, 0.5, -95)
-    ringInner.BackgroundColor3 = Color3.fromRGB(14, 14, 26)
+    ringInner.BackgroundColor3 = Color3.fromRGB(15, 30, 60)
     ringInner.BorderSizePixel = 0
     ringInner.ZIndex = 2
     ringInner.Parent = ringFrame
