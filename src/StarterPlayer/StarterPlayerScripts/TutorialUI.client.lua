@@ -22,21 +22,20 @@ local NAVY    = Color3.fromRGB(14, 14, 26)     -- dark panel
 local sg = Instance.new("ScreenGui")
 sg.Name           = "TutorialGui"
 sg.ResetOnSpawn   = false
-sg.Enabled        = true          -- always enabled; child visibility drives show/hide
+sg.Enabled        = true
 sg.DisplayOrder   = 5
-sg.IgnoreGuiInset = true          -- needed so FadeFrame covers full screen including top bar
+sg.IgnoreGuiInset = true
 sg.Parent         = playerGui
 
--- ─── FadeFrame — full-screen black overlay for cinematic transitions ──────────
--- TutorialCamera.client.lua controls its BackgroundTransparency via TweenService.
+-- ─── FadeFrame ────────────────────────────────────────────────────────────────
 local fadeFrame = Instance.new("Frame")
 fadeFrame.Name                   = "FadeFrame"
 fadeFrame.Size                   = UDim2.new(1, 0, 1, 0)
 fadeFrame.Position               = UDim2.new(0, 0, 0, 0)
 fadeFrame.BackgroundColor3       = Color3.new(0, 0, 0)
-fadeFrame.BackgroundTransparency = 1   -- starts invisible
+fadeFrame.BackgroundTransparency = 1
 fadeFrame.BorderSizePixel        = 0
-fadeFrame.ZIndex                 = 20  -- above all other UI elements
+fadeFrame.ZIndex                 = 20
 fadeFrame.Parent                 = sg
 
 -- ─── Bottom Panel ─────────────────────────────────────────────────────────────
@@ -60,7 +59,6 @@ topStripe.Size             = UDim2.new(1, 0, 0, 4)
 topStripe.BackgroundColor3 = ACCENT
 topStripe.BorderSizePixel  = 0
 Instance.new("UICorner", topStripe).CornerRadius = UDim.new(0, 12)
--- flat bottom half of stripe so only top corners are rounded
 local stripeFlat = Instance.new("Frame", topStripe)
 stripeFlat.Size             = UDim2.new(1, 0, 0.5, 0)
 stripeFlat.Position         = UDim2.new(0, 0, 0.5, 0)
@@ -76,7 +74,7 @@ stepLbl.TextColor3             = ACCENT
 stepLbl.TextScaled             = true
 stepLbl.Font                   = Enum.Font.GothamBold
 stepLbl.TextXAlignment         = Enum.TextXAlignment.Left
-stepLbl.Text                   = "Step 1 / 9"
+stepLbl.Text                   = "Step 1 / 5"
 stepLbl.Parent                 = panel
 
 local skipBtn = Instance.new("TextButton")
@@ -109,11 +107,11 @@ msgLbl.TextXAlignment         = Enum.TextXAlignment.Left
 msgLbl.Text                   = ""
 msgLbl.Parent                 = panel
 
--- ─── Final Menu — shown on step 10 ───────────────────────────────────────────
+-- ─── Final Menu ───────────────────────────────────────────────────────────────
 local finalMenu = Instance.new("Frame")
 finalMenu.Name                   = "FinalMenu"
-finalMenu.Size                   = UDim2.new(0, 340, 0, 190)
-finalMenu.Position               = UDim2.new(0.5, -170, 0.5, -95)
+finalMenu.Size                   = UDim2.new(0, 340, 0, 220)
+finalMenu.Position               = UDim2.new(0.5, -170, 0.5, -110)
 finalMenu.BackgroundColor3       = NAVY
 finalMenu.BackgroundTransparency = 0
 finalMenu.BorderSizePixel        = 0
@@ -150,10 +148,22 @@ menuTitle.Text                   = "You're ready to bake!"
 menuTitle.TextXAlignment         = Enum.TextXAlignment.Left
 menuTitle.ZIndex                 = 16
 
+-- Reward label shown under the header
+local rewardLbl = Instance.new("TextLabel", finalMenu)
+rewardLbl.Name                   = "RewardLabel"
+rewardLbl.Size                   = UDim2.new(1, -28, 0, 28)
+rewardLbl.Position               = UDim2.new(0, 14, 0, 50)
+rewardLbl.BackgroundTransparency = 1
+rewardLbl.TextColor3             = ACCENT
+rewardLbl.TextScaled             = true
+rewardLbl.Font                   = Enum.Font.GothamBold
+rewardLbl.Text                   = ""
+rewardLbl.ZIndex                 = 16
+
 local startDayBtn = Instance.new("TextButton")
 startDayBtn.Name             = "StartDayButton"
 startDayBtn.Size             = UDim2.new(1, -28, 0, 52)
-startDayBtn.Position         = UDim2.new(0, 14, 0, 56)
+startDayBtn.Position         = UDim2.new(0, 14, 0, 88)
 startDayBtn.BackgroundColor3 = Color3.fromRGB(30, 100, 40)
 startDayBtn.TextColor3       = Color3.fromRGB(200, 240, 200)
 startDayBtn.TextScaled       = true
@@ -170,7 +180,7 @@ sdStroke.Thickness = 1.5
 local replayBtn = Instance.new("TextButton")
 replayBtn.Name             = "ReplayButton"
 replayBtn.Size             = UDim2.new(1, -28, 0, 44)
-replayBtn.Position         = UDim2.new(0, 14, 0, 118)
+replayBtn.Position         = UDim2.new(0, 14, 0, 150)
 replayBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 52)
 replayBtn.TextColor3       = Color3.fromRGB(160, 160, 190)
 replayBtn.TextScaled       = true
@@ -198,19 +208,23 @@ tutorialStepRemote.OnClientEvent:Connect(function(data)
 		return
 	end
 
-	if data.step == 10 then
-		-- Final menu only — no bottom panel
+	-- Final menu: step > total (e.g. step=6, total=5)
+	if data.step > (data.total or 5) then
 		panel.Visible     = false
 		finalMenu.Visible = true
+		if data.reward and data.reward > 0 then
+			rewardLbl.Text = "Reward: +" .. data.reward .. " Coins!"
+		else
+			rewardLbl.Text = ""
+		end
 		return
 	end
 
-	-- Steps 1–9: show bottom panel
-	stepLbl.Text  = "Step " .. data.step .. " / 9"
+	-- Steps 1–N: show bottom panel with dynamic counter
+	stepLbl.Text  = "Step " .. data.step .. " / " .. (data.total or 5)
 	msgLbl.Text   = data.msg or ""
 	panel.Visible = true
 
-	-- Set or clear the forced cookie attribute for MixerController
 	if data.forceCookieId then
 		playerGui:SetAttribute("TutorialForceCookie", data.forceCookieId)
 	else
@@ -218,7 +232,7 @@ tutorialStepRemote.OnClientEvent:Connect(function(data)
 	end
 end)
 
--- Skip button
+-- Skip button — fires TutorialComplete; server handles completion from any step
 skipBtn.MouseButton1Click:Connect(function()
 	panel.Visible = false
 	tutorialDoneRemote:FireServer()

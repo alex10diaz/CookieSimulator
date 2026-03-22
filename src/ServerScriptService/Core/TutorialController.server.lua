@@ -1,7 +1,7 @@
 -- src/ServerScriptService/Core/TutorialController.server.lua
--- Drives the 9-step cinematic tutorial for first-time players.
+-- Drives the 5-step tutorial for first-time players.
 -- Server-authoritative: step state lives here. Client is display-only.
--- Progression: join (new) -> step 1 -> station results -> step 10 (final menu) -> complete
+-- Steps: Mix(1) -> Dough(2) -> Oven(3) -> Dress(4) -> Deliver(5) -> FinalMenu(6) -> complete(0)
 -- Returning players: join -> step 0 (isReturn=true) -> GameSpawn teleport via TutorialCamera
 
 local Players             = game:GetService("Players")
@@ -17,48 +17,43 @@ local tutorialDoneRemote = RemoteManager.Get("TutorialComplete")
 local startGameRemote    = RemoteManager.Get("StartGame")
 local replayRemote       = RemoteManager.Get("ReplayTutorial")
 
--- Step 1 gate: NPC order confirm (client remote — lower risk, NPC system validates state server-side)
-local confirmNPCOrderRemote = RemoteManager.Get("ConfirmNPCOrder")
+-- ─── Constants ────────────────────────────────────────────────────────────────
+local TOTAL_STEPS        = 5
+local FINAL_MENU_STEP    = TOTAL_STEPS + 1   -- 6: shown after step 5 delivery gate
+local TUTORIAL_REWARD    = 200               -- coins granted on tutorial completion
 
--- ─── State ───────────────────────────────────────────────────────────────────
-local activeTutorials = {}
-local TOTAL_STEPS = 9
-
--- Step 1 always targets the FOS display machine in workspace.POS
-local POS_STEP1_TARGET = "FOS"
+-- Use chocolate_chip (no frost needed) so the tutorial skips the frost station.
+local TUTORIAL_COOKIE = "chocolate_chip"
 
 local STEPS = {
-	[1] = { msg = "Head to the POS and accept a customer order!",           target = "POS",             forceCookieId = nil          },
-	[2] = { msg = "Go to a Mixer and press E to start mixing!",             target = "Mixer",           forceCookieId = "pink_sugar" },
-	[3] = { msg = "Shape your dough at the Dough Table — press E!",         target = "DoughTable",      forceCookieId = nil          },
-	[4] = { msg = "Stock the dough in the Pink Sugar fridge!",              target = "FridgePinkSugar", forceCookieId = nil          },
-	[5] = { msg = "Pull the chilled dough out of the fridge!",              target = "FridgePinkSugar", forceCookieId = nil          },
-	[6] = { msg = "Slide it into the Oven — watch the timer!",              target = "Oven",            forceCookieId = nil          },
-	[7] = { msg = "Apply pink frosting at the Frost Table!",                target = "FrostTable",      forceCookieId = nil          },
-	[8] = { msg = "Dress and pack your cookie!",                            target = "DressTable",      forceCookieId = nil          },
-	[9] = { msg = "Carry the box to the customer and press E to deliver!",  target = "WaitingArea",     forceCookieId = nil          },
+	[1] = { msg = "Go to a Mixer and press E to start mixing!",                 target = "Mixer",       forceCookieId = TUTORIAL_COOKIE },
+	[2] = { msg = "Shape your dough at the Dough Table!",                       target = "DoughTable",  forceCookieId = nil             },
+	[3] = { msg = "Pull your dough from the fridge, then bake it in the Oven!", target = "Oven",        forceCookieId = nil             },
+	[4] = { msg = "Dress and pack your cookies at the Dress Station!",          target = "DressTable",  forceCookieId = nil             },
+	[5] = { msg = "Carry the box to the customer and press E to deliver!",      target = "WaitingArea", forceCookieId = nil             },
 }
+
+-- ─── State ────────────────────────────────────────────────────────────────────
+local activeTutorials = {}
 
 -- ─── Helpers ─────────────────────────────────────────────────────────────────
 local function sendStep(player, step)
 	local payload
 	if step == 0 then
 		payload = { step = 0, total = TOTAL_STEPS, msg = "", isReturn = false }
-	elseif step == 10 then
-		payload = { step = 10, total = TOTAL_STEPS, msg = "" }
+	elseif step == FINAL_MENU_STEP then
+		payload = { step = FINAL_MENU_STEP, total = TOTAL_STEPS, msg = "", reward = TUTORIAL_REWARD }
 	else
 		local data = STEPS[step]
 		if not data then
 			warn("[TutorialController] sendStep: invalid step " .. tostring(step))
 			return
 		end
-		local session = activeTutorials[player.UserId]
-		local target = (step == 1 and session and session.posTarget) or data.target
 		payload = {
 			step          = step,
 			total         = TOTAL_STEPS,
 			msg           = data.msg,
-			target        = target,
+			target        = data.target,
 			forceCookieId = data.forceCookieId,
 		}
 	end
@@ -69,7 +64,7 @@ end
 local function advance(player)
 	local session = activeTutorials[player.UserId]
 	if not session then return end
-	if session.step >= TOTAL_STEPS then return end  -- m10: prevent overrun
+	if session.step >= FINAL_MENU_STEP then return end
 	session.step += 1
 	sendStep(player, session.step)
 end
@@ -79,9 +74,13 @@ local function completeTutorial(player)
 	if not activeTutorials[userId] then return end
 	activeTutorials[userId] = nil
 	player:SetAttribute("InTutorial", false)
+	-- Grant tutorial completion reward
+	pcall(function()
+		PlayerDataManager.AddCoins(player, TUTORIAL_REWARD)
+	end)
 	PlayerDataManager.SetTutorialCompleted(player)
 	sendStep(player, 0)
-	print("[TutorialController] " .. player.Name .. " tutorial COMPLETE — saved to DataStore")
+	print("[TutorialController] " .. player.Name .. " tutorial COMPLETE (+$" .. TUTORIAL_REWARD .. " coins) — saved to DataStore")
 end
 
 -- ─── Player Join ─────────────────────────────────────────────────────────────
@@ -108,12 +107,9 @@ local function handlePlayerJoin(player)
 		return
 	end
 
-	local chosen = POS_STEP1_TARGET
-	activeTutorials[player.UserId] = { step = 1, posTarget = chosen }
+	activeTutorials[player.UserId] = { step = 1 }
 	player:SetAttribute("InTutorial", true)
 	sendStep(player, 1)
-
-
 end
 
 Players.PlayerAdded:Connect(function(player)
@@ -128,38 +124,30 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(handlePlayerJoin, player)
 end
 
--- ─── Skip / Start Day / Replay ───────────────────────────────────────────────
+-- ─── Skip ────────────────────────────────────────────────────────────────────
+-- Allow skip from ANY step — no step restriction.
 tutorialDoneRemote.OnServerEvent:Connect(function(player)
-	-- M1: only allow completion from the final summary screen (step 10)
-	local session = activeTutorials[player.UserId]
-	if session and session.step ~= 10 then return end
+	if not activeTutorials[player.UserId] then return end
 	completeTutorial(player)
 end)
 
+-- ─── Start Day / Replay ──────────────────────────────────────────────────────
 startGameRemote.OnServerEvent:Connect(function(player)
-	-- M1: only allow starting day from the final summary screen (step 10)
 	local session = activeTutorials[player.UserId]
-	if session and session.step ~= 10 then return end
+	if session and session.step ~= FINAL_MENU_STEP then return end
 	completeTutorial(player)
 end)
 
 replayRemote.OnServerEvent:Connect(function(player)
 	local session = activeTutorials[player.UserId]
-	if not session or session.step ~= 10 then return end
+	if not session or session.step ~= FINAL_MENU_STEP then return end
 	session.step = 1
 	sendStep(player, 1)
 	print("[TutorialController] " .. player.Name .. " replaying tutorial from step 1")
 end)
 
 -- ─── Station Advance Gates ────────────────────────────────────────────────────
--- Step 1: NPC order confirmed at POS (client remote; NPC system validates state separately)
-confirmNPCOrderRemote.OnServerEvent:Connect(function(player)
-	local session = activeTutorials[player.UserId]
-	if session and session.step == 1 then advance(player) end
-end)
-
--- Steps 2, 3, 6, 7, 8: M1 — listen to StationCompleted BindableEvent fired by MinigameServer
--- after validated endSession(), NOT raw client remotes (which can be spoofed).
+-- Steps 1,2,3,4: gated by StationCompleted BindableEvent (server-authoritative)
 task.spawn(function()
 	local evts = ServerStorage:WaitForChild("Events", 10)
 	local sc   = evts and evts:WaitForChild("StationCompleted", 15)
@@ -167,50 +155,27 @@ task.spawn(function()
 	sc.Event:Connect(function(player, stationName)
 		local session = activeTutorials[player.UserId]
 		if not session then return end
-		if stationName == "mix" and session.step == 2 then
-			advance(player)                          -- 2 → 3
-		elseif stationName == "dough" and session.step == 3 then
-			-- Skip step 4 (auto-deposit already done); jump straight to step 5 (pull fridge)
-			session.step = 5
-			sendStep(player, 5)
-		elseif stationName == "oven"  and session.step == 6 then
-			advance(player)                          -- 6 → 7
-		elseif stationName == "frost" and session.step == 7 then
-			advance(player)                          -- 7 → 8
-		elseif stationName == "dress" and session.step == 8 then
-			advance(player)                          -- 8 → 9
+		if     stationName == "mix"   and session.step == 1 then advance(player)  -- 1→2
+		elseif stationName == "dough" and session.step == 2 then advance(player)  -- 2→3
+		elseif stationName == "oven"  and session.step == 3 then advance(player)  -- 3→4
+		elseif stationName == "dress" and session.step == 4 then advance(player)  -- 4→5
 		end
 	end)
-	print("[TutorialController] StationCompleted gate wired for steps 2,3,6,7,8")
+	print("[TutorialController] StationCompleted gate wired for steps 1-4")
 end)
 
--- Step 5 gate: FridgePulled BindableEvent (server-authoritative — cannot be spoofed)
-task.spawn(function()
-	local evts = ServerStorage:WaitForChild("Events", 10)
-	local fe   = evts and evts:WaitForChild("FridgePulled", 10)
-	if not fe then warn("[TutorialController] FridgePulled event not found"); return end
-	fe.Event:Connect(function(player)
-		local session = activeTutorials[player.UserId]
-		if session and session.step == 5 then
-			advance(player)
-		end
-	end)
-	print("[TutorialController] FridgePulled gate wired for step 5")
-end)
-
--- Step 9 gate: TutorialDelivered BindableEvent (fired by TestNPCSpawner after delivery)
--- DeliveryResult is server→client only — OnServerEvent would never fire here.
+-- Step 5 gate: TutorialDelivered BindableEvent (fired by TestNPCSpawner after delivery)
 task.spawn(function()
 	local evts = ServerStorage:WaitForChild("Events", 10)
 	local fe   = evts and evts:WaitForChild("TutorialDelivered", 10)
 	if not fe then warn("[TutorialController] TutorialDelivered BindableEvent not found"); return end
 	fe.Event:Connect(function(player)
 		local session = activeTutorials[player.UserId]
-		if session and session.step == 9 then
-			advance(player)  -- 9→10: Final Menu
+		if session and session.step == 5 then
+			advance(player)  -- 5→6: Final Menu
 		end
 	end)
-	print("[TutorialController] TutorialDelivered gate wired for step 9")
+	print("[TutorialController] TutorialDelivered gate wired for step 5")
 end)
 
-print("[TutorialController] Ready — 9-step cinematic tutorial active.")
+print("[TutorialController] Ready — 5-step tutorial active.")
