@@ -218,8 +218,8 @@ corner(skipBtn, 8); addStroke(skipBtn, Color3.fromRGB(80, 80, 140), 1, 0)
 -- ══════════════════════════════════════════════════════════════════════════════
 local ordersPanel = Instance.new("Frame", hud)
 ordersPanel.Name = "OrdersPanel"
-ordersPanel.Size = UDim2.new(0, 176, 1, -278)
-ordersPanel.Position = UDim2.new(0, 8, 0, 66)
+ordersPanel.Size = UDim2.new(0, 176, 1, -290)
+ordersPanel.Position = UDim2.new(0, 8, 0, 78)
 ordersPanel.BackgroundColor3 = C.BG
 ordersPanel.BackgroundTransparency = 0.12
 ordersPanel.BorderSizePixel = 0; ordersPanel.ZIndex = 8
