@@ -374,6 +374,16 @@ function OrderManager.PickupBox(player, boxId)
     return true
 end
 
+-- M-8: returns true if the player currently has a box in the "carrying" state
+function OrderManager.IsCarryingBox(player)
+    for _, box in pairs(boxes) do
+        if box.carrier == player.Name and box.status == "carrying" then
+            return true
+        end
+    end
+    return false
+end
+
 function OrderManager.DeliverBox(player, boxId, npcOrderId)
     local box = boxes[boxId]
     if not box then return false end

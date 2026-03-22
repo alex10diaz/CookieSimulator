@@ -509,7 +509,7 @@ addDeliverPrompt = function(npcId)
     pp.Name                  = "DeliverPrompt"
     pp.ActionText            = "Deliver Box"
     pp.ObjectText            = data.name
-    pp.MaxActivationDistance = 20
+    pp.MaxActivationDistance = 8    -- M-8: tightened from 20 (must be physically close)
     pp.HoldDuration          = 0
     pp.RequiresLineOfSight   = false
     pp.Parent                = head
@@ -517,6 +517,12 @@ addDeliverPrompt = function(npcId)
     pp.Triggered:Connect(function(player)
         local d = npcs[npcId]
         if not d or d.state ~= "at_counter" then return end
+
+        -- M-8: player must actually be carrying a box
+        if not OrderManager.IsCarryingBox(player) then
+            warn("[AntiExploit] " .. player.Name .. " triggered DeliverPrompt without a box")
+            return
+        end
 
         -- Search by npcId (works for both single-type and variety boxes)
         local pendingKey, pending = nil, nil
