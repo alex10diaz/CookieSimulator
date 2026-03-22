@@ -46,6 +46,31 @@ local ovenSession    = {}       -- player -> batchId they pulled from fridge, re
 local dressPending   = {}       -- player -> warmerEntry taken for dress
 local doughLock      = {}       -- batchId -> true  (prevents two players grabbing same dough batch)
 
+-- M-2 + C-3: shared session starter — records startedAt and arms a timeout watchdog
+local SESSION_TIMEOUT = 60  -- seconds before a stuck session is auto-cleared
+local function startSession(player, sessionData)
+    sessionData.startedAt = tick()  -- C-3: used in endSession() to reject too-fast results
+    activeSessions[player] = sessionData
+    local capturedBatchId   = sessionData.batchId
+    local capturedStation   = sessionData.station
+    -- M-2: watchdog clears stuck sessions if client crashes mid-minigame
+    task.delay(SESSION_TIMEOUT, function()
+        local s = activeSessions[player]
+        if s and s.batchId == capturedBatchId then
+            warn("[MinigameServer] Session timeout: " .. player.Name .. " @ " .. (capturedStation or "?"))
+            if capturedStation == "dough" then
+                doughLock[capturedBatchId] = nil
+            end
+            if (capturedStation == "frost" or capturedStation == "dress") and s.warmerEntry then
+                OrderManager.ReturnToWarmers(s.warmerEntry)
+                OrderManager.ClearPostOvenScore(capturedBatchId)
+            end
+            activeSessions[player] = nil
+            dressPending[player]   = nil
+        end
+    end)
+end
+
 -- ============================================================
 -- BROADCAST HELPERS
 -- ============================================================
@@ -78,17 +103,25 @@ local function updateWarmerCountLabels()
     end
 end
 
+-- M-4: debounce so chained BatchUpdated/FridgeUpdated/WarmersUpdated events
+-- don't fire 3×N remotes per station step — collapses to one broadcast per frame
+local _broadcastPending = false
 local function broadcastState()
-    local batchState  = OrderManager.GetBatchState()
-    local fridgeState = OrderManager.GetFridgeState()
-    local warmerState = OrderManager.GetWarmerState()
-    local stockByType = OrderManager.GetWarmerStockByCookieId()  -- P2-1: per-type stock for HUD
-    for _, p in ipairs(Players:GetPlayers()) do
-        BatchUpdated:FireClient(p, batchState)
-        FridgeUpdated:FireClient(p, fridgeState)
-        WarmersUpdated:FireClient(p, warmerState, stockByType)
-    end
-    updateWarmerCountLabels()
+    if _broadcastPending then return end
+    _broadcastPending = true
+    task.defer(function()
+        _broadcastPending = false
+        local batchState  = OrderManager.GetBatchState()
+        local fridgeState = OrderManager.GetFridgeState()
+        local warmerState = OrderManager.GetWarmerState()
+        local stockByType = OrderManager.GetWarmerStockByCookieId()
+        for _, p in ipairs(Players:GetPlayers()) do
+            BatchUpdated:FireClient(p, batchState)
+            FridgeUpdated:FireClient(p, fridgeState)
+            WarmersUpdated:FireClient(p, warmerState, stockByType)
+        end
+        updateWarmerCountLabels()
+    end)
 end
 
 OrderManager.On("BatchUpdated",   broadcastState)
