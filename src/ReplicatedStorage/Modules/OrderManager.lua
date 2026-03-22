@@ -298,12 +298,22 @@ function OrderManager.TakeFromWarmersByType(cookieId, quantity)
                 notify("WarmersUpdated", OrderManager.GetWarmerState())
                 return entry
             else
-                -- Partial take: deduct and return a clone
+                -- Partial take: deduct and return a clone with its own batchId.
+                -- Sharing a batchId between clones causes postOvenScores to be
+                -- cleared by the first CreateBox, making subsequent CreateBox calls fail.
                 entry.quantity -= quantity
                 notify("WarmersUpdated", OrderManager.GetWarmerState())
                 local clone = {}
                 for k, v in pairs(entry) do clone[k] = v end
                 clone.quantity = quantity
+                -- Give the clone a fresh batchId and copy the post-oven scores to it
+                local subId = nextBatch
+                nextBatch += 1
+                clone.batchId = subId
+                local src = postOvenScores[entry.batchId]
+                if src then
+                    postOvenScores[subId] = { mix = src.mix, dough = src.dough, oven = src.oven }
+                end
                 return clone
             end
         end
