@@ -30,22 +30,22 @@ for _, name in ipairs({
     if old then old:Destroy() end
 end
 
--- ── Palette ───────────────────────────────────────────────────────────────────
+-- ── Palette (Option C — Dark Modern: deep navy + hot pink + gold) ─────────────
 local C = {
-    BG       = Color3.fromRGB(28, 22, 16),
-    PANEL    = Color3.fromRGB(42, 34, 24),
-    CARD     = Color3.fromRGB(255, 248, 240),
-    WARM_BRN = Color3.fromRGB(139, 94, 60),
-    BLUSH    = Color3.fromRGB(244, 167, 185),
-    GOLD     = Color3.fromRGB(255, 200, 60),
-    WHITE    = Color3.fromRGB(255, 255, 255),
-    TEXT_DRK = Color3.fromRGB(40, 28, 16),
-    TEXT_LT  = Color3.fromRGB(190, 175, 158),
-    GREEN    = Color3.fromRGB(100, 210, 115),
-    BLUE     = Color3.fromRGB(100, 185, 245),
-    ORANGE   = Color3.fromRGB(235, 150, 55),
-    RED      = Color3.fromRGB(220, 75, 65),
-    YELLOW   = Color3.fromRGB(255, 225, 80),
+    BG       = Color3.fromRGB(10, 10, 26),      -- deep navy background
+    PANEL    = Color3.fromRGB(18, 18, 45),       -- panel / badge background
+    CARD     = Color3.fromRGB(26, 26, 55),       -- order card background
+    WARM_BRN = Color3.fromRGB(220, 50, 120),     -- hot pink accent (borders, headers)
+    BLUSH    = Color3.fromRGB(255, 140, 195),    -- light pink (coach bar stroke)
+    GOLD     = Color3.fromRGB(255, 205, 50),     -- gold (coins, rewards)
+    WHITE    = Color3.fromRGB(240, 240, 255),    -- near-white with blue tint
+    TEXT_DRK = Color3.fromRGB(230, 230, 255),    -- primary text on dark cards
+    TEXT_LT  = Color3.fromRGB(110, 115, 175),   -- muted secondary text
+    GREEN    = Color3.fromRGB(80, 215, 115),     -- success / patience high
+    BLUE     = Color3.fromRGB(80, 175, 255),     -- level badge / XP bar
+    ORANGE   = Color3.fromRGB(235, 150, 55),     -- patience warning
+    RED      = Color3.fromRGB(220, 65, 65),      -- patience critical
+    YELLOW   = Color3.fromRGB(255, 225, 70),     -- combo streak
 }
 
 local TI  = function(t) return TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) end
@@ -114,7 +114,7 @@ local coinBadge = Instance.new("Frame", topBar)
 coinBadge.Name = "CoinBadge"
 coinBadge.Size = UDim2.new(0, 148, 0, 36)
 coinBadge.Position = UDim2.new(0, 10, 0.5, -18)
-coinBadge.BackgroundColor3 = Color3.fromRGB(52, 40, 18)
+coinBadge.BackgroundColor3 = Color3.fromRGB(16, 14, 40)
 coinBadge.BackgroundTransparency = 0.15
 coinBadge.BorderSizePixel = 0; coinBadge.ZIndex = 11
 corner(coinBadge, 20); addStroke(coinBadge, C.GOLD, 1.5, 0.4)
@@ -138,7 +138,7 @@ local lvlBadge = Instance.new("Frame", topBar)
 lvlBadge.Name = "LevelBadge"
 lvlBadge.Size = UDim2.new(0, 185, 0, 38)
 lvlBadge.Position = UDim2.new(0, 166, 0.5, -19)
-lvlBadge.BackgroundColor3 = Color3.fromRGB(22, 38, 58)
+lvlBadge.BackgroundColor3 = Color3.fromRGB(16, 14, 40)
 lvlBadge.BackgroundTransparency = 0.15
 lvlBadge.BorderSizePixel = 0; lvlBadge.ZIndex = 11
 corner(lvlBadge, 10)
@@ -162,7 +162,7 @@ xpLbl.Text = "0 xp"; xpLbl.ZIndex = 12
 
 local xpTrack = Instance.new("Frame", lvlBadge)
 xpTrack.Size = UDim2.new(1, -12, 0, 6); xpTrack.Position = UDim2.new(0, 6, 1, -10)
-xpTrack.BackgroundColor3 = Color3.fromRGB(30, 50, 75); xpTrack.BorderSizePixel = 0; xpTrack.ZIndex = 12
+xpTrack.BackgroundColor3 = Color3.fromRGB(22, 22, 52); xpTrack.BorderSizePixel = 0; xpTrack.ZIndex = 12
 corner(xpTrack, 4)
 
 local xpFill = Instance.new("Frame", xpTrack)
@@ -203,10 +203,10 @@ corner(settingsBtn, 10); addStroke(settingsBtn, C.TEXT_LT, 1, 0.65)
 local skipBtn = Instance.new("TextButton", hud)
 skipBtn.Name = "SkipPreOpenBtn"
 skipBtn.Size = UDim2.new(0, 148, 0, 26); skipBtn.Position = UDim2.new(0.5, -74, 0, 60)
-skipBtn.ZIndex = 5; skipBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
-skipBtn.TextColor3 = Color3.fromRGB(160,160,170); skipBtn.Font = Enum.Font.Gotham
+skipBtn.ZIndex = 5; skipBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 52)
+skipBtn.TextColor3 = Color3.fromRGB(150, 155, 210); skipBtn.Font = Enum.Font.Gotham
 skipBtn.TextSize = 13; skipBtn.Text = "Skip to Open  →"; skipBtn.Visible = false
-corner(skipBtn, 8); addStroke(skipBtn, Color3.fromRGB(70,70,85), 1, 0)
+corner(skipBtn, 8); addStroke(skipBtn, Color3.fromRGB(80, 80, 140), 1, 0)
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- ORDERS PANEL (LEFT)
@@ -325,7 +325,7 @@ local function createCard(key, displayName, isVIP)
     -- Patience bar
     local pTrack = Instance.new("Frame", card)
     pTrack.Size = UDim2.new(1,-16,0,5); pTrack.Position = UDim2.new(0,8,1,-13)
-    pTrack.BackgroundColor3 = Color3.fromRGB(200,185,168); pTrack.BackgroundTransparency = 0.5
+    pTrack.BackgroundColor3 = Color3.fromRGB(45, 45, 80); pTrack.BackgroundTransparency = 0.3
     pTrack.BorderSizePixel = 0; pTrack.ZIndex = 11
     corner(pTrack, 3)
 
@@ -382,7 +382,7 @@ local coachBar = Instance.new("Frame", hud)
 coachBar.Name = "CoachBar"
 coachBar.Size = UDim2.new(0, 390, 0, 34)
 coachBar.Position = UDim2.new(0.5, -195, 1, -50)
-coachBar.BackgroundColor3 = Color3.fromRGB(18, 16, 28)
+coachBar.BackgroundColor3 = Color3.fromRGB(10, 10, 26)
 coachBar.BackgroundTransparency = 0.1; coachBar.BorderSizePixel = 0
 coachBar.ZIndex = 20; coachBar.Visible = false
 corner(coachBar, 20); addStroke(coachBar, C.BLUSH, 1, 0.5)
@@ -401,7 +401,7 @@ coachLbl.Text = "Mix  →  Dough  →  Oven  →  Warmers  →  Dress  →  Deli
 local comboPill = Instance.new("Frame", hud)
 comboPill.Name = "ComboPill"
 comboPill.Size = UDim2.new(0, 138, 0, 34); comboPill.Position = UDim2.new(0.5,-69,1,-90)
-comboPill.BackgroundColor3 = Color3.fromRGB(180,80,10); comboPill.BackgroundTransparency = 1
+comboPill.BackgroundColor3 = Color3.fromRGB(130, 30, 80); comboPill.BackgroundTransparency = 1
 comboPill.BorderSizePixel = 0; comboPill.ZIndex = 30
 corner(comboPill, 20)
 
