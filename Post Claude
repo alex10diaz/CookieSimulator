@@ -1,0 +1,35 @@
+# Post-Claude Coding Review Checklist (Bring Back to Codex)
+
+When you finish coding in Claude, paste these items here so Codex can do a fast, high-signal verification pass.
+
+## 1) What changed
+- PR/commit link (or patch)
+- Files changed list
+- Short summary of intended behavior changes
+
+## 2) Which blockers were addressed
+- C1/C2/C3/etc status (done / partial / not done)
+- Any blocker intentionally deferred
+
+## 3) Test evidence
+- Commands run
+- Results (pass/fail)
+- Multiplayer repro steps used
+
+## 4) Known risks after your changes
+- Remaining race windows
+- Remaining client-trust paths
+- Any TODOs left in code
+
+## 5) What you want Codex to check
+- correctness
+- exploit resistance
+- architecture quality
+- performance
+- mobile UI
+
+## Quick paste prompt for later
+"I finished coding in Claude. Please do a strict re-audit of changed files, identify regressions, and give me:
+1) must-fix before playtest,
+2) safe-to-ship now,
+3) exact follow-up patch list with file targets."
