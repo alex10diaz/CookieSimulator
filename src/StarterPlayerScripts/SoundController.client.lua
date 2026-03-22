@@ -21,14 +21,21 @@ local IDS = {
     DOUGH_DONE    = "rbxassetid://4590662766",  -- dough stage complete chime
     FROST_SQUIRT  = "rbxassetid://6518383320",  -- frosting squirt / swirl
     FROST_DONE    = "rbxassetid://4590662766",  -- frost stage complete chime
-    -- Delivery
+    -- Delivery & rewards
     CASH_REG      = "rbxassetid://131070686",   -- cash register ka-ching (delivery success)
     DELIVERY_FAIL = "rbxassetid://2865227271",  -- low buzzer (delivery fail)
+    COINS_JINGLE  = "rbxassetid://4590662766",  -- coins reward chime
+    -- NPC & interactions
+    NPC_BELL      = "rbxassetid://131634004",   -- customer arrives bell
+    FRIDGE_CLICK  = "rbxassetid://6026984224",  -- fridge door open
+    BOX_PICKUP    = "rbxassetid://5804534642",  -- box pickup thud
     -- UI
     UI_CLICK      = "rbxassetid://608537390",   -- soft UI tap
-    ORDER_BELL    = "rbxassetid://131634004",   -- ding (new order accepted)
+    ORDER_BELL    = "rbxassetid://131634004",   -- ding (player accepts NPC order)
     LEVEL_UP      = "rbxassetid://3331843335",  -- fanfare (bakery level up)
     MASTERY_UP    = "rbxassetid://4590662766",  -- soft chime (station mastery up)
+    -- Ambient
+    MUSIC         = "rbxassetid://1843073454",  -- bakery background loop
 }
 
 -- ── Build sounds ──────────────────────────────────────────────────────────────
@@ -42,20 +49,28 @@ local function makeSound(id, volume, looped)
 end
 
 local sounds = {
-    mixerLoop = makeSound(IDS.MIXER_LOOP,    0.45, true),
-    ovenDing  = makeSound(IDS.OVEN_DING,     0.7,  false),
-    ovenOpen  = makeSound(IDS.OVEN_OPEN,     0.5,  false),
-    doughThud = makeSound(IDS.DOUGH_THUD,    0.55, false),
-    doughDone = makeSound(IDS.DOUGH_DONE,    0.5,  false),
-    frostSqrt = makeSound(IDS.FROST_SQUIRT,  0.5,  false),
-    frostDone = makeSound(IDS.FROST_DONE,    0.5,  false),
-    cashReg   = makeSound(IDS.CASH_REG,      0.8,  false),
-    delivFail = makeSound(IDS.DELIVERY_FAIL, 0.6,  false),
-    uiClick   = makeSound(IDS.UI_CLICK,      0.4,  false),
-    orderBell = makeSound(IDS.ORDER_BELL,    0.65, false),
-    levelUp   = makeSound(IDS.LEVEL_UP,      0.85, false),
-    masteryUp = makeSound(IDS.MASTERY_UP,    0.55, false),
+    mixerLoop   = makeSound(IDS.MIXER_LOOP,    0.45, true),
+    ovenDing    = makeSound(IDS.OVEN_DING,     0.7,  false),
+    ovenOpen    = makeSound(IDS.OVEN_OPEN,     0.5,  false),
+    doughThud   = makeSound(IDS.DOUGH_THUD,    0.55, false),
+    doughDone   = makeSound(IDS.DOUGH_DONE,    0.5,  false),
+    frostSqrt   = makeSound(IDS.FROST_SQUIRT,  0.5,  false),
+    frostDone   = makeSound(IDS.FROST_DONE,    0.5,  false),
+    cashReg     = makeSound(IDS.CASH_REG,      0.8,  false),
+    delivFail   = makeSound(IDS.DELIVERY_FAIL, 0.6,  false),
+    coinsJingle = makeSound(IDS.COINS_JINGLE,  0.5,  false),
+    npcBell     = makeSound(IDS.NPC_BELL,      0.7,  false),
+    fridgeClick = makeSound(IDS.FRIDGE_CLICK,  0.5,  false),
+    boxPickup   = makeSound(IDS.BOX_PICKUP,    0.55, false),
+    uiClick     = makeSound(IDS.UI_CLICK,      0.4,  false),
+    orderBell   = makeSound(IDS.ORDER_BELL,    0.65, false),
+    levelUp     = makeSound(IDS.LEVEL_UP,      0.85, false),
+    masteryUp   = makeSound(IDS.MASTERY_UP,    0.55, false),
+    music       = makeSound(IDS.MUSIC,         0.28, true),
 }
+
+-- Ambient music starts immediately
+sounds.music:Play()
 
 -- ── Global UI click listener ──────────────────────────────────────────────────
 -- Connects a click sound to any TextButton that appears in PlayerGui
