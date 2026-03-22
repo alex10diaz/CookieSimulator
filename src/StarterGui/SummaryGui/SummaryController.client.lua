@@ -11,15 +11,15 @@ local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local gui       = playerGui:WaitForChild("SummaryGui")
 
--- ── Palette ───────────────────────────────────────────────────────────────────
+-- ── Palette (dark navy-blue modal — matches minigame modals) ──────────────────
 local C = {
-    BG       = Color3.fromRGB(16, 16, 28),
-    CARD     = Color3.fromRGB(26, 26, 42),
-    CARD2    = Color3.fromRGB(32, 32, 52),
-    GOLD     = Color3.fromRGB(255, 200, 0),
-    GOLD_DIM = Color3.fromRGB(180, 140, 0),
-    WHITE    = Color3.fromRGB(255, 255, 255),
-    MUTED    = Color3.fromRGB(150, 150, 180),
+    BG       = Color3.fromRGB(15, 30, 60),    -- dark navy-blue
+    CARD     = Color3.fromRGB(22, 42, 80),    -- stat card bg
+    CARD2    = Color3.fromRGB(28, 50, 90),    -- employee row bg
+    GOLD     = Color3.fromRGB(255, 205, 50),  -- gold
+    GOLD_DIM = Color3.fromRGB(180, 140, 0),   -- header gradient dim end
+    WHITE    = Color3.fromRGB(240, 240, 255),  -- cool white text
+    MUTED    = Color3.fromRGB(110, 140, 190),  -- blue-toned muted text
 }
 
 -- ── Build frame ───────────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ end
 -- ── Divider ───────────────────────────────────────────────────────────────────
 local div = Instance.new("Frame", frame)
 div.Size = UDim2.new(1,-20,0,1); div.Position = UDim2.new(0,10,0,168)
-div.BackgroundColor3 = Color3.fromRGB(60,60,90); div.BorderSizePixel = 0
+div.BackgroundColor3 = Color3.fromRGB(40, 70, 120); div.BorderSizePixel = 0
 
 -- ── Employee of Shift ─────────────────────────────────────────────────────────
 local empHeader = Instance.new("TextLabel", frame)
@@ -162,7 +162,7 @@ countdownLabel.Name = "Countdown"
 countdownLabel.Size = UDim2.new(1, -20, 0, 22)
 countdownLabel.Position = UDim2.new(0, 10, 0, 424)
 countdownLabel.BackgroundTransparency = 1
-countdownLabel.TextColor3 = Color3.fromRGB(120, 120, 150)
+countdownLabel.TextColor3 = Color3.fromRGB(110, 140, 190)
 countdownLabel.Font = Enum.Font.Gotham
 countdownLabel.TextScaled = true
 countdownLabel.Text = ""
@@ -171,15 +171,15 @@ local continueBtn = Instance.new("TextButton", frame)
 continueBtn.Name = "ContinueBtn"
 continueBtn.Size = UDim2.new(1, -40, 0, 48)
 continueBtn.Position = UDim2.new(0, 20, 0, 450)
-continueBtn.BackgroundColor3 = Color3.fromRGB(30, 100, 40)
+continueBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 100)
 continueBtn.BorderSizePixel = 0
 continueBtn.Font = Enum.Font.GothamBold
 continueBtn.TextSize = 15
-continueBtn.TextColor3 = Color3.fromRGB(200, 255, 210)
-continueBtn.Text = "Continue"
+continueBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+continueBtn.Text = "Continue →"
 Instance.new("UICorner", continueBtn).CornerRadius = UDim.new(0, 10)
 local btnStroke = Instance.new("UIStroke", continueBtn)
-btnStroke.Color = Color3.fromRGB(60, 180, 80); btnStroke.Thickness = 1.5
+btnStroke.Color = Color3.fromRGB(240, 90, 150); btnStroke.Thickness = 1.5
 
 gui.Enabled = false
 
