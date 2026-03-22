@@ -35,9 +35,9 @@ local function updateBillboards(state)
         local count    = state[fridgeId] or 0
         local ratio    = count / MAX_STOCK
 
-        local fillColor = ratio > 0.5  and Color3.fromRGB(80, 210, 120)
-                       or ratio > 0    and Color3.fromRGB(255, 185, 50)
-                       or                  Color3.fromRGB(200, 70, 70)
+        local fillColor = ratio > 0.5  and Color3.fromRGB(80, 215, 115)   -- GREEN
+                       or ratio > 0    and Color3.fromRGB(255, 205, 50)    -- GOLD
+                       or                  Color3.fromRGB(220, 65, 65)     -- RED
 
         for _, desc in ipairs(fridge:GetDescendants()) do
             if desc:IsA("BillboardGui") and desc.Name == "FridgeDisplay" then
