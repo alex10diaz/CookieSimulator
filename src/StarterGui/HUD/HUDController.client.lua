@@ -510,6 +510,7 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     if state == "Intermission" or state == "EndOfDay" then
         for key in pairs(orderCards) do removeCard(key) end
         activeOrders = {}; emptyLbl.Visible = true; coachBar.Visible = false
+        hideTray()
     end
     if state == "Open" and coachCount < 3 then coachBar.Visible = true end
 end)
