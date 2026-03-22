@@ -13,6 +13,8 @@ local npcOrderCancelledEvent  = RemoteManager.Get("NPCOrderCancelledClient")
 local driveThruArrivedEvent   = RemoteManager.Get("DriveThruCarArrived")  -- S-3
 local npcOrderFailedEvent     = RemoteManager.Get("NPCOrderFailed")       -- S-4
 local comboUpdateEvent        = RemoteManager.Get("ComboUpdate")          -- S-9
+local npcPatienceEvent        = RemoteManager.Get("NPCPatienceUpdate")    -- S-6
+local boxCreatedEvent         = RemoteManager.Get("BoxCreated")           -- S-8
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -122,9 +124,10 @@ stockLbl.TextWrapped       = true
 stockLbl.TextXAlignment    = Enum.TextXAlignment.Left
 stockLbl.Text              = ""
 
+-- UI-3: expanded names so players can read warmer stock at a glance
 local SHORT = {
-    pink_sugar="Pink",chocolate_chip="Choc",birthday_cake="Bday",
-    cookies_and_cream="C&C",snickerdoodle="Snick",lemon_blackraspberry="Lemon",
+    pink_sugar="Pink Sugar",chocolate_chip="Choc Chip",birthday_cake="Bday Cake",
+    cookies_and_cream="C&C",snickerdoodle="Snickerdoodle",lemon_blackraspberry="Lemon",
 }
 local function updateStockPill(stockByType)
     if not stockByType then stockPill.Visible = false; return end

@@ -662,6 +662,14 @@ local function startPatienceTicker(npcId)
                 data.patience -= 1
                 if data.state == "seated" or data.state == "at_counter" then
                     NPCSpawner.SetTimerText(data.model, formatTime(data.patience))
+                    -- S-6: broadcast patience ratio to all clients every 5 ticks
+                    if data.patience % 5 == 0 and data.order then
+                        npcPatienceRemote:FireAllClients(
+                            data.order.orderId,
+                            data.patience,
+                            data.maxPatience or data.patience
+                        )
+                    end
                 end
                 if data.patience <= 0 then
                     npcLeave(npcId, "patience_expired")
@@ -700,6 +708,7 @@ local function spawnNPC()
         isVIP           = isVIP,
         state           = "queuing",
         patience        = getPatienceTime(),
+        maxPatience     = getPatienceTime(),  -- S-6: store initial value for ratio calc
         queueSlot       = slot,
         waitSpot        = nil,
         order           = nil,

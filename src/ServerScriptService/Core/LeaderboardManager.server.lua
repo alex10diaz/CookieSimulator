@@ -4,7 +4,7 @@
 -- All-time: from PlayerDataManager profiles (online players)
 --
 -- Set LEADERBOARD_ENABLED = true when the game launches.
-local LEADERBOARD_ENABLED = false
+local LEADERBOARD_ENABLED = true  -- S-10: enabled for alpha
 
 local Players             = game:GetService("Players")
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
@@ -112,6 +112,16 @@ end)
 Players.PlayerAdded:Connect(function()
     task.wait(3)
     broadcast()
+end)
+
+-- S-10: Live broadcast every 30s during Open phase
+task.spawn(function()
+    while true do
+        task.wait(30)
+        if Workspace:GetAttribute("GameState") == "Open" then
+            broadcast()
+        end
+    end
 end)
 
 print("[LeaderboardManager] Ready")
