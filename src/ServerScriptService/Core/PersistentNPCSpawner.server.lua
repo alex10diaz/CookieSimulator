@@ -460,6 +460,10 @@ npcLeave = function(npcId, reason)
         OrderManager.CancelNPCOrder(data.order.orderId)
         -- Tell HUDController to remove this order from the active-order pill
         npcOrderCancelledRemote:FireAllClients(data.order.orderId, data.order.cookieId, data.order.packSize)
+        -- S-4: if NPC left due to patience expiry, broadcast fail state to all clients
+        if reason == "patience_expired" or reason == "counter_timeout" then
+            npcOrderFailedRemote:FireAllClients(data.name, data.order.orderId)
+        end
     end
 
     npcs[npcId] = nil
@@ -560,6 +564,8 @@ addDeliverPrompt = function(npcId)
             PlayerDataManager.ResetCombo(player)
             comboStreak = 0
         end
+        -- S-9: notify client of updated combo streak
+        comboUpdateRemote:FireClient(player, comboStreak)
 
         -- Full payout via EconomyManager
         -- timeRemaining=0, totalTime=1 → speedMult=1.0 (no timer tracking in M4)

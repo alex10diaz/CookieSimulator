@@ -10,6 +10,9 @@ local deliveryEvent  = RemoteManager.Get("DeliveryResult")
 local hudUpdateEvent          = RemoteManager.Get("HUDUpdate")
 local warmersStockEvent       = RemoteManager.Get("WarmersUpdated")  -- P2-1: per-type stock
 local npcOrderCancelledEvent  = RemoteManager.Get("NPCOrderCancelledClient")
+local driveThruArrivedEvent   = RemoteManager.Get("DriveThruCarArrived")  -- S-3
+local npcOrderFailedEvent     = RemoteManager.Get("NPCOrderFailed")       -- S-4
+local comboUpdateEvent        = RemoteManager.Get("ComboUpdate")          -- S-9
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -356,6 +359,74 @@ npcOrderCancelledEvent.OnClientEvent:Connect(function(orderId, cookieId, packSiz
     -- Last resort: remove oldest
     table.remove(activeOrders, 1)
     refreshOrderPill()
+end)
+
+-- ── Alert pill helper (S-3, S-4) ─────────────────────────────────────────────
+local function showAlert(text, bgColor, accentColor, duration)
+    -- Remove any existing alert to avoid stacking
+    local existing = hud:FindFirstChild("AlertPill")
+    if existing then existing:Destroy() end
+
+    local alert = Instance.new("Frame", hud)
+    alert.Name = "AlertPill"
+    alert.Size = UDim2.new(0, 210, 0, 36)
+    alert.Position = UDim2.new(0.5, -105, 0, 62)
+    alert.BackgroundColor3 = bgColor
+    alert.BackgroundTransparency = 1; alert.BorderSizePixel = 0; alert.ZIndex = 40
+    Instance.new("UICorner", alert).CornerRadius = UDim.new(1, 0)
+    local stroke = Instance.new("UIStroke", alert)
+    stroke.Color = accentColor; stroke.Thickness = 1.5; stroke.Transparency = 1
+    local lbl = Instance.new("TextLabel", alert)
+    lbl.Size = UDim2.new(1,-8,1,0); lbl.Position = UDim2.new(0,4,0,0)
+    lbl.BackgroundTransparency = 1; lbl.TextColor3 = accentColor
+    lbl.Font = Enum.Font.GothamBold; lbl.TextScaled = true
+    lbl.Text = text; lbl.TextTransparency = 1; lbl.ZIndex = 41
+
+    TweenService:Create(alert,  TI(0.2), { BackgroundTransparency = 0.1 }):Play()
+    TweenService:Create(stroke, TI(0.2), { Transparency = 0.3 }):Play()
+    TweenService:Create(lbl,    TI(0.2), { TextTransparency = 0 }):Play()
+
+    task.delay(duration or 3, function()
+        if not alert.Parent then return end
+        TweenService:Create(alert,  TI(0.3), { BackgroundTransparency = 1 }):Play()
+        TweenService:Create(stroke, TI(0.3), { Transparency = 1 }):Play()
+        local t = TweenService:Create(lbl, TI(0.3), { TextTransparency = 1 })
+        t:Play()
+        t.Completed:Connect(function() if alert.Parent then alert:Destroy() end end)
+    end)
+end
+
+-- S-3: Drive-thru car arrival alert
+driveThruArrivedEvent.OnClientEvent:Connect(function()
+    showAlert("Drive Thru!", Color3.fromRGB(20, 45, 90), C.BLUE, 5)
+end)
+
+-- S-4: Order failed alert (NPC left without delivery)
+npcOrderFailedEvent.OnClientEvent:Connect(function(npcName)
+    local text = (npcName and npcName ~= "") and ("Order Failed! " .. npcName .. " left") or "Order Failed!"
+    showAlert(text, Color3.fromRGB(70, 18, 18), C.RED, 4)
+end)
+
+-- S-9: Combo streak pill (bottom-center, visible when streak >= 2)
+local comboPill = Instance.new("Frame", hud)
+comboPill.Name = "ComboPill"
+comboPill.Size = UDim2.new(0, 130, 0, 36)
+comboPill.Position = UDim2.new(0.5, -65, 1, -56)
+comboPill.BackgroundColor3 = Color3.fromRGB(180, 80, 10)
+comboPill.BackgroundTransparency = 1; comboPill.BorderSizePixel = 0; comboPill.ZIndex = 30
+Instance.new("UICorner", comboPill).CornerRadius = UDim.new(1, 0)
+local comboLbl = Instance.new("TextLabel", comboPill)
+comboLbl.Size = UDim2.new(1,0,1,0); comboLbl.BackgroundTransparency = 1
+comboLbl.TextColor3 = Color3.fromRGB(255, 200, 80); comboLbl.Font = Enum.Font.GothamBold
+comboLbl.TextScaled = true; comboLbl.ZIndex = 31
+
+comboUpdateEvent.OnClientEvent:Connect(function(streak)
+    if streak and streak >= 2 then
+        comboLbl.Text = "x" .. streak .. " COMBO"
+        TweenService:Create(comboPill, TI(0.2), { BackgroundTransparency = 0.15 }):Play()
+    else
+        TweenService:Create(comboPill, TI(0.3), { BackgroundTransparency = 1 }):Play()
+    end
 end)
 
 print("[HUDController] Ready.")
