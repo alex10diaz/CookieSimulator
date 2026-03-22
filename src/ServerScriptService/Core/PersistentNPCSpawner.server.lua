@@ -70,8 +70,12 @@ local rushHourActive = false  -- set by RushHourStart/End BindableEvents
 
 local npcs        = {}  -- npcId -> npc data
 local npcQueue    = {}  -- ordered list: npcIds currently in the POS queue
-local pendingBoxes = {} -- cookieId -> { boxId, carrier, npcId }
+local pendingBoxes = {} -- "npc_<id>" -> { boxId, carrier, npcId }
 local nextNpcId   = 1
+
+local function pendingKeyForNpc(npcId)
+    return "npc_" .. tostring(npcId)
+end
 
 -- ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -365,6 +369,10 @@ local function confirmOrder(player, npcId)
     end
     if data.state ~= "cutscene_pending" then
         warn("[NPCController] confirmOrder: unexpected state:", data.state)
+        return
+    end
+    if data.triggeringPlayer and data.triggeringPlayer ~= player then
+        warn("[AntiExploit] " .. player.Name .. " tried to confirm another player's cutscene npcId=" .. tostring(npcId))
         return
     end
     data.triggeringPlayer = nil  -- clear now that cutscene is resolved

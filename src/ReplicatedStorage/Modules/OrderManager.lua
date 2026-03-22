@@ -387,15 +387,41 @@ end
 function OrderManager.DeliverBox(player, boxId, npcOrderId)
     local box = boxes[boxId]
     if not box then return false end
-    box.status = "delivered"
+    if box.status ~= "carrying" then
+        warn(string.format("[AntiExploit] DeliverBox rejected: box #%d not in carrying state (status=%s)", boxId, tostring(box.status)))
+        return false
+    end
+    if box.carrier ~= player.Name then
+        warn(string.format("[AntiExploit] DeliverBox rejected: %s tried to deliver box #%d carried by %s",
+            player.Name, boxId, tostring(box.carrier)))
+        return false
+    end
 
     local order = nil
     for i, o in ipairs(npcOrders) do
         if o.orderId == npcOrderId then
+            -- Validate order↔box compatibility before consuming order
+            if o.isVariety then
+                if not box.isVariety then
+                    warn(string.format("[AntiExploit] DeliverBox rejected: box #%d is not variety for variety order #%d", boxId, npcOrderId))
+                    return false
+                end
+            else
+                if box.cookieId ~= o.cookieId then
+                    warn(string.format("[AntiExploit] DeliverBox rejected: cookie mismatch box=%s order=%s",
+                        tostring(box.cookieId), tostring(o.cookieId)))
+                    return false
+                end
+            end
             order = table.remove(npcOrders, i)
             break
         end
     end
+    if not order then
+        warn(string.format("[AntiExploit] DeliverBox rejected: order #%s not found for box #%d", tostring(npcOrderId), boxId))
+        return false
+    end
+    box.status = "delivered"
 
     print(string.format("[OrderManager] Box #%d delivered by %s | Quality: %d%% | NPC: %s",
         boxId, player.Name, box.quality, order and order.npcName or "unknown"))
