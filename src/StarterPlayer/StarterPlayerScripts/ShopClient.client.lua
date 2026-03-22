@@ -24,8 +24,8 @@ local tabUpgrade = bg:WaitForChild("TabUpgrades")
 local tabCosm    = bg:WaitForChild("TabCosmetics")
 local itemList   = bg:WaitForChild("ItemList")  -- ScrollingFrame
 
-local ACCENT   = Color3.fromRGB(255, 200, 0)  -- gold
-local NAVY     = Color3.fromRGB(14, 14, 26)
+local ACCENT   = Color3.fromRGB(255, 205, 50)  -- gold
+local NAVY     = Color3.fromRGB(15, 30, 60)
 
 -- ── CLIENT STATE ────────────────────────────────────────────────
 local ownedStations  = {}
@@ -97,21 +97,21 @@ local function renderItems()
         row.Size             = UDim2.new(1, -8, 0, ROW_H - 4)
         row.Position         = UDim2.new(0, 4, 0, yOffset + 2)
         row.BackgroundColor3 = owned
-            and Color3.fromRGB(18, 38, 20)
-            or  Color3.fromRGB(18, 18, 32)
+            and Color3.fromRGB(18, 48, 24)
+            or  Color3.fromRGB(22, 42, 80)
         row.BorderSizePixel  = 0
         row.Parent           = itemList
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
         local rowStroke = Instance.new("UIStroke", row)
         rowStroke.Color     = owned
             and Color3.fromRGB(40, 110, 45)
-            or  Color3.fromRGB(40, 40, 65)
+            or  Color3.fromRGB(40, 70, 120)
         rowStroke.Thickness = 1
 
         -- Left accent stripe (gold = owned, dim = not)
         local stripe = Instance.new("Frame", row)
         stripe.Size             = UDim2.new(0, 4, 1, 0)
-        stripe.BackgroundColor3 = owned and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(50, 50, 80)
+        stripe.BackgroundColor3 = owned and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(40, 70, 120)
         stripe.BorderSizePixel  = 0
         Instance.new("UICorner", stripe).CornerRadius = UDim.new(0, 8)
 
@@ -123,7 +123,7 @@ local function renderItems()
         nameLabel.Text                   = item.name
         nameLabel.TextColor3             = owned
             and Color3.fromRGB(120, 220, 120)
-            or  Color3.fromRGB(230, 230, 245)
+            or  Color3.fromRGB(240, 240, 255)
         nameLabel.Font                   = Enum.Font.GothamBold
         nameLabel.TextSize               = 14
         nameLabel.TextXAlignment         = Enum.TextXAlignment.Left
@@ -135,7 +135,7 @@ local function renderItems()
         descLabel.Position               = UDim2.new(0, 14, 0, 32)
         descLabel.BackgroundTransparency = 1
         descLabel.Text                   = item.desc
-        descLabel.TextColor3             = Color3.fromRGB(130, 130, 165)
+        descLabel.TextColor3             = Color3.fromRGB(110, 140, 190)
         descLabel.Font                   = Enum.Font.Gotham
         descLabel.TextSize               = 11
         descLabel.TextXAlignment         = Enum.TextXAlignment.Left
@@ -152,7 +152,7 @@ local function renderItems()
             or  (tostring(item.price) .. " coins")
         priceLabel.TextColor3             = owned
             and Color3.fromRGB(80, 200, 80)
-            or  ((afford and prereq) and Color3.fromRGB(255, 215, 80) or Color3.fromRGB(120, 120, 145))
+            or  ((afford and prereq) and Color3.fromRGB(255, 215, 80) or Color3.fromRGB(110, 140, 190))
         priceLabel.Font                   = Enum.Font.GothamBold
         priceLabel.TextSize               = 12
         priceLabel.TextXAlignment         = Enum.TextXAlignment.Center
@@ -165,12 +165,12 @@ local function renderItems()
             buyBtn.Size             = UDim2.new(0.22, 0, 0, 26)
             buyBtn.Position         = UDim2.new(0.73, 0, 0, 34)
             buyBtn.BackgroundColor3 = canBuy
-                and Color3.fromRGB(30, 100, 40)
-                or  Color3.fromRGB(22, 22, 40)
+                and Color3.fromRGB(200, 40, 100)
+                or  Color3.fromRGB(22, 42, 80)
             buyBtn.Text             = (not prereq) and "Locked" or "Buy"
             buyBtn.TextColor3       = canBuy
-                and Color3.fromRGB(180, 240, 180)
-                or  Color3.fromRGB(80, 80, 100)
+                and Color3.fromRGB(255, 255, 255)
+                or  Color3.fromRGB(110, 140, 190)
             buyBtn.Font             = Enum.Font.GothamBold
             buyBtn.TextSize         = 13
             buyBtn.AutoButtonColor  = false
@@ -179,8 +179,8 @@ local function renderItems()
             Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 6)
             local buyStroke = Instance.new("UIStroke", buyBtn)
             buyStroke.Color     = canBuy
-                and Color3.fromRGB(50, 160, 60)
-                or  Color3.fromRGB(40, 40, 65)
+                and Color3.fromRGB(240, 90, 150)
+                or  Color3.fromRGB(40, 70, 120)
             buyStroke.Thickness = 1.5
 
             if canBuy then
