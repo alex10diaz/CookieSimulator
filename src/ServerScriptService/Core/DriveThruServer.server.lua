@@ -364,9 +364,15 @@ OrderManager.On("BoxCreated", function(box)
         PlayerDataManager.AddXP(player, deliverXp)
         SessionStats.RecordDelivery(5, deliverCoins, 0, order.packSize)
 
+        -- Fetch updated profile totals so HUD shows cumulative coins, not just earned
+        local profile = PlayerDataManager.GetData(player)
+
         local deliveryResult = RemoteManager.Get("DeliveryResult")
         deliveryResult:FireClient(player, 5, deliverCoins, deliverXp)
-        hudUpdate:FireClient(player, deliverCoins, deliverXp, nil)
+        hudUpdate:FireClient(player,
+            profile and profile.coins or 0,
+            profile and profile.xp    or 0,
+            nil)
 
         print(string.format("[DriveThruServer] %s delivered | %s x%d | +%d coins",
             player.Name, order.cookieId, order.packSize, deliverCoins))
