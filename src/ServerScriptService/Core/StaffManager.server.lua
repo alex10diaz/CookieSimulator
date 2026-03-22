@@ -553,6 +553,9 @@ end
 local function spawnHirePrompts()
 	if next(hirePrompts) ~= nil then return end  -- guard against double-call
 	for stationId, stationDef in pairs(STATIONS) do
+		-- m-9: destroy any previous anchor from a prior call to prevent leaking Parts into workspace
+		local existing = workspace:FindFirstChild("HireAnchor_" .. stationId)
+		if existing then existing:Destroy() end
 		local anchor = Instance.new("Part")
 		anchor.Name         = "HireAnchor_" .. stationId
 		anchor.Anchored     = true

@@ -63,6 +63,7 @@ local forceDropBoxRemote       = RemoteManager.Get("ForceDropBox")
 local npcOrderCancelledRemote  = RemoteManager.Get("NPCOrderCancelledClient")
 local comboUpdateRemote        = RemoteManager.Get("ComboUpdate")       -- S-9
 local npcOrderFailedRemote     = RemoteManager.Get("NPCOrderFailed")    -- S-4
+local npcPatienceRemote        = RemoteManager.Get("NPCPatienceUpdate") -- S-6
 
 -- ─── STATE ────────────────────────────────────────────────────────────────────
 local rushHourActive = false  -- set by RushHourStart/End BindableEvents

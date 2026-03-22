@@ -124,6 +124,8 @@ local REMOTES = {
     "NPCOrderFailed",          -- Server->All: NPC name + orderId; clients flash fail state
     -- S-9: Combo streak update
     "ComboUpdate",             -- Server->Client: current combo streak count
+    -- S-6: NPC patience replication
+    "NPCPatienceUpdate",       -- Server->All: orderId, currentPatience, maxPatience
 }
 
 -- Server creates all remotes; client waits for server-created ones.

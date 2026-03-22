@@ -158,7 +158,11 @@ local function startWhenReady()
     if #Players:GetPlayers() == 0 then
         Players.PlayerAdded:Wait()
     end
-    task.wait(2) -- brief settle for all systems to load
+    -- m-10: poll until GameEvents folder exists (confirms RemoteManager bootstrapped)
+    local _rs, _w = game:GetService("ReplicatedStorage"), 0
+    while not _rs:FindFirstChild("GameEvents") and _w < 10 do
+        task.wait(0.5); _w += 0.5
+    end
     task.spawn(runCycle)
 end
 
