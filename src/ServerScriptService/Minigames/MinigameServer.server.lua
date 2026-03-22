@@ -264,7 +264,7 @@ end
 -- ============================================================
 
 -- DOUGH, FROST, DRESS prompts
-local function handleSimpleStart(player, stationName)
+local function handleSimpleStart(player, stationName, stationModel)
     local gameState = Workspace:GetAttribute("GameState")
     if gameState ~= "Open" and gameState ~= "PreOpen" then return end  -- lock during Intermission/EndOfDay/Lobby
     if activeSessions[player] then
@@ -308,7 +308,7 @@ local function handleSimpleStart(player, stationName)
         dressPending[player] = entry
     end
 
-    startSession(player, { station = stationName, batchId = batchId, warmerEntry = extraData and extraData.warmerEntry })
+    startSession(player, { station = stationName, batchId = batchId, warmerEntry = extraData and extraData.warmerEntry, stationModel = stationModel })
     
     local startRemote = RemoteManager.Get(config.start)
     if stationName == "dress" and extraData and extraData.warmerEntry then
@@ -322,9 +322,11 @@ end
 local function hookPromptIfNamed(desc)
     if not desc:IsA("ProximityPrompt") then return end
     if desc.Name == "DoughPrompt" then
-        desc.Triggered:Connect(function(player) handleSimpleStart(player, "dough") end)
+        local model = desc:FindFirstAncestorOfClass("Model")
+        desc.Triggered:Connect(function(player) handleSimpleStart(player, "dough", model) end)
     elseif desc.Name == "FrostPrompt" then
-        desc.Triggered:Connect(function(player) handleSimpleStart(player, "frost") end)
+        local model = desc:FindFirstAncestorOfClass("Model")
+        desc.Triggered:Connect(function(player) handleSimpleStart(player, "frost", model) end)
     -- DressPrompt is handled by DressStationServer (KDS system)
     end
 end
@@ -455,7 +457,7 @@ local function hookFridgeOvenPrompts()
                 
                 print(string.format("[MinigameServer] %s deposited batch #%d into %s", player.Name, batchId, oven.Name))
                 
-                startSession(player, { station = "oven", batchId = batchId })
+                startSession(player, { station = "oven", batchId = batchId, stationModel = oven })
                 
                 local startRemote = RemoteManager.Get("StartOvenMinigame")
                 startRemote:FireClient(player)
