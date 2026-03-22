@@ -2,9 +2,10 @@
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local OrderManager   = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
 local ServerScriptService = game:GetService("ServerScriptService")
-local SessionStats = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
+local SessionStats   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local DEV_SKIP_PREOPEN    = false     -- false = always run PreOpen (production)
@@ -95,6 +96,7 @@ end)
 
 local function runCycle()
     while true do
+        OrderManager.Reset()   -- wipe pipeline state before every new shift
         SessionStats.Reset()
         if not DEV_SKIP_PREOPEN then
             runPhase(PREOPEN_DURATION, "PreOpen")
