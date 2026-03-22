@@ -57,35 +57,24 @@ end
 -- spawnWorkerRig(workerName, spawnCF)
 -- Builds a minimal NPC model and parents it to workspace.
 -- Returns the Model instance.
-local function spawnWorkerRig(workerName, spawnCF, hiringPlayer)
+local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 	local rig
 
-	-- Clone the hiring player's character so the worker looks like them
-	if hiringPlayer and hiringPlayer.Character then
+	-- M-10: use clean NPCTemplate R6 rig instead of cloning the hiring player's character
+	local template = ServerStorage:FindFirstChild("NPCTemplate")
+	if template then
 		local ok, err2 = pcall(function()
-			local char = hiringPlayer.Character
-			char.Archivable = true
-			local clone = char:Clone()
-			char.Archivable = false
+			local clone = template:Clone()
 			clone.Name = workerName
 
-			-- Strip scripts / animators / sounds — keep visuals only
-			for _, obj in ipairs(clone:GetDescendants()) do
-				if obj:IsA("Script") or obj:IsA("LocalScript")
-					or obj:IsA("Animator") or obj:IsA("AnimationController")
-					or obj:IsA("Sound") then
-					obj:Destroy()
-				end
+			-- Hide health/name bar
+			local hum = clone:FindFirstChildOfClass("Humanoid")
+			if hum then
+				hum.DisplayDistanceType   = Enum.HumanoidDisplayDistanceType.None
+				hum.HealthDisplayDistance = 0
 			end
 
-			-- Hide default name/health bar
-			local hum2 = clone:FindFirstChildOfClass("Humanoid")
-			if hum2 then
-				hum2.DisplayDistanceType  = Enum.HumanoidDisplayDistanceType.None
-				hum2.HealthDisplayDistance = 0
-			end
-
-			-- Anchor + disable collision on every part
+			-- Anchor + disable collision
 			for _, part in ipairs(clone:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.Anchored   = true
@@ -93,37 +82,25 @@ local function spawnWorkerRig(workerName, spawnCF, hiringPlayer)
 				end
 			end
 
-			-- Reset all joint transforms to T-pose so the clone isn't frozen mid-walk
-			for _, j in ipairs(clone:GetDescendants()) do
-				if j:IsA("Motor6D") then
-					j.Transform = CFrame.new()
-				end
-			end
-
-			-- Remove existing shirt/pants so baker uniform is clean
-			for _, obj in ipairs(clone:GetChildren()) do
-				if obj:IsA("Shirt") or obj:IsA("Pants") then obj:Destroy() end
-			end
-
-			-- Teleport: move each part relative to HRP offset
-			local hrp2 = clone:FindFirstChild("HumanoidRootPart")
-			if hrp2 then
-				local originCF = hrp2.CFrame
+			-- Place at spawn
+			local hrp = clone:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				local originCF = hrp.CFrame
 				for _, part in ipairs(clone:GetDescendants()) do
 					if part:IsA("BasePart") then
 						local offset = originCF:ToObjectSpace(part.CFrame)
 						part.CFrame = spawnCF * offset
 					end
 				end
-				hrp2.CFrame = spawnCF
-				clone.PrimaryPart = hrp2
+				hrp.CFrame = spawnCF
+				clone.PrimaryPart = hrp
 			end
 
 			clone.Parent = workspace
 			rig = clone
 		end)
 		if not ok then
-			warn("[StaffManager] Character clone failed, using block rig:", err2)
+			warn("[StaffManager] NPCTemplate clone failed, using block rig:", err2)
 		end
 	end
 
