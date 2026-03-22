@@ -411,6 +411,89 @@ comboLbl.BackgroundTransparency = 1; comboLbl.TextColor3 = Color3.fromRGB(255,20
 comboLbl.Font = Enum.Font.GothamBold; comboLbl.TextScaled = true; comboLbl.ZIndex = 31
 
 -- ══════════════════════════════════════════════════════════════════════════════
+-- SETTINGS PANEL
+-- ══════════════════════════════════════════════════════════════════════════════
+local settingsPanel = Instance.new("Frame", hud)
+settingsPanel.Name = "SettingsPanel"
+settingsPanel.Size = UDim2.new(0, 220, 0, 148)
+settingsPanel.Position = UDim2.new(1, -230, 0, 58)
+settingsPanel.BackgroundColor3 = C.CARD
+settingsPanel.BackgroundTransparency = 0.06
+settingsPanel.BorderSizePixel = 0; settingsPanel.ZIndex = 50
+settingsPanel.Visible = false
+corner(settingsPanel, 12); addStroke(settingsPanel, C.WARM_BRN, 2, 0.2)
+
+local sHdr = Instance.new("Frame", settingsPanel)
+sHdr.Size = UDim2.new(1,0,0,34); sHdr.Position = UDim2.new(0,0,0,0)
+sHdr.BackgroundColor3 = C.WARM_BRN; sHdr.BackgroundTransparency = 0.1
+sHdr.BorderSizePixel = 0; sHdr.ZIndex = 51
+corner(sHdr, 12)
+local sHdrFlat = Instance.new("Frame", sHdr)
+sHdrFlat.Size = UDim2.new(1,0,0.5,0); sHdrFlat.Position = UDim2.new(0,0,0.5,0)
+sHdrFlat.BackgroundColor3 = C.WARM_BRN; sHdrFlat.BackgroundTransparency = 0.1
+sHdrFlat.BorderSizePixel = 0; sHdrFlat.ZIndex = 51
+local sTitle = Instance.new("TextLabel", sHdr)
+sTitle.Size = UDim2.new(1,-40,1,0); sTitle.Position = UDim2.new(0,12,0,0)
+sTitle.BackgroundTransparency = 1; sTitle.TextColor3 = C.WHITE
+sTitle.Font = Enum.Font.GothamBold; sTitle.TextSize = 14
+sTitle.TextXAlignment = Enum.TextXAlignment.Left
+sTitle.Text = "⚙  Settings"; sTitle.ZIndex = 52
+local sClose = Instance.new("TextButton", sHdr)
+sClose.Size = UDim2.new(0,30,0,30); sClose.Position = UDim2.new(1,-34,0.5,-15)
+sClose.BackgroundTransparency = 1; sClose.TextColor3 = C.WHITE
+sClose.Font = Enum.Font.GothamBold; sClose.TextSize = 16
+sClose.Text = "✕"; sClose.ZIndex = 52; sClose.BorderSizePixel = 0
+
+local function makeToggle(yPos, icon, label, attrName)
+    local row = Instance.new("Frame", settingsPanel)
+    row.Size = UDim2.new(1,-16,0,44); row.Position = UDim2.new(0,8,0,yPos)
+    row.BackgroundTransparency = 1; row.BorderSizePixel = 0; row.ZIndex = 51
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(0.7,0,1,0); lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = C.TEXT_DRK; lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.ZIndex = 52
+    lbl.Text = icon .. "  " .. label
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(0,64,0,30); btn.Position = UDim2.new(1,-64,0.5,-15)
+    btn.BorderSizePixel = 0; btn.ZIndex = 52
+    btn.Font = Enum.Font.GothamBold; btn.TextSize = 12
+    btn.TextColor3 = C.WHITE; btn.AutoButtonColor = false
+    corner(btn, 8)
+    player:SetAttribute(attrName, true)
+    local function refresh()
+        local on = player:GetAttribute(attrName) ~= false
+        btn.BackgroundColor3 = on and C.GREEN or C.RED
+        btn.Text = on and "ON" or "OFF"
+        if attrName == "MusicEnabled" then
+            for _, snd in ipairs(workspace:GetDescendants()) do
+                if snd:IsA("Sound") and snd.Name:lower():find("music") then
+                    snd.Volume = on and 0.5 or 0
+                end
+            end
+        end
+    end
+    refresh()
+    btn.MouseButton1Click:Connect(function()
+        player:SetAttribute(attrName, not (player:GetAttribute(attrName) ~= false))
+        refresh()
+    end)
+end
+
+makeToggle(42,  "🎵", "Music",    "MusicEnabled")
+makeToggle(94,  "🔊", "Sound FX", "SFXEnabled")
+
+local settingsOpen = false
+local function toggleSettings()
+    settingsOpen = not settingsOpen
+    settingsPanel.Visible = settingsOpen
+    if settingsOpen then
+        settingsPanel.BackgroundTransparency = 1
+        TweenService:Create(settingsPanel, TIB(0.25), { BackgroundTransparency = 0.06 }):Play()
+    end
+end
+sClose.MouseButton1Click:Connect(function() settingsOpen = false; settingsPanel.Visible = false end)
+
+-- ══════════════════════════════════════════════════════════════════════════════
 -- TRAY PANEL (right side — what the player is currently carrying)
 -- ══════════════════════════════════════════════════════════════════════════════
 local trayPanel = Instance.new("Frame", hud)
@@ -524,6 +607,7 @@ settingsBtn.MouseButton1Click:Connect(function()
     task.delay(0.15, function()
         TweenService:Create(settingsBtn, TI(0.2), { BackgroundTransparency = 0.3 }):Play()
     end)
+    toggleSettings()
 end)
 
 local skipRemote = RemoteManager.Get("SkipPreOpen")
