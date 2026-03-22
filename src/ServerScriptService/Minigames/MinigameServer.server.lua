@@ -109,6 +109,7 @@ local function startSession(player, sessionData)
             end
             if (capturedStation == "frost" or capturedStation == "dress") and s.warmerEntry then
                 OrderManager.ReturnToWarmers(s.warmerEntry)
+            elseif (capturedStation == "frost" or capturedStation == "dress") and capturedBatchId then
                 OrderManager.ClearPostOvenScore(capturedBatchId)
             end
             activeSessions[player] = nil
@@ -117,6 +118,27 @@ local function startSession(player, sessionData)
             clearStationBillboard(capturedModel)
         end
     end)
+end
+
+local function cleanupPlayerSession(player, reason)
+    local session = activeSessions[player]
+    if session then
+        if session.station == "dough" and session.batchId then
+            doughLock[session.batchId] = nil
+        end
+        if (session.station == "frost" or session.station == "dress") and session.warmerEntry then
+            OrderManager.ReturnToWarmers(session.warmerEntry)
+        elseif (session.station == "frost" or session.station == "dress") and session.batchId then
+            OrderManager.ClearPostOvenScore(session.batchId)
+        end
+        clearStationBillboard(session.stationModel)
+    end
+    activeSessions[player] = nil
+    ovenSession[player]    = nil
+    dressPending[player]   = nil
+    if reason and session then
+        print(string.format("[MinigameServer] Cleared session for %s (%s)", player.Name, reason))
+    end
 end
 
 -- ============================================================
@@ -481,33 +503,18 @@ end
 
 -- m7: Player pressed Exit button — cancel session, return warmer entry if applicable
 RemoteManager.Get("CancelMinigame").OnServerEvent:Connect(function(player)
-    local session = activeSessions[player]
-    if not session then return end
-    if (session.station == "frost" or session.station == "dress") and session.warmerEntry then
-        OrderManager.ReturnToWarmers(session.warmerEntry)
-        OrderManager.ClearPostOvenScore(session.batchId)
-    end
-    if session.station == "dough" and session.batchId then
-        doughLock[session.batchId] = nil
-    end
-    activeSessions[player] = nil
-    dressPending[player]   = nil
-    print("[MinigameServer] " .. player.Name .. " cancelled " .. tostring(session.station))
+    if not activeSessions[player] then return end
+    cleanupPlayerSession(player, "cancelled")
 end)
 
 Players.PlayerRemoving:Connect(function(player)
-    -- Release any dough lock this player held
-    local session = activeSessions[player]
-    if session and session.station == "dough" and session.batchId then
-        doughLock[session.batchId] = nil
-    end
-    -- m2: clear postOvenScores for abandoned frost/dress sessions
-    if session and (session.station == "frost" or session.station == "dress") and session.batchId then
-        OrderManager.ClearPostOvenScore(session.batchId)
-    end
-    activeSessions[player] = nil
-    ovenSession[player]    = nil
-    dressPending[player]   = nil
+    cleanupPlayerSession(player, "player removing")
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterRemoving:Connect(function()
+        cleanupPlayerSession(player, "character reset")
+    end)
 end)
 
 
