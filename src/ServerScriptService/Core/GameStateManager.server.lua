@@ -99,7 +99,26 @@ local function runCycle()
         if not DEV_SKIP_PREOPEN then
             runPhase(PREOPEN_DURATION, "PreOpen")
         end
-        runPhase(OPEN_DURATION, "Open")
+        -- S-1: Open phase with rush hour at 70% elapsed
+        do
+            local ssEvents  = game:GetService("ServerStorage"):FindFirstChild("Events")
+            local rushStart = ssEvents and ssEvents:FindFirstChild("RushHourStart")
+            local rushEnd   = ssEvents and ssEvents:FindFirstChild("RushHourEnd")
+            local remaining = OPEN_DURATION
+            local rushFired = false
+            broadcast("Open", remaining)
+            while remaining > 0 do
+                task.wait(1)
+                remaining -= 1
+                stateChangedRemote:FireAllClients("Open", remaining)
+                if not rushFired and remaining <= RUSH_THRESHOLD then
+                    rushFired = true
+                    if rushStart then rushStart:Fire() end
+                    print("[GameStateManager] Rush Hour started! (" .. remaining .. "s remain)")
+                end
+            end
+            if rushEnd then rushEnd:Fire() end
+        end
 
         -- End of day
         broadcast("EndOfDay", SUMMARY_DURATION)
