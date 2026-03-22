@@ -12,6 +12,8 @@ local skipPreOpenFlag     = false
 local skipPreOpenRemote   = RemoteManager.Get("SkipPreOpen")
 local PREOPEN_DURATION    = 3 * 60   -- 3 minutes: enough time to prep dough before first customers
 local OPEN_DURATION       = 15 * 60  -- M-7: 15 minutes (was 10)
+-- S-1: rush hour fires when 30% of Open remains (= 70% elapsed)
+local RUSH_THRESHOLD      = math.floor(OPEN_DURATION * 0.30)
 local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
 local INTERMISSION_DURATION = 3 * 60 -- 3 minutes back room break
 
