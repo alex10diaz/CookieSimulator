@@ -284,7 +284,7 @@ local function spawnStagedBox(box)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText            = "Pick Up"
 	prompt.ObjectText            = label
-	prompt.MaxActivationDistance = 6
+	prompt.MaxActivationDistance = 10
 	prompt.RequiresLineOfSight   = false
 	prompt.Parent                = boxPart
 
