@@ -274,6 +274,14 @@ local function clearDressLock(player)
     if lock and lock.orderId then
         orderLockedBy[lock.orderId] = nil
     end
+    if lock and not lock.finalized and lock.pendingEntry then
+        OrderManager.ReturnToWarmers(lock.pendingEntry)
+    end
+    if lock and not lock.finalized and lock.collected then
+        for _, entry in ipairs(lock.collected) do
+            OrderManager.ReturnToWarmers(entry)
+        end
+    end
     dressLocked[player] = nil
 end
 
@@ -426,6 +434,7 @@ local function hookWarmerPrompt(prompt, model)
             end
             -- No toppings — create box immediately
             local box = OrderManager.CreateVarietyBox(player, lock.collected, DRESS_SCORE)
+            lock.finalized = box ~= nil
             clearDressLock(player)
             if box then
                 print(string.format("[DressStation] %s completed variety pickup -- box #%d for %s",
@@ -467,6 +476,7 @@ local function hookWarmerPrompt(prompt, model)
             end
             -- No toppings — create box immediately
             local box = OrderManager.CreateBox(player, entry.batchId, DRESS_SCORE, entry)
+            lock.finalized = box ~= nil
             clearDressLock(player)
             if box then
                 print(string.format("[DressStation] %s picked up %s — box #%d created for %s",
@@ -517,6 +527,7 @@ toppingCompleteRemote.OnServerEvent:Connect(function(player, elapsed)
 
     if lock.isVariety then
         local box = OrderManager.CreateVarietyBox(player, lock.collected, score)
+        lock.finalized = box ~= nil
         clearDressLock(player)
         if box then
             print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- variety box #%d",
@@ -529,6 +540,7 @@ toppingCompleteRemote.OnServerEvent:Connect(function(player, elapsed)
     else
         local entry = lock.pendingEntry
         local box   = OrderManager.CreateBox(player, entry.batchId, score, entry)
+        lock.finalized = box ~= nil
         clearDressLock(player)
         if box then
             print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- box #%d",
@@ -550,6 +562,13 @@ end)
 Players.PlayerRemoving:Connect(function(player)
     activeKDS[player] = nil
     clearDressLock(player)
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterRemoving:Connect(function()
+        activeKDS[player] = nil
+        clearDressLock(player)
+    end)
 end)
 
 print("[DressStationServer] Ready — KDS v2 (TV display + warmer pickup).")

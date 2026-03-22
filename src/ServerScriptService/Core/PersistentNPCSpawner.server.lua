@@ -532,10 +532,13 @@ addDeliverPrompt = function(npcId)
     pp.Triggered:Connect(function(player)
         local d = npcs[npcId]
         if not d or d.state ~= "at_counter" then return end
+        if d.deliveryLocked then return end
+        d.deliveryLocked = true
 
         -- M-8: player must actually be carrying a box
         if not OrderManager.IsCarryingBox(player) then
             warn("[AntiExploit] " .. player.Name .. " triggered DeliverPrompt without a box")
+            d.deliveryLocked = false
             return
         end
 
@@ -546,17 +549,20 @@ addDeliverPrompt = function(npcId)
         end
         if not pending then
             warn("[NPCController] No pending box for", d.name)
+            d.deliveryLocked = false
             return
         end
 
         if pending.carrier and pending.carrier ~= player.Name then
             warn("[NPCController] Wrong carrier:", player.Name, "vs", pending.carrier)
+            d.deliveryLocked = false
             return
         end
 
         local ok, quality = OrderManager.DeliverBox(player, pending.boxId, d.order.orderId)
         if not ok then
             warn("[NPCController] DeliverBox failed for", player.Name)
+            d.deliveryLocked = false
             return
         end
 
@@ -653,6 +659,7 @@ addDeliverPrompt = function(npcId)
         print(string.format("[NPCController] %s delivered to %s | q=%d%% coins=%d stars=%d",
             player.Name, d.name, quality, coins, stars))
 
+        d.deliveryLocked = false
         npcLeave(npcId, "delivered")
     end)
 end
@@ -781,7 +788,7 @@ OrderManager.On("BoxCreated", function(box)
             data.assignedBoxId = box.boxId
             -- If box was made by an AI worker (not a real player), any player can deliver
             local isRealPlayer = Players:FindFirstChild(box.carrier) ~= nil
-            pendingBoxes[box.cookieId] = {
+            pendingBoxes[pendingKeyForNpc(npcId)] = {
                 boxId   = box.boxId,
                 carrier = isRealPlayer and box.carrier or nil,
                 npcId   = npcId,
@@ -840,13 +847,13 @@ end)
 Players.PlayerRemoving:Connect(function(player)
     -- Collect keys first to avoid undefined behavior when mutating during pairs()
     local boxesToRemove = {}
-    for cookieId, pending in pairs(pendingBoxes) do
+    for key, pending in pairs(pendingBoxes) do
         if pending.carrier == player.Name then
-            table.insert(boxesToRemove, cookieId)
+            table.insert(boxesToRemove, key)
         end
     end
-    for _, cookieId in ipairs(boxesToRemove) do
-        pendingBoxes[cookieId] = nil
+    for _, key in ipairs(boxesToRemove) do
+        pendingBoxes[key] = nil
     end
 
     -- Auto-confirm any NPC this player triggered that is stuck in cutscene_pending
