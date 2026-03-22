@@ -44,6 +44,7 @@ function MinigameBase.ShowResult(emoji, label, score)
     local result = Instance.new("ScreenGui")
     result.Name         = "MinigameResult"
     result.ResetOnSpawn = false
+    result.DisplayOrder = 25   -- P0-3: above HUD (20) and minigame GUIs (22)
     result.Parent       = playerGui
 
     local card = Instance.new("Frame")
