@@ -221,7 +221,12 @@ local function dismissCar(car, _, reason)
     print("[DriveThruServer] Car dismissed: " .. reason)
     clearDeliveryPrompt()
     if currentOrder.npcOrderId then
-        OrderManager.CancelNPCOrder(currentOrder.npcOrderId)
+        local dismissedOrderId  = currentOrder.npcOrderId
+        local dismissedCookieId = currentOrder.cookieId
+        local dismissedPackSize = currentOrder.packSize
+        OrderManager.CancelNPCOrder(dismissedOrderId)
+        -- Notify all clients to remove the drive-thru order card from HUD
+        npcOrderCancelledRemote:FireAllClients(dismissedOrderId, dismissedCookieId, dismissedPackSize)
     end
     currentOrder = nil
     updateTV("No Orders", "")

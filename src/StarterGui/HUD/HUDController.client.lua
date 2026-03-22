@@ -9,6 +9,7 @@ local stateRemote            = RemoteManager.Get("GameStateChanged")
 local acceptedEvent          = RemoteManager.Get("OrderAccepted")
 local deliveryEvent          = RemoteManager.Get("DeliveryResult")
 local hudUpdateEvent         = RemoteManager.Get("HUDUpdate")
+local dataInitEvent          = RemoteManager.Get("PlayerDataInit")
 local warmersStockEvent      = RemoteManager.Get("WarmersUpdated")
 local npcOrderCancelledEvent = RemoteManager.Get("NPCOrderCancelledClient")
 local driveThruArrivedEvent  = RemoteManager.Get("DriveThruCarArrived")
@@ -20,6 +21,10 @@ local boxCreatedEvent        = RemoteManager.Get("BoxCreated")
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local hud       = playerGui:WaitForChild("HUD")
+
+-- Cached player data (initialized by PlayerDataInit, updated by HUDUpdate)
+local localLevel = 1
+local function xpRequired(lvl) return math.floor(100 * (lvl ^ 1.35)) end
 
 -- Remove legacy elements
 for _, name in ipairs({
@@ -646,16 +651,28 @@ hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
     if coins then coinsLbl.Text = tostring(coins) end
     if xp then
         xpLbl.Text = xp .. " xp"
-        local level = player:GetAttribute("BakeryLevel") or 1
-        levelLbl.Text = "Lv. " .. level
-        local xpPerLvl = 500
-        local ratio = math.clamp((xp % xpPerLvl) / xpPerLvl, 0.03, 1)
+        levelLbl.Text = "Lv. " .. localLevel
+        local req   = xpRequired(localLevel)
+        local ratio = math.clamp((xp % req) / req, 0.03, 1)
         TweenService:Create(xpFill, TI(0.5), { Size = UDim2.new(ratio,0,1,0) }):Play()
     end
     if activeOrderName ~= nil then
         local nm = tostring(activeOrderName):gsub("\xC3\x97","x")
         addOrder(nil, nm, false)
     end
+end)
+
+-- Initialize HUD with actual player data on join (fixes coins showing 0 and level always 1)
+dataInitEvent.OnClientEvent:Connect(function(data)
+    if not data then return end
+    localLevel = data.level or 1
+    coinsLbl.Text  = tostring(data.coins or 0)
+    levelLbl.Text  = "Lv. " .. localLevel
+    local xp  = data.xp or 0
+    xpLbl.Text = xp .. " xp"
+    local req   = xpRequired(localLevel)
+    local ratio = math.clamp((xp % req) / req, 0.03, 1)
+    xpFill.Size = UDim2.new(ratio, 0, 1, 0)
 end)
 
 acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
