@@ -13,10 +13,18 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 -- ── Sound IDs ─────────────────────────────────────────────────────────────────
 local IDS = {
+    -- Station sounds
     MIXER_LOOP    = "rbxassetid://9117709834",  -- machine/motor hum (looped)
     OVEN_DING     = "rbxassetid://4612375233",  -- oven-ready bell
+    OVEN_OPEN     = "rbxassetid://5803015743",  -- oven door thud
+    DOUGH_THUD    = "rbxassetid://5803015743",  -- dough impact / slap
+    DOUGH_DONE    = "rbxassetid://4590662766",  -- dough stage complete chime
+    FROST_SQUIRT  = "rbxassetid://6518383320",  -- frosting squirt / swirl
+    FROST_DONE    = "rbxassetid://4590662766",  -- frost stage complete chime
+    -- Delivery
     CASH_REG      = "rbxassetid://131070686",   -- cash register ka-ching (delivery success)
     DELIVERY_FAIL = "rbxassetid://2865227271",  -- low buzzer (delivery fail)
+    -- UI
     UI_CLICK      = "rbxassetid://608537390",   -- soft UI tap
     ORDER_BELL    = "rbxassetid://131634004",   -- ding (new order accepted)
     LEVEL_UP      = "rbxassetid://3331843335",  -- fanfare (bakery level up)
@@ -34,14 +42,19 @@ local function makeSound(id, volume, looped)
 end
 
 local sounds = {
-    mixerLoop   = makeSound(IDS.MIXER_LOOP,    0.45, true),
-    ovenDing    = makeSound(IDS.OVEN_DING,     0.7,  false),
-    cashReg     = makeSound(IDS.CASH_REG,      0.8,  false),
-    delivFail   = makeSound(IDS.DELIVERY_FAIL, 0.6,  false),
-    uiClick     = makeSound(IDS.UI_CLICK,      0.4,  false),
-    orderBell   = makeSound(IDS.ORDER_BELL,    0.65, false),
-    levelUp     = makeSound(IDS.LEVEL_UP,      0.85, false),
-    masteryUp   = makeSound(IDS.MASTERY_UP,    0.55, false),
+    mixerLoop = makeSound(IDS.MIXER_LOOP,    0.45, true),
+    ovenDing  = makeSound(IDS.OVEN_DING,     0.7,  false),
+    ovenOpen  = makeSound(IDS.OVEN_OPEN,     0.5,  false),
+    doughThud = makeSound(IDS.DOUGH_THUD,    0.55, false),
+    doughDone = makeSound(IDS.DOUGH_DONE,    0.5,  false),
+    frostSqrt = makeSound(IDS.FROST_SQUIRT,  0.5,  false),
+    frostDone = makeSound(IDS.FROST_DONE,    0.5,  false),
+    cashReg   = makeSound(IDS.CASH_REG,      0.8,  false),
+    delivFail = makeSound(IDS.DELIVERY_FAIL, 0.6,  false),
+    uiClick   = makeSound(IDS.UI_CLICK,      0.4,  false),
+    orderBell = makeSound(IDS.ORDER_BELL,    0.65, false),
+    levelUp   = makeSound(IDS.LEVEL_UP,      0.85, false),
+    masteryUp = makeSound(IDS.MASTERY_UP,    0.55, false),
 }
 
 -- ── Global UI click listener ──────────────────────────────────────────────────
