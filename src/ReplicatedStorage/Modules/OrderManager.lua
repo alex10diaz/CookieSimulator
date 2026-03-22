@@ -671,4 +671,27 @@ function OrderManager.ClearPostOvenScore(batchId)
     postOvenScores[batchId] = nil
 end
 
+-- ============================================================
+-- SHIFT RESET
+-- Called at the start of each shift cycle (before PreOpen).
+-- Wipes all pipeline state so stock does not accumulate across shifts.
+-- Listeners, counters (nextBatch/nextOrder/nextBox), and registered
+-- callbacks are intentionally preserved.
+-- ============================================================
+function OrderManager.Reset()
+    batches        = {}
+    fridges        = {}
+    ovenBatches    = {}
+    warmers        = {}
+    frostPending   = {}
+    postOvenScores = {}
+    npcOrders      = {}
+    boxes          = {}
+    -- Push empty state to all display listeners
+    notify("FridgeUpdated",  OrderManager.GetFridgeState())
+    notify("WarmersUpdated", OrderManager.GetWarmerState())
+    notify("BatchUpdated",   OrderManager.GetBatchState())
+    print("[OrderManager] Reset — pipeline state cleared for new shift")
+end
+
 return OrderManager
