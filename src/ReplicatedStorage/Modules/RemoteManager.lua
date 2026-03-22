@@ -118,6 +118,12 @@ local REMOTES = {
     "NPCOrderCancelledClient", -- Server->All clients: orderId that was cancelled (for HUD update)
     -- Minigame cancel (player presses Exit button)
     "CancelMinigame",          -- Client->Server: player chose to exit minigame early
+    -- S-3: Drive-thru car arrival alert
+    "DriveThruCarArrived",     -- Server->All: car arrived at window; clients show HUD pill
+    -- S-4: NPC left without delivery (order failed)
+    "NPCOrderFailed",          -- Server->All: NPC name + orderId; clients flash fail state
+    -- S-9: Combo streak update
+    "ComboUpdate",             -- Server->Client: current combo streak count
 }
 
 -- Server creates all remotes; client waits for server-created ones.

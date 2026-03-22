@@ -61,6 +61,8 @@ local startOrderCutsceneRemote = RemoteManager.Get("StartOrderCutscene")
 local confirmOrderRemote       = RemoteManager.Get("ConfirmNPCOrder")
 local forceDropBoxRemote       = RemoteManager.Get("ForceDropBox")
 local npcOrderCancelledRemote  = RemoteManager.Get("NPCOrderCancelledClient")
+local comboUpdateRemote        = RemoteManager.Get("ComboUpdate")       -- S-9
+local npcOrderFailedRemote     = RemoteManager.Get("NPCOrderFailed")    -- S-4
 
 -- ─── STATE ────────────────────────────────────────────────────────────────────
 local rushHourActive = false  -- set by RushHourStart/End BindableEvents

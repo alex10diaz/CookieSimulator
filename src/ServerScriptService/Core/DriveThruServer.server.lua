@@ -12,7 +12,8 @@ local Workspace           = game:GetService("Workspace")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
-local hudUpdate         = RemoteManager.Get("HUDUpdate")
+local hudUpdate              = RemoteManager.Get("HUDUpdate")
+local driveThruArrivedRemote = RemoteManager.Get("DriveThruCarArrived")
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local EconomyManager    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EconomyManager"))
 local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
@@ -245,6 +246,8 @@ local function handleCarArrival()
 
         setWindowOpen(true)
         updateTV("Customer waiting...", "Walk up to take order")
+        -- S-3: alert all clients that a drive-thru car is waiting
+        driveThruArrivedRemote:FireAllClients()
 
         local orderTaken = false
 
