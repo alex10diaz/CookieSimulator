@@ -10,6 +10,7 @@ local MenuManager         = require(ServerScriptService:WaitForChild("Core"):Wai
 local CookieData          = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local CookieUnlockManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("CookieUnlockManager"))
 local StationRemapService = require(ServerScriptService:WaitForChild("Core"):WaitForChild("StationRemapService"))
+local PlayerDataManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
 local openMenuBoardRemote     = RemoteManager.Get("OpenMenuBoard")
 local setMenuRemote           = RemoteManager.Get("SetMenuSelection")
@@ -78,7 +79,12 @@ end)
 -- ── PLAYER JOINS ────────────────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
     -- Grant starter cookies (idempotent — safe to call every join)
-    task.defer(function()
+    -- Wait for PlayerDataManager profile to load before granting/reading ownership
+    task.spawn(function()
+        local deadline = tick() + 10
+        while not PlayerDataManager.GetData(player) and tick() < deadline do
+            task.wait(0.1)
+        end
         CookieUnlockManager.GrantStarters(player)
         local state = workspace:GetAttribute("GameState")
         if state == "PreOpen" then
