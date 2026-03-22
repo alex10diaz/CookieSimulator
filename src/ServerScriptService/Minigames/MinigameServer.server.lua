@@ -46,6 +46,49 @@ local ovenSession    = {}       -- player -> batchId they pulled from fridge, re
 local dressPending   = {}       -- player -> warmerEntry taken for dress
 local doughLock      = {}       -- batchId -> true  (prevents two players grabbing same dough batch)
 
+-- ============================================================
+-- S-2: STATION OCCUPIED BILLBOARD
+-- ============================================================
+local STATION_LABELS = { mix="Mixing", dough="Shaping Dough", oven="Baking", frost="Frosting", dress="Packing" }
+
+local function getOrCreateBillboard(part)
+    local existing = part:FindFirstChild("OccupiedBillboard")
+    if existing then return existing end
+    local bg = Instance.new("BillboardGui")
+    bg.Name = "OccupiedBillboard"; bg.Size = UDim2.new(0,180,0,36)
+    bg.StudsOffset = Vector3.new(0, 4, 0); bg.AlwaysOnTop = false
+    bg.Enabled = false; bg.Parent = part
+    local frame = Instance.new("Frame", bg)
+    frame.Size = UDim2.new(1,0,1,0); frame.BackgroundColor3 = Color3.fromRGB(18,18,32)
+    frame.BackgroundTransparency = 0.1; frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(1,0)
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(255,200,0); stroke.Thickness = 1.5; stroke.Transparency = 0.3
+    local lbl = Instance.new("TextLabel", frame)
+    lbl.Name = "OccupiedLabel"; lbl.Size = UDim2.new(1,-6,1,0); lbl.Position = UDim2.new(0,3,0,0)
+    lbl.BackgroundTransparency = 1; lbl.TextColor3 = Color3.fromRGB(255,200,0)
+    lbl.Font = Enum.Font.GothamBold; lbl.TextScaled = true
+    return bg
+end
+
+local function showStationBillboard(model, playerName, stationName)
+    if not model then return end
+    local part = model:FindFirstChildWhichIsA("BasePart")
+    if not part then return end
+    local bg = getOrCreateBillboard(part)
+    local lbl = bg:FindFirstChild("OccupiedLabel", true)
+    if lbl then lbl.Text = playerName .. " — " .. (STATION_LABELS[stationName] or stationName) end
+    bg.Enabled = true
+end
+
+local function clearStationBillboard(model)
+    if not model then return end
+    local part = model:FindFirstChildWhichIsA("BasePart")
+    if not part then return end
+    local bg = part:FindFirstChild("OccupiedBillboard")
+    if bg then bg.Enabled = false end
+end
+
 -- M-2 + C-3: shared session starter — records startedAt and arms a timeout watchdog
 local SESSION_TIMEOUT = 60  -- seconds before a stuck session is auto-cleared
 local function startSession(player, sessionData)
@@ -53,6 +96,9 @@ local function startSession(player, sessionData)
     activeSessions[player] = sessionData
     local capturedBatchId   = sessionData.batchId
     local capturedStation   = sessionData.station
+    local capturedModel     = sessionData.stationModel
+    -- S-2: show occupied billboard
+    showStationBillboard(capturedModel, player.Name, capturedStation)
     -- M-2: watchdog clears stuck sessions if client crashes mid-minigame
     task.delay(SESSION_TIMEOUT, function()
         local s = activeSessions[player]
@@ -67,6 +113,8 @@ local function startSession(player, sessionData)
             end
             activeSessions[player] = nil
             dressPending[player]   = nil
+            -- S-2: clear billboard on watchdog timeout
+            clearStationBillboard(capturedModel)
         end
     end)
 end
@@ -164,6 +212,8 @@ local function endSession(player, stationName, score)
     end
 
     local batchId = session.batchId
+    -- S-2: clear occupied billboard
+    clearStationBillboard(session.stationModel)
     activeSessions[player] = nil
     score = math.clamp(score, 0, 100)
 
@@ -333,7 +383,23 @@ RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
         return
     end
 
-    startSession(player, { station = "mix", batchId = batchId, cookieId = cookieId })
+    -- S-2: track which mixer the player is nearest to for the billboard
+    local mixerModel = nil
+    if Workspace:FindFirstChild("Mixers") then
+        local nearest, nearestDist = nil, math.huge
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        for _, m in ipairs(Workspace.Mixers:GetChildren()) do
+            if m:IsA("Model") then
+                local p = m:FindFirstChildWhichIsA("BasePart")
+                if p and hrp then
+                    local d = (p.Position - hrp.Position).Magnitude
+                    if d < nearestDist then nearestDist = d; nearest = m end
+                end
+            end
+        end
+        mixerModel = nearest
+    end
+    startSession(player, { station = "mix", batchId = batchId, cookieId = cookieId, stationModel = mixerModel })
 
     local settings, label = MINIGAMES.mix.getSettings()
     RemoteManager.Get("StartMixMinigame"):FireClient(player, settings, label)
