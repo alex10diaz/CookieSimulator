@@ -225,22 +225,9 @@ ordersPanel.BackgroundTransparency = 0.12
 ordersPanel.BorderSizePixel = 0; ordersPanel.ZIndex = 8
 corner(ordersPanel, 12); addStroke(ordersPanel, C.WARM_BRN, 1.5, 0.55)
 
-local ordersHdr = Instance.new("TextLabel", ordersPanel)
-ordersHdr.Size = UDim2.new(1, 0, 0, 28); ordersHdr.Position = UDim2.new(0, 0, 0, 0)
-ordersHdr.BackgroundColor3 = C.WARM_BRN; ordersHdr.BackgroundTransparency = 0.25
-ordersHdr.BorderSizePixel = 0; ordersHdr.ZIndex = 9
-ordersHdr.Text = "📋  ORDERS"; ordersHdr.TextColor3 = C.GOLD
-ordersHdr.Font = Enum.Font.GothamBold; ordersHdr.TextSize = 13
-corner(ordersHdr, 12)
--- Flatten bottom corners of header
-local hdrFlat = Instance.new("Frame", ordersHdr)
-hdrFlat.Size = UDim2.new(1,0,0.5,0); hdrFlat.Position = UDim2.new(0,0,0.5,0)
-hdrFlat.BackgroundColor3 = C.WARM_BRN; hdrFlat.BackgroundTransparency = 0.25
-hdrFlat.BorderSizePixel = 0; hdrFlat.ZIndex = 9
-
 local ordersList = Instance.new("ScrollingFrame", ordersPanel)
 ordersList.Name = "OrdersList"
-ordersList.Size = UDim2.new(1, -6, 1, -34); ordersList.Position = UDim2.new(0, 3, 0, 32)
+ordersList.Size = UDim2.new(1, -6, 1, -8); ordersList.Position = UDim2.new(0, 3, 0, 4)
 ordersList.BackgroundTransparency = 1; ordersList.BorderSizePixel = 0
 ordersList.ScrollBarThickness = 0; ordersList.ZIndex = 9
 ordersList.CanvasSize = UDim2.new(0,0,0,0)
