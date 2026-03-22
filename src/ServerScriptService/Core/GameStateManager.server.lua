@@ -11,7 +11,7 @@ local DEV_SKIP_PREOPEN    = false     -- false = always run PreOpen (production)
 local skipPreOpenFlag     = false
 local skipPreOpenRemote   = RemoteManager.Get("SkipPreOpen")
 local PREOPEN_DURATION    = 3 * 60   -- 3 minutes: enough time to prep dough before first customers
-local OPEN_DURATION       = 10 * 60  -- 10 minutes (M6)
+local OPEN_DURATION       = 15 * 60  -- M-7: 15 minutes (was 10)
 local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
 local INTERMISSION_DURATION = 3 * 60 -- 3 minutes back room break
 

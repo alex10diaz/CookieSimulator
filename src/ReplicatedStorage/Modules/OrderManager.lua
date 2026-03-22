@@ -4,6 +4,7 @@
 --   needsFrost=true  → Frost → Warmers → Dress
 --   needsFrost=false → Warmers → Dress
 
+local Players    = game:GetService("Players")
 local CookieData = require(script.Parent:WaitForChild("CookieData"))
 
 local OrderManager = {}
@@ -11,7 +12,9 @@ local OrderManager = {}
 -- ============================================================
 -- CONSTANTS
 -- ============================================================
-local MAX_ACTIVE_BATCHES = 2   -- batches in Mix/Dough stage at once
+-- M-5: dynamic cap — 1 active batch per player, minimum 2
+-- (computed at call time so it scales as players join/leave)
+local MIN_ACTIVE_BATCHES = 2
 local MAX_FRIDGE_BATCHES = 4   -- per fridge (per cookie type)
 
 local STATION_WEIGHT = {
@@ -74,8 +77,10 @@ end
 function OrderManager.TryStartBatch(player, cookieId)
     local count = 0
     for _ in pairs(batches) do count += 1 end
-    if count >= MAX_ACTIVE_BATCHES then
-        warn("[OrderManager] Max active batches reached")
+    -- M-5: scale cap with current player count
+    local maxBatches = math.max(MIN_ACTIVE_BATCHES, #Players:GetPlayers())
+    if count >= maxBatches then
+        warn("[OrderManager] Max active batches reached (" .. maxBatches .. ")")
         return nil
     end
 
