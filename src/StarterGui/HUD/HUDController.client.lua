@@ -554,7 +554,7 @@ local TRAY_HIDE_X = UDim2.new(1, 180, 0, 58)
 local function showTray(name, pct)
     local stars = math.clamp(math.round((pct or 0) / 20), 0, 5)
     trayCookieLbl.Text = "🍪 " .. (name or "Cookie")
-    trayQualityLbl.Text = string.rep("★", stars) .. string.rep("☆", 5 - stars) .. "  " .. (pct or 0) .. "%"
+    trayQualityLbl.Text = string.rep("★", stars) .. string.rep("☆", 5 - stars) .. "  " .. stars .. "/5  (" .. (pct or 0) .. "%)"
     trayQualityLbl.Visible = (pct ~= nil)
     if not trayVisible then
         trayVisible = true
@@ -829,7 +829,7 @@ boxCreatedEvent.OnClientEvent:Connect(function(box)
     r1.Size = UDim2.new(1,0,0,28); r1.Position = UDim2.new(0,0,0,4)
     r1.BackgroundTransparency = 1; r1.TextColor3 = C.GOLD
     r1.Font = Enum.Font.GothamBold; r1.TextScaled = true; r1.ZIndex = 46
-    r1.Text = string.rep("★",stars)..string.rep("☆",5-stars).."  "..pct.."%"
+    r1.Text = string.rep("★",stars)..string.rep("☆",5-stars).."  "..stars.."/5  ("..pct.."%)"
     r1.TextTransparency = 1
 
     local r2 = Instance.new("TextLabel", card)
