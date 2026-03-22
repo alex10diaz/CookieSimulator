@@ -154,6 +154,14 @@ local function endSession(player, stationName, score)
         warn("[AntiExploit] " .. player.Name .. " sent non-number score: " .. tostring(score))
         return
     end
+    -- C-3: reject results submitted too fast — catches instant-perfect-score exploit
+    local MIN_DURATION = 3
+    local elapsed = tick() - (session.startedAt or 0)
+    if elapsed < MIN_DURATION then
+        warn(string.format("[AntiExploit] %s submitted %s result in %.2fs (min %ds)",
+            player.Name, stationName, elapsed, MIN_DURATION))
+        return
+    end
 
     local batchId = session.batchId
     activeSessions[player] = nil
@@ -250,7 +258,7 @@ local function handleSimpleStart(player, stationName)
         dressPending[player] = entry
     end
 
-    activeSessions[player] = { station = stationName, batchId = batchId, warmerEntry = extraData and extraData.warmerEntry }
+    startSession(player, { station = stationName, batchId = batchId, warmerEntry = extraData and extraData.warmerEntry })
     
     local startRemote = RemoteManager.Get(config.start)
     if stationName == "dress" and extraData and extraData.warmerEntry then
@@ -325,7 +333,7 @@ RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
         return
     end
 
-    activeSessions[player] = { station = "mix", batchId = batchId, cookieId = cookieId }
+    startSession(player, { station = "mix", batchId = batchId, cookieId = cookieId })
 
     local settings, label = MINIGAMES.mix.getSettings()
     RemoteManager.Get("StartMixMinigame"):FireClient(player, settings, label)
@@ -381,7 +389,7 @@ local function hookFridgeOvenPrompts()
                 
                 print(string.format("[MinigameServer] %s deposited batch #%d into %s", player.Name, batchId, oven.Name))
                 
-                activeSessions[player] = { station = "oven", batchId = batchId }
+                startSession(player, { station = "oven", batchId = batchId })
                 
                 local startRemote = RemoteManager.Get("StartOvenMinigame")
                 startRemote:FireClient(player)
