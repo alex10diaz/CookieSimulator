@@ -103,9 +103,28 @@ if ok and mixEndRemote then
     end)
 end
 
--- Oven complete
+-- Oven start + complete
+RemoteManager.Get("StartOvenMinigame").OnClientEvent:Connect(function()
+    sounds.ovenOpen:Play()
+end)
 RemoteManager.Get("OvenMinigameResult").OnClientEvent:Connect(function()
     sounds.ovenDing:Play()
+end)
+
+-- Dough start + complete
+RemoteManager.Get("StartDoughMinigame").OnClientEvent:Connect(function()
+    sounds.doughThud:Play()
+end)
+RemoteManager.Get("DoughMinigameResult").OnClientEvent:Connect(function()
+    sounds.doughDone:Play()
+end)
+
+-- Frost start + complete
+RemoteManager.Get("StartFrostMinigame").OnClientEvent:Connect(function()
+    sounds.frostSqrt:Play()
+end)
+RemoteManager.Get("FrostMinigameResult").OnClientEvent:Connect(function()
+    sounds.frostDone:Play()
 end)
 
 -- ── Delivery ──────────────────────────────────────────────────────────────────
@@ -136,3 +155,40 @@ RemoteManager.Get("MasteryLevelUp").OnClientEvent:Connect(function()
 end)
 
 print("[SoundController] Ready.")
+
+--[[
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  HOW TO REPLACE A SOUND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Find a free sound in the Roblox Creator Marketplace
+   (creator.roblox.com → Marketplace → Audio → filter "Free")
+2. Click the sound → copy the number from the URL:
+   e.g. roblox.com/library/131070686 → ID is 131070686
+3. In the IDS table at the top of this file, replace the number:
+   CASH_REG = "rbxassetid://131070686"
+              ───────────────^^^^^^^^^
+               replace just this number
+4. Save and push via MCP run_code (or re-run this script in Studio)
+
+VOLUME GUIDE  (0 = silent, 1 = full)
+  UI sounds:     0.3 – 0.5  (subtle, non-intrusive)
+  Station FX:    0.5 – 0.7  (present but not distracting)
+  Delivery/LvlUp 0.7 – 0.9  (reward moment, should feel good)
+  Mixer loop:    0.4         (runs for several seconds, keep low)
+
+CURRENT SOUND MAP
+  MIXER_LOOP    → mix station active (looping)
+  OVEN_OPEN     → oven minigame starts
+  OVEN_DING     → oven minigame complete
+  DOUGH_THUD    → dough minigame starts
+  DOUGH_DONE    → dough minigame complete
+  FROST_SQUIRT  → frost minigame starts
+  FROST_DONE    → frost minigame complete
+  CASH_REG      → successful delivery
+  DELIVERY_FAIL → failed/0-star delivery
+  UI_CLICK      → any button press in the game
+  ORDER_BELL    → player accepts NPC order
+  LEVEL_UP      → bakery level increases
+  MASTERY_UP    → station mastery level increases
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+--]]
