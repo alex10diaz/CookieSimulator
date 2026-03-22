@@ -411,6 +411,78 @@ comboLbl.BackgroundTransparency = 1; comboLbl.TextColor3 = Color3.fromRGB(255,20
 comboLbl.Font = Enum.Font.GothamBold; comboLbl.TextScaled = true; comboLbl.ZIndex = 31
 
 -- ══════════════════════════════════════════════════════════════════════════════
+-- TRAY PANEL (right side — what the player is currently carrying)
+-- ══════════════════════════════════════════════════════════════════════════════
+local trayPanel = Instance.new("Frame", hud)
+trayPanel.Name = "TrayPanel"
+trayPanel.Size = UDim2.new(0, 160, 0, 92)
+trayPanel.Position = UDim2.new(1, 180, 0, 58)  -- starts off-screen right
+trayPanel.BackgroundColor3 = C.CARD
+trayPanel.BackgroundTransparency = 0.06
+trayPanel.BorderSizePixel = 0; trayPanel.ZIndex = 8
+corner(trayPanel, 10); addStroke(trayPanel, C.WARM_BRN, 1.5, 0.3)
+
+-- Header
+local trayHdr = Instance.new("Frame", trayPanel)
+trayHdr.Size = UDim2.new(1, 0, 0, 28); trayHdr.Position = UDim2.new(0, 0, 0, 0)
+trayHdr.BackgroundColor3 = C.WARM_BRN; trayHdr.BackgroundTransparency = 0.15
+trayHdr.BorderSizePixel = 0; trayHdr.ZIndex = 9
+corner(trayHdr, 10)
+local trayHdrFlat = Instance.new("Frame", trayHdr)
+trayHdrFlat.Size = UDim2.new(1,0,0.5,0); trayHdrFlat.Position = UDim2.new(0,0,0.5,0)
+trayHdrFlat.BackgroundColor3 = C.WARM_BRN; trayHdrFlat.BackgroundTransparency = 0.15
+trayHdrFlat.BorderSizePixel = 0; trayHdrFlat.ZIndex = 9
+
+local trayHdrLbl = Instance.new("TextLabel", trayHdr)
+trayHdrLbl.Size = UDim2.new(1,-8,1,0); trayHdrLbl.Position = UDim2.new(0,8,0,0)
+trayHdrLbl.BackgroundTransparency = 1; trayHdrLbl.TextColor3 = C.WHITE
+trayHdrLbl.Font = Enum.Font.GothamBold; trayHdrLbl.TextSize = 12
+trayHdrLbl.TextXAlignment = Enum.TextXAlignment.Left
+trayHdrLbl.Text = "📦  CARRYING"; trayHdrLbl.ZIndex = 10
+
+-- Cookie name label
+local trayCookieLbl = Instance.new("TextLabel", trayPanel)
+trayCookieLbl.Name = "TrayCookieLabel"
+trayCookieLbl.Size = UDim2.new(1,-12,0,36); trayCookieLbl.Position = UDim2.new(0,6,0,32)
+trayCookieLbl.BackgroundTransparency = 1; trayCookieLbl.TextColor3 = C.TEXT_DRK
+trayCookieLbl.Font = Enum.Font.GothamBold; trayCookieLbl.TextSize = 13
+trayCookieLbl.TextWrapped = true; trayCookieLbl.TextXAlignment = Enum.TextXAlignment.Left
+trayCookieLbl.TextYAlignment = Enum.TextYAlignment.Center
+trayCookieLbl.Text = "🍪 Cookie"; trayCookieLbl.ZIndex = 9
+
+-- Quality stars label
+local trayQualityLbl = Instance.new("TextLabel", trayPanel)
+trayQualityLbl.Name = "TrayQualityLabel"
+trayQualityLbl.Size = UDim2.new(1,-12,0,20); trayQualityLbl.Position = UDim2.new(0,6,0,68)
+trayQualityLbl.BackgroundTransparency = 1; trayQualityLbl.TextColor3 = C.GOLD
+trayQualityLbl.Font = Enum.Font.GothamBold; trayQualityLbl.TextSize = 12
+trayQualityLbl.TextXAlignment = Enum.TextXAlignment.Left
+trayQualityLbl.Text = "★★★★☆"; trayQualityLbl.ZIndex = 9
+
+local trayVisible = false
+local TRAY_SHOW_X = UDim2.new(1, -168, 0, 58)
+local TRAY_HIDE_X = UDim2.new(1, 180, 0, 58)
+
+local function showTray(name, pct)
+    local stars = math.clamp(math.round((pct or 0) / 20), 0, 5)
+    trayCookieLbl.Text = "🍪 " .. (name or "Cookie")
+    trayQualityLbl.Text = string.rep("★", stars) .. string.rep("☆", 5 - stars) .. "  " .. (pct or 0) .. "%"
+    trayQualityLbl.Visible = (pct ~= nil)
+    if not trayVisible then
+        trayVisible = true
+        trayPanel.Position = TRAY_HIDE_X
+        TweenService:Create(trayPanel, TIB(0.35), { Position = TRAY_SHOW_X }):Play()
+    end
+end
+
+local function hideTray()
+    if not trayVisible then return end
+    trayVisible = false
+    local t = TweenService:Create(trayPanel, TI(0.22), { Position = TRAY_HIDE_X })
+    t:Play()
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
 -- STATE HANDLERS
 -- ══════════════════════════════════════════════════════════════════════════════
 local STATE_BG = {
@@ -517,6 +589,7 @@ end)
 
 deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
     removeByIndex(1)
+    hideTray()
     coachCount += 1
     if coachCount >= 3 then coachBar.Visible = false end
 
@@ -637,6 +710,7 @@ end)
 boxCreatedEvent.OnClientEvent:Connect(function(box)
     if not (box and box.carrier == player.Name) then return end
     local pct   = math.clamp(math.round(box.quality or 0), 0, 100)
+    showTray(cookieName(box.cookieId or ""), pct)
     local stars = math.clamp(math.round(pct / 20), 1, 5)
     local old = hud:FindFirstChild("QualityPreview")
     if old then old:Destroy() end
