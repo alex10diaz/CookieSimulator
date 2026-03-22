@@ -30,22 +30,22 @@ for _, name in ipairs({
     if old then old:Destroy() end
 end
 
--- ── Palette (Option C — Dark Modern: deep navy + hot pink + gold) ─────────────
+-- ── Palette (baby blue / toothpaste + hot pink + gold) ─────────────────────
 local C = {
-    BG       = Color3.fromRGB(10, 10, 26),      -- deep navy background
-    PANEL    = Color3.fromRGB(18, 18, 45),       -- panel / badge background
-    CARD     = Color3.fromRGB(26, 26, 55),       -- order card background
-    WARM_BRN = Color3.fromRGB(220, 50, 120),     -- hot pink accent (borders, headers)
-    BLUSH    = Color3.fromRGB(255, 140, 195),    -- light pink (coach bar stroke)
-    GOLD     = Color3.fromRGB(255, 205, 50),     -- gold (coins, rewards)
-    WHITE    = Color3.fromRGB(240, 240, 255),    -- near-white with blue tint
-    TEXT_DRK = Color3.fromRGB(230, 230, 255),    -- primary text on dark cards
-    TEXT_LT  = Color3.fromRGB(110, 115, 175),   -- muted secondary text
-    GREEN    = Color3.fromRGB(80, 215, 115),     -- success / patience high
-    BLUE     = Color3.fromRGB(80, 175, 255),     -- level badge / XP bar
-    ORANGE   = Color3.fromRGB(235, 150, 55),     -- patience warning
-    RED      = Color3.fromRGB(220, 65, 65),      -- patience critical
-    YELLOW   = Color3.fromRGB(255, 225, 70),     -- combo streak
+    BG       = Color3.fromRGB(175, 218, 235),   -- baby blue / toothpaste background
+    PANEL    = Color3.fromRGB(148, 195, 215),   -- slightly deeper blue panels
+    CARD     = Color3.fromRGB(238, 248, 255),   -- near-white order cards
+    WARM_BRN = Color3.fromRGB(220, 50, 120),    -- hot pink accent (borders, headers)
+    BLUSH    = Color3.fromRGB(255, 140, 195),   -- light pink (coach bar stroke)
+    GOLD     = Color3.fromRGB(255, 205, 50),    -- gold (coins, rewards)
+    WHITE    = Color3.fromRGB(255, 255, 255),   -- white
+    TEXT_DRK = Color3.fromRGB(15, 38, 70),      -- dark navy text (on light bg)
+    TEXT_LT  = Color3.fromRGB(60, 95, 135),    -- medium navy (muted text)
+    GREEN    = Color3.fromRGB(80, 215, 115),    -- success / patience high
+    BLUE     = Color3.fromRGB(80, 175, 255),    -- level badge / XP bar
+    ORANGE   = Color3.fromRGB(235, 150, 55),    -- patience warning
+    RED      = Color3.fromRGB(220, 65, 65),     -- patience critical
+    YELLOW   = Color3.fromRGB(255, 225, 70),    -- combo streak
 }
 
 local TI  = function(t) return TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) end
