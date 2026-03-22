@@ -1,64 +1,125 @@
--- SoundController.client.lua (S-5)
--- Plays 3 key sounds: mixer whir during mix, oven ding on completion, cash register on delivery.
--- Replace SoundIds with any free Roblox audio assets you prefer.
+-- SoundController.client.lua
+-- All client-side sounds: UI clicks, station sounds, delivery, level-up.
+-- Swap rbxassetid values for preferred free Roblox audio assets.
 
+local Players       = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local SoundService      = game:GetService("SoundService")
+local SoundService  = game:GetService("SoundService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 
--- ── Sound IDs (swap these for your preferred assets) ─────────────────────────
-local ID_MIXER_LOOP   = "rbxassetid://9117709834"   -- machine/motor hum (looped)
-local ID_OVEN_DING    = "rbxassetid://4612375233"   -- oven-ready bell
-local ID_CASH_REG     = "rbxassetid://131070686"    -- cash register ka-ching
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- ── Create sounds in SoundService (client-local) ──────────────────────────────
+-- ── Sound IDs ─────────────────────────────────────────────────────────────────
+local IDS = {
+    MIXER_LOOP    = "rbxassetid://9117709834",  -- machine/motor hum (looped)
+    OVEN_DING     = "rbxassetid://4612375233",  -- oven-ready bell
+    CASH_REG      = "rbxassetid://131070686",   -- cash register ka-ching (delivery success)
+    DELIVERY_FAIL = "rbxassetid://2865227271",  -- low buzzer (delivery fail)
+    UI_CLICK      = "rbxassetid://608537390",   -- soft UI tap
+    ORDER_BELL    = "rbxassetid://131634004",   -- ding (new order accepted)
+    LEVEL_UP      = "rbxassetid://3331843335",  -- fanfare (bakery level up)
+    MASTERY_UP    = "rbxassetid://4590662766",  -- soft chime (station mastery up)
+}
+
+-- ── Build sounds ──────────────────────────────────────────────────────────────
 local function makeSound(id, volume, looped)
     local s = Instance.new("Sound")
     s.SoundId = id
     s.Volume  = volume or 0.6
     s.Looped  = looped or false
-    s.RollOffMaxDistance = 0  -- 2D sound (not positional)
     s.Parent  = SoundService
     return s
 end
 
-local mixerSound = makeSound(ID_MIXER_LOOP, 0.45, true)
-local ovenSound  = makeSound(ID_OVEN_DING,  0.7,  false)
-local cashSound  = makeSound(ID_CASH_REG,   0.8,  false)
+local sounds = {
+    mixerLoop   = makeSound(IDS.MIXER_LOOP,    0.45, true),
+    ovenDing    = makeSound(IDS.OVEN_DING,     0.7,  false),
+    cashReg     = makeSound(IDS.CASH_REG,      0.8,  false),
+    delivFail   = makeSound(IDS.DELIVERY_FAIL, 0.6,  false),
+    uiClick     = makeSound(IDS.UI_CLICK,      0.4,  false),
+    orderBell   = makeSound(IDS.ORDER_BELL,    0.65, false),
+    levelUp     = makeSound(IDS.LEVEL_UP,      0.85, false),
+    masteryUp   = makeSound(IDS.MASTERY_UP,    0.55, false),
+}
 
--- ── Remotes ──────────────────────────────────────────────────────────────────
-local startMixEvent   = RemoteManager.Get("StartMixMinigame")
-local mixResultEvent  = RemoteManager.Get("MixMinigameResult")   -- client fires this, so we listen via OnClientEvent won't work
-local ovenResultEvent = RemoteManager.Get("OvenMinigameResult")
-local deliveryEvent   = RemoteManager.Get("DeliveryResult")
-local cancelEvent     = RemoteManager.Get("CancelMinigame")      -- fired by client, not useful here
+-- ── Global UI click listener ──────────────────────────────────────────────────
+-- Connects a click sound to any TextButton that appears in PlayerGui
+local function hookButton(btn)
+    if not btn:IsA("TextButton") then return end
+    btn.MouseButton1Click:Connect(function()
+        if sounds.uiClick.IsLoaded then
+            sounds.uiClick:Play()
+        end
+    end)
+end
 
--- Mix start → play loop; oven result or mix result → stop loop
-startMixEvent.OnClientEvent:Connect(function()
-    if not mixerSound.IsPlaying then mixerSound:Play() end
+local function hookGui(gui)
+    for _, desc in ipairs(gui:GetDescendants()) do
+        hookButton(desc)
+    end
+    gui.DescendantAdded:Connect(hookButton)
+end
+
+-- Hook all current + future ScreenGuis
+for _, gui in ipairs(playerGui:GetChildren()) do hookGui(gui) end
+playerGui.ChildAdded:Connect(function(child)
+    task.defer(function() hookGui(child) end)
 end)
 
--- Stop mixer when minigame ends (result or cancel)
-local mixResultRemote = RemoteManager.Get("MixMinigameResult")
--- MixMinigameResult is fired Server→Client when the server confirms the result
--- but actually the client fires it TO the server, so OnClientEvent won't fire here.
--- Instead we stop the loop when the mix UI closes, which is on a brief delay.
--- Safest: stop after 12 seconds max (mix duration is ~8s + buffer)
-startMixEvent.OnClientEvent:Connect(function()
-    task.delay(12, function()
-        if mixerSound.IsPlaying then mixerSound:Stop() end
+-- ── Station sounds ────────────────────────────────────────────────────────────
+local mixStart = RemoteManager.Get("StartMixMinigame")
+local mixStop  = RemoteManager.Get("MinigameEnded")   -- server fires when any minigame ends
+
+-- Mix loop: start on mix begin, stop on minigame end or after max duration
+mixStart.OnClientEvent:Connect(function()
+    if not sounds.mixerLoop.IsPlaying then
+        sounds.mixerLoop:Play()
+    end
+    -- Fallback stop after 15s in case MinigameEnded doesn't fire
+    task.delay(15, function()
+        if sounds.mixerLoop.IsPlaying then sounds.mixerLoop:Stop() end
     end)
 end)
 
--- Oven minigame result → ding
-ovenResultEvent.OnClientEvent:Connect(function()
-    ovenSound:Play()
+local ok, mixEndRemote = pcall(function() return RemoteManager.Get("MinigameEnded") end)
+if ok and mixEndRemote then
+    mixEndRemote.OnClientEvent:Connect(function()
+        if sounds.mixerLoop.IsPlaying then sounds.mixerLoop:Stop() end
+    end)
+end
+
+-- Oven complete
+RemoteManager.Get("OvenMinigameResult").OnClientEvent:Connect(function()
+    sounds.ovenDing:Play()
 end)
 
--- Delivery confirmed → cash register
-deliveryEvent.OnClientEvent:Connect(function()
-    cashSound:Play()
+-- ── Delivery ──────────────────────────────────────────────────────────────────
+-- DeliveryResult fires (stars, coins, xp) — stars 1-5 = success, 0 = fail
+RemoteManager.Get("DeliveryResult").OnClientEvent:Connect(function(stars)
+    if stars and stars >= 1 then
+        sounds.cashReg:Play()
+    else
+        sounds.delivFail:Play()
+    end
+end)
+
+-- ── Order accepted bell ───────────────────────────────────────────────────────
+local okOrder, orderAccepted = pcall(function() return RemoteManager.Get("OrderAccepted") end)
+if okOrder and orderAccepted then
+    orderAccepted.OnClientEvent:Connect(function()
+        sounds.orderBell:Play()
+    end)
+end
+
+-- ── Level-up sounds ───────────────────────────────────────────────────────────
+RemoteManager.Get("BakeryLevelUp").OnClientEvent:Connect(function()
+    sounds.levelUp:Play()
+end)
+
+RemoteManager.Get("MasteryLevelUp").OnClientEvent:Connect(function()
+    sounds.masteryUp:Play()
 end)
 
 print("[SoundController] Ready.")
