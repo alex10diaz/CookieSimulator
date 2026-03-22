@@ -147,6 +147,7 @@ end)
 RemoteManager.Get("DeliveryResult").OnClientEvent:Connect(function(stars)
     if stars and stars >= 1 then
         sounds.cashReg:Play()
+        sounds.coinsJingle:Play()
     else
         sounds.delivFail:Play()
     end
@@ -159,6 +160,21 @@ if okOrder and orderAccepted then
         sounds.orderBell:Play()
     end)
 end
+
+-- ── NPC arrival bell ─────────────────────────────────────────────────────────
+RemoteManager.Get("StartOrderCutscene").OnClientEvent:Connect(function()
+    sounds.npcBell:Play()
+end)
+
+-- ── Fridge open + box pickup via ProximityPromptService ──────────────────────
+local PPS = game:GetService("ProximityPromptService")
+PPS.PromptTriggered:Connect(function(prompt)
+    if prompt.Name == "FridgePrompt" then
+        sounds.fridgeClick:Play()
+    elseif prompt.Name == "WarmerPickupPrompt" then
+        sounds.boxPickup:Play()
+    end
+end)
 
 -- ── Level-up sounds ───────────────────────────────────────────────────────────
 RemoteManager.Get("BakeryLevelUp").OnClientEvent:Connect(function()
@@ -192,6 +208,7 @@ VOLUME GUIDE  (0 = silent, 1 = full)
   Mixer loop:    0.4         (runs for several seconds, keep low)
 
 CURRENT SOUND MAP
+  MUSIC         → ambient bakery loop (always on)
   MIXER_LOOP    → mix station active (looping)
   OVEN_OPEN     → oven minigame starts
   OVEN_DING     → oven minigame complete
@@ -199,8 +216,12 @@ CURRENT SOUND MAP
   DOUGH_DONE    → dough minigame complete
   FROST_SQUIRT  → frost minigame starts
   FROST_DONE    → frost minigame complete
-  CASH_REG      → successful delivery
+  CASH_REG      → successful delivery (plays with COINS_JINGLE)
+  COINS_JINGLE  → coins reward on successful delivery
   DELIVERY_FAIL → failed/0-star delivery
+  NPC_BELL      → customer arrives at the store
+  FRIDGE_CLICK  → fridge door opened
+  BOX_PICKUP    → box picked up from warmer
   UI_CLICK      → any button press in the game
   ORDER_BELL    → player accepts NPC order
   LEVEL_UP      → bakery level increases
