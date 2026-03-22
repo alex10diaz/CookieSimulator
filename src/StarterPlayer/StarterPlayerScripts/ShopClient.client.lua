@@ -204,16 +204,16 @@ local function setTab(tab)
     -- Active tab = gold accent; inactive = dark navy
     tabUpgrade.BackgroundColor3 = tab == "Upgrades"
         and ACCENT
-        or  Color3.fromRGB(28, 28, 46)
+        or  Color3.fromRGB(22, 42, 80)
     tabUpgrade.TextColor3 = tab == "Upgrades"
         and Color3.fromRGB(20, 14, 4)
-        or  Color3.fromRGB(140, 140, 180)
+        or  Color3.fromRGB(110, 140, 190)
     tabCosm.BackgroundColor3 = tab == "Cosmetics"
         and ACCENT
-        or  Color3.fromRGB(28, 28, 46)
+        or  Color3.fromRGB(22, 42, 80)
     tabCosm.TextColor3 = tab == "Cosmetics"
         and Color3.fromRGB(20, 14, 4)
-        or  Color3.fromRGB(140, 140, 180)
+        or  Color3.fromRGB(110, 140, 190)
     renderItems()
 end
 
