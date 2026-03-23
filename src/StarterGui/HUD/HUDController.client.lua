@@ -180,12 +180,12 @@ lvlBadge.BackgroundColor3 = Color3.fromRGB(125, 172, 198)
 lvlBadge.BackgroundTransparency = 0.15
 lvlBadge.BorderSizePixel = 0; lvlBadge.ZIndex = 11
 corner(lvlBadge, 10)
-local lvlStroke = addStroke(lvlBadge, C.BLUE, 1.5, 0.5)
+local lvlStroke = addStroke(lvlBadge, C.TEXT_LT, 1.5, 0.5)
 
 local levelLbl = Instance.new("TextLabel", lvlBadge)
 levelLbl.Name = "LevelLabel"
 levelLbl.Size = UDim2.new(0, 68, 0, 20); levelLbl.Position = UDim2.new(0, 8, 0, 5)
-levelLbl.BackgroundTransparency = 1; levelLbl.TextColor3 = C.BLUE
+levelLbl.BackgroundTransparency = 1; levelLbl.TextColor3 = C.TEXT_DRK
 levelLbl.Font = Enum.Font.GothamBold; levelLbl.TextScaled = true
 levelLbl.TextXAlignment = Enum.TextXAlignment.Left
 levelLbl.Text = "Lv. 1"; levelLbl.ZIndex = 12
@@ -206,7 +206,7 @@ corner(xpTrack, 4)
 local xpFill = Instance.new("Frame", xpTrack)
 xpFill.Name = "XPFill"
 xpFill.Size = UDim2.new(0.05, 0, 1, 0)
-xpFill.BackgroundColor3 = C.BLUE; xpFill.BorderSizePixel = 0; xpFill.ZIndex = 13
+xpFill.BackgroundColor3 = C.TEXT_DRK; xpFill.BorderSizePixel = 0; xpFill.ZIndex = 13
 corner(xpFill, 4)
 
 -- TIMER BADGE (center)
