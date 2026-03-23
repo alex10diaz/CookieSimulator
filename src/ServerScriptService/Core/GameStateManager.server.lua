@@ -19,6 +19,7 @@ local SUMMARY_DURATION    = 30       -- 30 seconds end-of-day
 local INTERMISSION_DURATION = 3 * 60 -- 3 minutes back room break
 
 local BACK_ROOM_CF = CFrame.new(0, 3, -127)
+local driveThruUnlocked = false  -- locked until first shift completes
 
 -- Inside-store spawn: near the POS/waiting area (NOT the outside NPC spawn point).
 -- NPCSpawnPoint/FrontSpawn Parts are for NPCs only — players must NOT be sent there.
