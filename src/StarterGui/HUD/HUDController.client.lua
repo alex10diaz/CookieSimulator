@@ -842,10 +842,53 @@ comboUpdateEvent.OnClientEvent:Connect(function(streak)
     end
 end)
 
+-- ── Carrying Visual (visible to all players) ──────────────────────────────────
+local function showCarryingVisual(carrierName, cid)
+    local carrier = Players:FindFirstChild(carrierName)
+    local char = carrier and carrier.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local existing = hrp:FindFirstChild("CarryingVisual")
+    if existing then existing:Destroy() end
+    local bb = Instance.new("BillboardGui", hrp)
+    bb.Name = "CarryingVisual"
+    bb.Size = UDim2.new(0, 180, 0, 32)
+    bb.StudsOffset = Vector3.new(0, 4.2, 0)
+    bb.AlwaysOnTop = false
+    bb.ResetOnSpawn = false
+    local bg = Instance.new("Frame", bb)
+    bg.Size = UDim2.fromScale(1, 1)
+    bg.BackgroundColor3 = Color3.fromRGB(25, 50, 85)
+    bg.BackgroundTransparency = 0.2
+    bg.BorderSizePixel = 0
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 10)
+    local s = Instance.new("UIStroke", bg)
+    s.Color = Color3.fromRGB(255, 205, 50); s.Thickness = 1.5; s.Transparency = 0.35
+    local lbl = Instance.new("TextLabel", bg)
+    lbl.Size = UDim2.fromScale(1, 1)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "\xf0\x9f\x93\xa6 " .. cookieName(cid or "")
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextScaled = true
+    lbl.TextStrokeTransparency = 0.45
+    lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+end
+local function clearCarryingVisual(carrierName)
+    local carrier = Players:FindFirstChild(carrierName)
+    local char = carrier and carrier.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local bb = hrp and hrp:FindFirstChild("CarryingVisual")
+    if bb then bb:Destroy() end
+end
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- BOX QUALITY PREVIEW
 -- ══════════════════════════════════════════════════════════════════════════════
 boxCreatedEvent.OnClientEvent:Connect(function(box)
+    if box and box.carrier then showCarryingVisual(box.carrier, box.cookieId) end
     if not (box and box.carrier == player.Name) then return end
     local pct   = math.clamp(math.round(box.quality or 0), 0, 100)
     showTray(cookieName(box.cookieId or ""), pct)
