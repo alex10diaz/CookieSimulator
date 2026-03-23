@@ -66,7 +66,7 @@ local sounds = {
     orderBell   = makeSound(IDS.ORDER_BELL,    0.65, false),
     levelUp     = makeSound(IDS.LEVEL_UP,      0.85, false),
     masteryUp   = makeSound(IDS.MASTERY_UP,    0.55, false),
-    music       = makeSound(IDS.MUSIC,         0.28, true),
+    music       = makeSound(IDS.MUSIC,         0.10, true),
 }
 
 -- Ambient music starts immediately
