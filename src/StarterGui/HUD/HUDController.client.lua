@@ -760,6 +760,7 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
     do local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart"); if hrp then EffectsModule.Confetti(hrp.Position) end end
 end)
 
+
 npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP)
     if not orderId then return end
     local ratio = math.clamp((current or 0) / math.max(maxP or 1, 1), 0, 1)

@@ -70,6 +70,8 @@ local function getOrCreateBillboard(part)
     return bg
 end
 
+local StationStatusUpdate = RemoteManager.Get("StationStatusUpdate")
+
 local function showStationBillboard(model, playerName, stationName)
     if not model then return end
     local part = model:FindFirstChildWhichIsA("BasePart")
@@ -146,7 +148,6 @@ end
 -- BROADCAST HELPERS
 -- ============================================================
 local BatchUpdated   = RemoteManager.Get("BatchUpdated")
-local StationStatusUpdate = RemoteManager.Get("StationStatusUpdate")
 local WarmersUpdated = RemoteManager.Get("WarmersUpdated")
 local FridgeUpdated  = RemoteManager.Get("FridgeUpdated")
 local BoxCreated     = RemoteManager.Get("BoxCreated")
