@@ -102,11 +102,14 @@ Players.PlayerAdded:Connect(onPlayerAdded)
 
 -- ── LIVE EQUIP (fires when cosmetic is purchased or station grant unlocks one) ─
 
-cosmeticEquipped.Event:Connect(function(player, cosmeticId)
+cosmeticEquipped.Event:Connect(function(player, cosmeticId, slot)
     local character = player.Character
     if not character then return end
-    local slot = getSlot(cosmeticId)
-    applyCosmetic(character, slot, cosmeticId)
+    if cosmeticId then
+        applyCosmetic(character, getSlot(cosmeticId), cosmeticId)
+    elseif slot then
+        removeCosmetic(character, slot)
+    end
 end)
 
 print("[CosmeticService] Ready.")

@@ -160,12 +160,34 @@ purchaseRemote.OnServerEvent:Connect(function(player, itemId)
             newCoins          = newCoins,
             unlockedStations  = stations,
             unlockedCosmetics = cosmetics,
+            equippedCosmetics = PlayerDataManager.GetEquipped(player),
         })
     else
         resultRemote:FireClient(player, {
             success = false,
-            reason  = result,  -- result is reason string on failure
+            reason  = result,
         })
+    end
+end)
+
+-- SetCosmetic: equip (cosmeticId) or unequip (nil, slot)
+local setCosmeticRemote = RemoteManager.Get("SetCosmetic")
+local cosmeticEquippedEvent2 = ServerStorage:WaitForChild("Events"):WaitForChild("CosmeticEquipped")
+
+setCosmeticRemote.OnServerEvent:Connect(function(player, cosmeticId, slot)
+    if cosmeticId ~= nil then
+        -- Equip: validate ownership first
+        if type(cosmeticId) ~= "string" then return end
+        if not UnlockManager.Owns(player, cosmeticId) then return end
+        PlayerDataManager.EquipCosmetic(player, cosmeticId)
+        cosmeticEquippedEvent2:Fire(player, cosmeticId)
+    else
+        -- Unequip: clear the slot
+        if slot ~= "hat" and slot ~= "apron" then return end
+        local p = PlayerDataManager.GetData(player)
+        if not p then return end
+        if p.equippedCosmetics then p.equippedCosmetics[slot] = nil end
+        cosmeticEquippedEvent2:Fire(player, nil, slot)
     end
 end)
 

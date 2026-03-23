@@ -28,10 +28,11 @@ local ACCENT   = Color3.fromRGB(255, 205, 50)  -- gold
 local NAVY     = Color3.fromRGB(15, 30, 60)
 
 -- ── CLIENT STATE ────────────────────────────────────────────────
-local ownedStations  = {}
-local ownedCosmetics = {}
-local playerCoins    = 0
-local activeTab      = "Upgrades"
+local ownedStations   = {}
+local ownedCosmetics  = {}
+local equippedCosm    = { hat = nil, apron = nil }
+local playerCoins     = 0
+local activeTab       = "Upgrades"
 
 -- ── CATALOG (mirrors UnlockManager — static) ────────────────────
 local CATALOG = {
