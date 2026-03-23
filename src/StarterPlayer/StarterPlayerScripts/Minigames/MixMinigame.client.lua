@@ -195,6 +195,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
         if finished then return end
         finished = true
         if mainConn then mainConn:Disconnect() end
+        stopMixerLoop()
         humanoid.WalkSpeed = 16
         humanoid.JumpHeight = 7.2
         sg:Destroy()
@@ -219,6 +220,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
             if finished then return end
             finished = true
             if mainConn then mainConn:Disconnect() end
+            stopMixerLoop()
             humanoid.WalkSpeed  = 16
             humanoid.JumpHeight = 7.2
             sg:Destroy()

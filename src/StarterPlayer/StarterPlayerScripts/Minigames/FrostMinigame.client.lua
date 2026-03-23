@@ -2,6 +2,7 @@
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
+local SoundService      = game:GetService("SoundService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local startRemote   = RemoteManager.Get("StartFrostMinigame")
@@ -34,6 +35,12 @@ startRemote.OnClientEvent:Connect(function()
     if not humanoid then return end
     humanoid.WalkSpeed = 0
     humanoid.JumpHeight = 0
+
+    -- Frost squirt sound — plays on each checkpoint click
+    local frostSqrt = Instance.new("Sound")
+    frostSqrt.SoundId = "rbxassetid://9119512290"
+    frostSqrt.Volume  = 0.5
+    frostSqrt.Parent  = SoundService
 
     local sg = Instance.new("ScreenGui")
     sg.Name           = "FrostGui"
@@ -118,6 +125,7 @@ startRemote.OnClientEvent:Connect(function()
         if finished then return end
         finished = true
         if mainConn then mainConn:Disconnect() end
+        frostSqrt:Destroy()
         humanoid.WalkSpeed = 16
         humanoid.JumpHeight = 7.2
         sg:Destroy()
@@ -142,6 +150,7 @@ startRemote.OnClientEvent:Connect(function()
             if finished then return end
             finished = true
             if mainConn then mainConn:Disconnect() end
+            frostSqrt:Destroy()
             humanoid.WalkSpeed  = 16
             humanoid.JumpHeight = 7.2
             sg:Destroy()
@@ -179,6 +188,7 @@ startRemote.OnClientEvent:Connect(function()
         dot.MouseButton1Click:Connect(function()
             if finished then return end
             if idx ~= activeIndex then return end  -- must click in order
+            frostSqrt:Play()
             numHit = numHit + 1
             dot.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
             dot.TextColor3 = Color3.fromRGB(20, 50, 20)
