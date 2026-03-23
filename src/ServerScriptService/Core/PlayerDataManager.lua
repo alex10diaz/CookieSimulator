@@ -294,6 +294,7 @@ Players.PlayerAdded:Connect(function(player)
             xp                = p.xp,
             unlockedStations  = p.unlockedStations,
             unlockedCosmetics = p.unlockedCosmetics,
+            equippedCosmetics = p.equippedCosmetics,
             bakeryName        = p.bakeryName,
             bakeryLevel       = p.bakeryLevel,
         })

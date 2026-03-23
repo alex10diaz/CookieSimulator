@@ -80,6 +80,7 @@ local REMOTES = {
     "LeaderboardUpdate",
     "PurchaseItem",
     "PurchaseResult",
+    "SetCosmetic",          -- Client->Server: equip (cosmeticId) or unequip (nil, slot)
     "SlotSelect",
     "SlotSelectResult",
     "PlayerDataInit",   -- Server→Client: sends coins/level/unlocks on profile load
