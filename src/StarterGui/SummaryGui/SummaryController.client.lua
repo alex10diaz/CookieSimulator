@@ -32,7 +32,7 @@ frame.Name             = "SummaryFrame"
 local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 800
 local _vpH = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.Y or 900
 local _fw  = math.clamp(math.floor(_vpW * 0.45), 400, 560)
-local _fh  = math.min(520, math.floor(_vpH * 0.90))
+local _fh  = math.min(570, math.floor(_vpH * 0.90))
 frame.Size             = UDim2.new(0, _fw, 0, _fh)
 frame.Position         = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -math.floor(_fh/2))
 frame.BackgroundColor3 = C.BG
@@ -108,15 +108,35 @@ for i, def in ipairs(STAT_DEFS) do
     statLabels[def.key] = valL
 end
 
+-- ── Shift Grade row ───────────────────────────────────────────────────────────
+local gradeRow = Instance.new("Frame", frame)
+gradeRow.Name = "GradeRow"
+gradeRow.Size = UDim2.new(1,-20,0,40); gradeRow.Position = UDim2.new(0,10,0,168)
+gradeRow.BackgroundColor3 = C.CARD; gradeRow.BackgroundTransparency = 0; gradeRow.BorderSizePixel = 0
+Instance.new("UICorner", gradeRow).CornerRadius = UDim.new(0, 8)
+
+local gradeLabelL = Instance.new("TextLabel", gradeRow)
+gradeLabelL.Size = UDim2.new(0.6,0,1,0); gradeLabelL.Position = UDim2.new(0,12,0,0)
+gradeLabelL.BackgroundTransparency = 1; gradeLabelL.TextColor3 = C.MUTED
+gradeLabelL.Font = Enum.Font.GothamBold; gradeLabelL.TextScaled = true
+gradeLabelL.TextXAlignment = Enum.TextXAlignment.Left; gradeLabelL.Text = "SHIFT GRADE"
+
+local gradeValL = Instance.new("TextLabel", gradeRow)
+gradeValL.Name = "GradeVal"
+gradeValL.Size = UDim2.new(0.38,0,1,0); gradeValL.Position = UDim2.new(0.62,0,0,0)
+gradeValL.BackgroundTransparency = 1; gradeValL.TextColor3 = C.GOLD
+gradeValL.Font = Enum.Font.GothamBold; gradeValL.TextScaled = true
+gradeValL.TextXAlignment = Enum.TextXAlignment.Right; gradeValL.Text = "—"
+
 -- ── Divider ───────────────────────────────────────────────────────────────────
 local div = Instance.new("Frame", frame)
-div.Size = UDim2.new(1,-20,0,1); div.Position = UDim2.new(0,10,0,168)
+div.Size = UDim2.new(1,-20,0,1); div.Position = UDim2.new(0,10,0,216)
 div.BackgroundColor3 = Color3.fromRGB(40, 70, 120); div.BorderSizePixel = 0
 
 -- ── Employee of Shift ─────────────────────────────────────────────────────────
 local empHeader = Instance.new("TextLabel", frame)
 empHeader.Name = "EmpTitle"; empHeader.Size = UDim2.new(1,-20,0,28)
-empHeader.Position = UDim2.new(0,10,0,176)
+empHeader.Position = UDim2.new(0,10,0,224)
 empHeader.BackgroundTransparency = 1; empHeader.TextColor3 = C.GOLD
 empHeader.Font = Enum.Font.GothamBold; empHeader.TextScaled = true
 empHeader.TextXAlignment = Enum.TextXAlignment.Left; empHeader.Text = "Employee of the Shift"
@@ -133,7 +153,7 @@ for idx, def in ipairs(ROLE_DEFS) do
     local row = Instance.new("Frame", frame)
     row.Name = "Emp_"..def.role
     row.Size = UDim2.new(1,-20,0,40)
-    row.Position = UDim2.new(0,10,0, 210 + (idx-1)*44)
+    row.Position = UDim2.new(0,10,0, 258 + (idx-1)*44)
     row.BackgroundColor3 = C.CARD2
     row.BackgroundTransparency = 0; row.BorderSizePixel = 0
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
@@ -160,7 +180,7 @@ end
 local countdownLabel = Instance.new("TextLabel", frame)
 countdownLabel.Name = "Countdown"
 countdownLabel.Size = UDim2.new(1, -20, 0, 22)
-countdownLabel.Position = UDim2.new(0, 10, 0, 424)
+countdownLabel.Position = UDim2.new(0, 10, 0, 472)
 countdownLabel.BackgroundTransparency = 1
 countdownLabel.TextColor3 = Color3.fromRGB(110, 140, 190)
 countdownLabel.Font = Enum.Font.Gotham
@@ -170,7 +190,7 @@ countdownLabel.Text = ""
 local continueBtn = Instance.new("TextButton", frame)
 continueBtn.Name = "ContinueBtn"
 continueBtn.Size = UDim2.new(1, -40, 0, 48)
-continueBtn.Position = UDim2.new(0, 20, 0, 450)
+continueBtn.Position = UDim2.new(0, 20, 0, 498)
 continueBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 100)
 continueBtn.BorderSizePixel = 0
 continueBtn.Font = Enum.Font.GothamBold

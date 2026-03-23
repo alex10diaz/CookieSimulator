@@ -134,6 +134,7 @@ local function runCycle()
         broadcast("EndOfDay", SUMMARY_DURATION)
         local summary = SessionStats.GetSummary()
         summary.employees = SessionStats.GetEmployeeOfShift()
+        summary.shiftGrade = SessionStats.GetShiftGrade(summary)
         summaryRemote:FireAllClients(summary)
         task.wait(SUMMARY_DURATION)
 
