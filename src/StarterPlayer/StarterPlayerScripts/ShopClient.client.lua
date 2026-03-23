@@ -329,8 +329,9 @@ resultRemote.OnClientEvent:Connect(function(data)
         playerCoins    = data.newCoins
         ownedStations  = data.unlockedStations  or ownedStations
         ownedCosmetics = data.unlockedCosmetics or ownedCosmetics
+        equippedCosm   = data.equippedCosmetics or equippedCosm
         updateCoinsLabel()
-        renderItems()  -- refresh Buy/Owned states
+        renderItems()
     else
         -- Re-render to restore button state (remove "...")
         renderItems()
