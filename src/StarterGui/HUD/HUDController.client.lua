@@ -874,4 +874,46 @@ boxCreatedEvent.OnClientEvent:Connect(function(box)
     end)
 end)
 
+-- ── Station Status Dots ──────────────────────────────────────────────────────
+local STATUS_GREEN  = Color3.fromRGB(80, 220, 100)
+local STATUS_YELLOW = Color3.fromRGB(255, 200, 0)
+
+local function getOrCreateStatusDot(model)
+    if not model or not model:IsA("Model") then return nil end
+    local part = model:FindFirstChildWhichIsA("BasePart")
+    if not part then return nil end
+    local existing = part:FindFirstChild("StationStatusDot")
+    if existing then return existing end
+
+    local bb = Instance.new("BillboardGui", part)
+    bb.Name           = "StationStatusDot"
+    bb.Size           = UDim2.new(0, 28, 0, 28)
+    bb.StudsOffset    = Vector3.new(0, 5.5, 0)
+    bb.AlwaysOnTop    = false
+    bb.ResetOnSpawn   = false
+
+    local frame = Instance.new("Frame", bb)
+    frame.Name                  = "Dot"
+    frame.Size                  = UDim2.fromScale(1, 1)
+    frame.BackgroundColor3      = STATUS_GREEN
+    frame.BorderSizePixel       = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(1, 0)
+
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color        = Color3.fromRGB(0, 0, 0)
+    stroke.Thickness    = 1.5
+    stroke.Transparency = 0.5
+
+    return bb
+end
+
+local stationStatusRemote = RemoteManager.Get("StationStatusUpdate")
+stationStatusRemote.OnClientEvent:Connect(function(model, status, _occupantName)
+    local bb = getOrCreateStatusDot(model)
+    if not bb then return end
+    local dot = bb:FindFirstChild("Dot")
+    if not dot then return end
+    dot.BackgroundColor3 = status == "occupied" and STATUS_YELLOW or STATUS_GREEN
+end)
+
 print("[HUDController] Redesign v2 ready.")
