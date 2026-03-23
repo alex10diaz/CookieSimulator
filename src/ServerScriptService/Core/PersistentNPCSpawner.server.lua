@@ -677,19 +677,17 @@ local function startPatienceTicker(npcId)
             local data = npcs[npcId]
             if not data then break end
 
-            if data.state == "waiting_in_queue" or data.state == "seated" or data.state == "at_counter" then
-                -- m1: tick patience in all active wait states so the bar drives actual NPC leave
+            if data.state == "seated" or data.state == "at_counter" then
+                -- Patience only ticks after order is taken (seated/at_counter), not while waiting in queue
                 data.patience -= 1
-                if data.state == "seated" or data.state == "at_counter" then
-                    NPCSpawner.SetTimerText(data.model, formatTime(data.patience))
-                    -- S-6: broadcast patience ratio to all clients every 5 ticks
-                    if data.patience % 5 == 0 and data.order then
-                        npcPatienceRemote:FireAllClients(
-                            data.order.orderId,
-                            data.patience,
-                            data.maxPatience or data.patience
-                        )
-                    end
+                NPCSpawner.SetTimerText(data.model, formatTime(data.patience))
+                -- S-6: broadcast patience ratio to all clients every 5 ticks
+                if data.patience % 5 == 0 and data.order then
+                    npcPatienceRemote:FireAllClients(
+                        data.order.orderId,
+                        data.patience,
+                        data.maxPatience or data.patience
+                    )
                 end
                 if data.patience <= 0 then
                     npcLeave(npcId, "patience_expired")
@@ -836,6 +834,16 @@ end)
 -- Stagger a second NPC 25s after game opens
 task.delay(25, function()
     if isSpawnAllowed() then spawnNPC() end
+end)
+
+-- Empty-lobby fast-spawn: if Open and no NPCs present, spawn after 10s gap
+task.spawn(function()
+    while true do
+        task.wait(10)
+        if isSpawnAllowed() and countNPCs() == 0 then
+            spawnNPC()
+        end
+    end
 end)
 
 -- Spawn NPCs immediately when Open phase begins (no 60s wait)

@@ -28,13 +28,11 @@ local BAKER_CF = {
     dough = CFrame.new(  7,    4, -35.75) * CFrame.Angles(0, math.rad( 90),  0),
     oven  = CFrame.new(-5.44, 4, -82.68) * CFrame.Angles(0, math.rad(-45),  0),
     frost = CFrame.new( 5.95, 4, -67.81) * CFrame.Angles(0, math.rad( 90),  0),
-    dress = CFrame.new(-20.09,4, -33.38) * CFrame.Angles(0, math.rad( 90),  0),
 }
-local LABELS    = {mix="Mixing",dough="Shaping",oven="Baking",frost="Frosting",dress="Packing"}
+local LABELS    = {mix="Mixing",dough="Shaping",oven="Baking",frost="Frosting"}
 local ANCHOR_CF = {
     mix=CFrame.new(17.68,2.5,-14.76), dough=CFrame.new(7,2.5,-35.75),
     oven=CFrame.new(-5.44,2.5,-82.68), frost=CFrame.new(5.95,2.5,-67.81),
-    dress=CFrame.new(-20.09,2.5,-33.38),
 }
 
 local workers = {}; local workerCount = 0
