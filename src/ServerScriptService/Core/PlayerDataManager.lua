@@ -276,8 +276,20 @@ function PlayerDataManager.AwardBakeryXP(player, amount)
 end
 
 -- ── LIFECYCLE ──────────────────────────────────────────────────
+local AUTO_SAVE_INTERVAL = 300  -- save every 5 minutes
+
 Players.PlayerAdded:Connect(function(player)
     profiles[player.UserId] = loadProfile(player.UserId)
+
+    -- Auto-save loop for this player
+    task.spawn(function()
+        while player.Parent do
+            task.wait(AUTO_SAVE_INTERVAL)
+            if player.Parent then
+                saveProfile(player.UserId)
+            end
+        end
+    end)
     local p = profiles[player.UserId]
 
     print("[PlayerDataManager] Loaded profile for " .. player.Name

@@ -123,6 +123,13 @@ local function runCycle()
             if rushEnd then rushEnd:Fire() end
         end
 
+        -- Unlock drive-thru after first completed shift
+        if not driveThruUnlocked then
+            driveThruUnlocked = true
+            workspace:SetAttribute("DriveThruUnlocked", true)
+            print("[GameStateManager] Drive-thru unlocked after first shift.")
+        end
+
         -- End of day
         broadcast("EndOfDay", SUMMARY_DURATION)
         local summary = SessionStats.GetSummary()
