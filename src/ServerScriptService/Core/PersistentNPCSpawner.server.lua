@@ -56,6 +56,7 @@ local DISPLAY_FRAME = ORDER_DISPLAY and ORDER_DISPLAY:FindFirstChildOfClass("Fra
 
 -- Remotes
 local deliveryResult           = RemoteManager.Get("DeliveryResult")
+local deliveryFeedback         = RemoteManager.Get("DeliveryFeedback")
 local hudUpdate                = RemoteManager.Get("HUDUpdate")
 local startOrderCutsceneRemote = RemoteManager.Get("StartOrderCutscene")
 local confirmOrderRemote       = RemoteManager.Get("ConfirmNPCOrder")
@@ -627,6 +628,12 @@ addDeliverPrompt = function(npcId)
         local xp    = payout.xp
 
         deliveryResult:FireClient(player, stars, coins, xp)
+        do
+            local npcHead = data.model and data.model:FindFirstChild("Head")
+            if npcHead then
+                deliveryFeedback:FireAllClients(npcHead.Position, stars)
+            end
+        end
         do
             local _sse = game:GetService("ServerStorage"):FindFirstChild("Events")
             local _be  = _sse and _sse:FindFirstChild("DeliveryPayout")
