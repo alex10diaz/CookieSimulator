@@ -481,6 +481,7 @@ npcLeave = function(npcId, reason)
         -- S-4: if NPC left due to patience expiry, broadcast fail state + apply coin penalty
         if reason == "patience_expired" or reason == "counter_timeout" then
             npcOrderFailedRemote:FireAllClients(data.name, data.order.orderId)
+            SessionStats.RecordFail()
             -- Deduct penalty from all active players
             local FAIL_PENALTY = 75
             for _, p in ipairs(Players:GetPlayers()) do

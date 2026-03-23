@@ -149,6 +149,7 @@ function SessionStats.Reset()
     data.cookiesBaked = 0
     data.totalStars   = 0
     data.peakCombo    = 0
+    data.fails        = 0
     stationData       = {}
 end
 
