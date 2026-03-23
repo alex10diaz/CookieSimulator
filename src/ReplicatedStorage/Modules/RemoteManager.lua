@@ -129,6 +129,8 @@ local REMOTES = {
     "ComboUpdate",             -- Server->Client: current combo streak count
     -- S-6: NPC patience replication
     "NPCPatienceUpdate",       -- Server->All: orderId, currentPatience, maxPatience
+    "DeliveryFeedback",        -- Server->All: npcHeadPos, stars, carrierName
+    "WorkerFeedback",          -- Server->All: player, stationName, score, hrpPos
 }
 
 -- Server creates all remotes; client waits for server-created ones.
