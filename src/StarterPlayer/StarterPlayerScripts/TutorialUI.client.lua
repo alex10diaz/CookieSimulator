@@ -1,7 +1,7 @@
 -- src/StarterPlayer/StarterPlayerScripts/TutorialUI.client.lua
 -- Shows the tutorial step overlay pushed by TutorialController (server).
 -- Owns: FadeFrame (used by TutorialCamera), bottom panel, Final Menu.
--- M7 Polish: dark navy + gold UIStroke + gold header bars.
+-- M7 Polish: dark navy + gold UIStroke + gold header bars (matches minigame UIs).
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -39,64 +39,65 @@ fadeFrame.ZIndex                 = 20
 fadeFrame.Parent                 = sg
 
 -- ─── Bottom Panel ─────────────────────────────────────────────────────────────
+local PW = math.min(420, 580)  -- panel width
 local panel = Instance.new("Frame")
 panel.Name                   = "TutorialPanel"
-panel.Size                   = UDim2.new(0, 420, 0, 116)
-panel.Position               = UDim2.new(0, 20, 1, -136)
+panel.Size                   = UDim2.new(0, PW, 0, 136)
+panel.Position               = UDim2.new(0.5, -PW/2, 1, -156)
 panel.BackgroundColor3       = NAVY
 panel.BackgroundTransparency = 0
 panel.BorderSizePixel        = 0
 panel.Visible                = false
 panel.Parent                 = sg
-Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 16)
 local panelStroke = Instance.new("UIStroke", panel)
 panelStroke.Color     = ACCENT
 panelStroke.Thickness = 1.5
 
--- Gold top accent stripe
-local topStripe = Instance.new("Frame", panel)
-topStripe.Size             = UDim2.new(1, 0, 0, 4)
-topStripe.BackgroundColor3 = ACCENT
-topStripe.BorderSizePixel  = 0
-Instance.new("UICorner", topStripe).CornerRadius = UDim.new(0, 12)
-local stripeFlat = Instance.new("Frame", topStripe)
-stripeFlat.Size             = UDim2.new(1, 0, 0.5, 0)
-stripeFlat.Position         = UDim2.new(0, 0, 0.5, 0)
-stripeFlat.BackgroundColor3 = ACCENT
-stripeFlat.BorderSizePixel  = 0
+-- Gold header bar (matches minigame UIs)
+local headerBar = Instance.new("Frame", panel)
+headerBar.Name             = "HeaderBar"
+headerBar.Size             = UDim2.new(1, 0, 0, 44)
+headerBar.BackgroundColor3 = ACCENT
+headerBar.BorderSizePixel  = 0
+Instance.new("UICorner", headerBar).CornerRadius = UDim.new(0, 16)
+local headerFlat = Instance.new("Frame", headerBar)
+headerFlat.Size             = UDim2.new(1, 0, 0.5, 0)
+headerFlat.Position         = UDim2.new(0, 0, 0.5, 0)
+headerFlat.BackgroundColor3 = ACCENT
+headerFlat.BorderSizePixel  = 0
 
 local stepLbl = Instance.new("TextLabel")
 stepLbl.Name                   = "StepLabel"
-stepLbl.Size                   = UDim2.new(0.55, 0, 0, 24)
-stepLbl.Position               = UDim2.new(0, 12, 0, 8)
+stepLbl.Size                   = UDim2.new(1, -90, 1, 0)
+stepLbl.Position               = UDim2.new(0, 14, 0, 0)
 stepLbl.BackgroundTransparency = 1
-stepLbl.TextColor3             = ACCENT
+stepLbl.TextColor3             = Color3.fromRGB(20, 14, 4)
 stepLbl.TextScaled             = true
 stepLbl.Font                   = Enum.Font.GothamBold
 stepLbl.TextXAlignment         = Enum.TextXAlignment.Left
-stepLbl.Text                   = "Step 1 / 5"
-stepLbl.Parent                 = panel
+stepLbl.Text                   = "Tutorial  —  Step 1 / 5"
+stepLbl.Parent                 = headerBar
 
+-- Skip button in header (top-right, matches minigame exit button style)
 local skipBtn = Instance.new("TextButton")
 skipBtn.Name             = "SkipButton"
-skipBtn.Size             = UDim2.new(0, 80, 0, 44)
-skipBtn.Position         = UDim2.new(1, -92, 0, 6)
-skipBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-skipBtn.TextColor3       = Color3.fromRGB(160, 160, 185)
+skipBtn.Size             = UDim2.new(0, 54, 0, 28)
+skipBtn.Position         = UDim2.new(1, -62, 0.5, -14)
+skipBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+skipBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
 skipBtn.TextScaled       = true
-skipBtn.Font             = Enum.Font.Gotham
+skipBtn.Font             = Enum.Font.GothamBold
 skipBtn.Text             = "Skip"
 skipBtn.BorderSizePixel  = 0
-skipBtn.Parent           = panel
-Instance.new("UICorner", skipBtn).CornerRadius = UDim.new(0, 8)
-local skipStroke = Instance.new("UIStroke", skipBtn)
-skipStroke.Color     = Color3.fromRGB(70, 70, 95)
-skipStroke.Thickness = 1
+skipBtn.ZIndex           = 5
+skipBtn.Parent           = headerBar
+Instance.new("UICorner", skipBtn).CornerRadius = UDim.new(0, 6)
 
 local msgLbl = Instance.new("TextLabel")
 msgLbl.Name                   = "MessageLabel"
-msgLbl.Size                   = UDim2.new(1, -24, 0, 58)
-msgLbl.Position               = UDim2.new(0, 12, 0, 46)
+msgLbl.Size                   = UDim2.new(1, -28, 0, 76)
+msgLbl.Position               = UDim2.new(0, 14, 0, 50)
 msgLbl.BackgroundTransparency = 1
 msgLbl.TextColor3             = Color3.fromRGB(220, 220, 240)
 msgLbl.TextWrapped            = true
@@ -104,6 +105,7 @@ msgLbl.TextScaled             = false
 msgLbl.TextSize               = 17
 msgLbl.Font                   = Enum.Font.Gotham
 msgLbl.TextXAlignment         = Enum.TextXAlignment.Left
+msgLbl.TextYAlignment         = Enum.TextYAlignment.Top
 msgLbl.Text                   = ""
 msgLbl.Parent                 = panel
 
@@ -221,7 +223,7 @@ tutorialStepRemote.OnClientEvent:Connect(function(data)
 	end
 
 	-- Steps 1–N: show bottom panel with dynamic counter
-	stepLbl.Text  = "Step " .. data.step .. " / " .. (data.total or 5)
+	stepLbl.Text  = "Tutorial  —  Step " .. data.step .. " / " .. (data.total or 5)
 	msgLbl.Text   = data.msg or ""
 	panel.Visible = true
 
