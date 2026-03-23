@@ -3,6 +3,16 @@ local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
+local SoundService      = game:GetService("SoundService")
+
+local MIXER_SOUND_ID = "rbxassetid://9125678301"
+local function stopMixerLoop()
+    for _, snd in ipairs(SoundService:GetDescendants()) do
+        if snd:IsA("Sound") and snd.SoundId == MIXER_SOUND_ID and snd.IsPlaying then
+            snd:Stop()
+        end
+    end
+end
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local startRemote   = RemoteManager.Get("StartMixMinigame")
