@@ -688,7 +688,8 @@ local function startPatienceTicker(npcId)
                     npcPatienceRemote:FireAllClients(
                         data.order.orderId,
                         data.patience,
-                        data.maxPatience or data.patience
+                        data.maxPatience or data.patience,
+                        data.model
                     )
                 end
                 if data.patience <= 0 then

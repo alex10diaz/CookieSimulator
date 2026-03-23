@@ -761,7 +761,37 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
 end)
 
 
-npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP)
+local function updatePatienceAura(npcModel, ratio)
+    local head = npcModel:FindFirstChild("Head")
+    if not head then return end
+    local bb = head:FindFirstChild("PatienceAura")
+    if not bb then
+        bb = Instance.new("BillboardGui", head)
+        bb.Name          = "PatienceAura"
+        bb.Size          = UDim2.new(0, 80, 0, 80)
+        bb.StudsOffset   = Vector3.new(0, 1.2, 0)
+        bb.AlwaysOnTop   = false
+        bb.ResetOnSpawn  = false
+        local ring = Instance.new("Frame", bb)
+        ring.Name                   = "Ring"
+        ring.Size                   = UDim2.fromScale(1, 1)
+        ring.BackgroundTransparency = 1
+        ring.BorderSizePixel        = 0
+        Instance.new("UICorner", ring).CornerRadius = UDim.new(1, 0)
+        local stroke = Instance.new("UIStroke", ring)
+        stroke.Name      = "RingStroke"
+        stroke.Thickness = 3.5
+        stroke.Color     = Color3.fromRGB(80, 220, 100)
+    end
+    local stroke = bb:FindFirstChild("RingStroke", true)
+    if not stroke then return end
+    local col = ratio > 0.6 and Color3.fromRGB(80, 220, 100)
+        or ratio > 0.3 and Color3.fromRGB(255, 165, 0)
+        or Color3.fromRGB(220, 60, 60)
+    TweenService:Create(stroke, TweenInfo.new(0.5), { Color = col }):Play()
+end
+
+npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP, npcModel)
     if not orderId then return end
     local ratio = math.clamp((current or 0) / math.max(maxP or 1, 1), 0, 1)
     patienceMap[orderId] = ratio
@@ -771,6 +801,7 @@ npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP)
     elseif #activeOrders > 0 and not activeOrders[1].orderId then
         updatePatience(cardKey(activeOrders[1]), ratio)
     end
+    if npcModel and npcModel.Parent then updatePatienceAura(npcModel, ratio) end
 end)
 
 npcOrderCancelledEvent.OnClientEvent:Connect(function(orderId, cookieId, packSize)
