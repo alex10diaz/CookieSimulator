@@ -180,7 +180,7 @@ local function renderItems()
         end
 
         -- Equip / Unequip button for owned cosmetics
-        if owned and item.itemType == "cosmetic" then
+        if owned and item.tab == "Cosmetics" then
             local btn = Instance.new("TextButton")
             btn.Size             = UDim2.new(0.27, 0, 0, 26)
             btn.Position         = UDim2.new(0.71, 0, 0, 34)
