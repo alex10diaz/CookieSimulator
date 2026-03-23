@@ -19,7 +19,6 @@ local driveThruArrivedEvent  = RemoteManager.Get("DriveThruCarArrived")
 local npcOrderFailedEvent    = RemoteManager.Get("NPCOrderFailed")
 local comboUpdateEvent       = RemoteManager.Get("ComboUpdate")
 local npcPatienceEvent       = RemoteManager.Get("NPCPatienceUpdate")
-local deliveryFeedbackEvent  = RemoteManager.Get("DeliveryFeedback")
 local boxCreatedEvent        = RemoteManager.Get("BoxCreated")
 
 local player    = Players.LocalPlayer
@@ -1058,43 +1057,6 @@ end
 
 RemoteManager.Get("NPCOrderReady").OnClientEvent:Connect(flashNewOrder)
 
--- ── Floating Delivery Review Text ────────────────────────────────────────────
-local STAR_LABELS = { "☆☆☆☆☆ Missed!", "★☆☆☆☆ Oops", "★★☆☆☆ Okay", "★★★☆☆ Good", "★★★★☆ Great!", "★★★★★ Perfect!" }
-deliveryFeedbackEvent.OnClientEvent:Connect(function(position, stars)
-    if not position then return end
-    local s = math.clamp(stars or 0, 0, 5)
-    local label = STAR_LABELS[s + 1] or "★★★★★ Perfect!"
-    local isGood = s >= 4
 
-    local anchor = Instance.new("Part")
-    anchor.Anchored = true; anchor.CanCollide = false; anchor.Transparency = 1
-    anchor.Size = Vector3.new(1,1,1)
-    anchor.CFrame = CFrame.new(position + Vector3.new(0, 2.5, 0))
-    anchor.Parent = workspace
-
-    local bb = Instance.new("BillboardGui", anchor)
-    bb.Size = UDim2.new(0, 200, 0, 50)
-    bb.StudsOffset = Vector3.new(0, 0, 0)
-    bb.AlwaysOnTop = false
-    bb.ResetOnSpawn = false
-
-    local lbl = Instance.new("TextLabel", bb)
-    lbl.Size = UDim2.fromScale(1, 1)
-    lbl.BackgroundTransparency = 1
-    lbl.TextColor3 = isGood and C.GOLD or C.ORANGE
-    lbl.Font = Enum.Font.GothamBold
-    lbl.TextScaled = true
-    lbl.TextStrokeTransparency = 0.3
-    lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    lbl.Text = label
-    lbl.TextTransparency = 0
-
-    TweenService:Create(anchor, TweenInfo.new(1.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        { CFrame = CFrame.new(position + Vector3.new(0, 5.5, 0)) }):Play()
-    local t = TweenService:Create(lbl, TweenInfo.new(1.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        { TextTransparency = 1 })
-    t:Play()
-    t.Completed:Connect(function() anchor:Destroy() end)
-end)
 
 print("[HUDController] Redesign v2 ready.")
