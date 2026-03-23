@@ -49,6 +49,17 @@ local function applyCosmetic(character, slot, cosmeticId)
     local clone = model:Clone()
     clone.Name = "Cosmetic_" .. slot
 
+    -- If it's a proper Roblox Accessory, use humanoid:AddAccessory()
+    -- This handles positioning/attachment automatically for catalog accessories
+    if clone:IsA("Accessory") then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then clone:Destroy(); return end
+        clone.Parent = character
+        humanoid:AddAccessory(clone)
+        return
+    end
+
+    -- Fallback: weld a Model/Part directly to the body part (for custom primitives)
     local bodyPart = character:FindFirstChild(ATTACH_TO[slot])
     if not bodyPart then clone:Destroy(); return end
 
