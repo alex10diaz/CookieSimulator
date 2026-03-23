@@ -396,9 +396,58 @@ local function startLoop()
 end
 
 -- ── UNLOCK / GAME STATE ───────────────────────────────────────────────────────
+-- ── LOCKED SIGN ────────────────────────────────────────────────────────────────
+-- A visible sign outside driveThruFolder that shows when locked
+local lockedSign = nil
+
+local function ensureLockedSign()
+    if lockedSign and lockedSign.Parent then return lockedSign end
+    local p = Instance.new("Part")
+    p.Name         = "DriveThruLockedSign"
+    p.Size         = Vector3.new(10, 5, 0.5)
+    p.CFrame       = CFrame.new(-36, 7, -25) * CFrame.Angles(0, math.rad(90), 0)
+    p.Anchored     = true
+    p.CanCollide   = true
+    p.Material     = Enum.Material.SmoothPlastic
+    p.BrickColor   = BrickColor.new("Crimson")
+    p.Parent       = Workspace
+
+    local sg = Instance.new("SurfaceGui")
+    sg.Name        = "LockedSignGui"
+    sg.Face        = Enum.NormalId.Front
+    sg.SizingMode  = Enum.SurfaceGuiSizingMode.PixelsPerStud
+    sg.PixelsPerStud = 40
+    sg.Parent      = p
+
+    local bg = Instance.new("Frame", sg)
+    bg.Size = UDim2.fromScale(1, 1)
+    bg.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+    bg.BorderSizePixel = 0
+
+    local lbl = Instance.new("TextLabel", bg)
+    lbl.Size = UDim2.fromScale(1, 1)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "🚗 DRIVE THRU\n🔒 Locked\nComplete first shift\nto unlock!"
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextScaled = true
+
+    lockedSign = p
+    return lockedSign
+end
+
+local function setLockedSignVisible(visible)
+    local sign = ensureLockedSign()
+    if sign then sign.Transparency = visible and 0 or 1; sign.CanCollide = visible end
+end
+
 local function onUnlockChanged()
     local unlocked = workspace:GetAttribute("DriveThruUnlocked")
     setFolderVisible(unlocked == true)
+    setLockedSignVisible(not unlocked)
+    if unlocked then
+        updateTV("No Orders", "")
+    end
     if unlocked and workspace:GetAttribute("GameState") == "Open" then startLoop() end
     print("[DriveThruServer] DriveThruUnlocked=" .. tostring(unlocked))
 end

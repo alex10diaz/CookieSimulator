@@ -869,6 +869,15 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
+-- Immediately spawn NPCs when Open phase begins (don't wait 60s loop)
+Workspace:GetAttributeChangedSignal("GameState"):Connect(function()
+    if Workspace:GetAttribute("GameState") == "Open" then
+        task.wait(3)   -- brief pause so OrderManager resets first
+        spawnNPC()
+        task.delay(25, spawnNPC)
+    end
+end)
+
 -- Wire Rush Hour BindableEvents
 local ssEvents = game:GetService("ServerStorage"):FindFirstChild("Events")
 if ssEvents then
