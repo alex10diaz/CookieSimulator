@@ -69,6 +69,35 @@ end
 local function formatTime(s)
     return string.format("%d:%02d", math.floor(s/60), s%60)
 end
+local function spawnFloatingReward(coinsAmt, xpAmt)
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local bb = Instance.new("BillboardGui", hrp)
+    bb.Name            = "FloatingReward"
+    bb.Size            = UDim2.new(0, 180, 0, 44)
+    bb.StudsOffset     = Vector3.new(0, 3.5, 0)
+    bb.AlwaysOnTop     = false
+    bb.ResetOnSpawn    = false
+    bb.ZIndexBehavior  = Enum.ZIndexBehavior.Sibling
+    local lbl = Instance.new("TextLabel", bb)
+    lbl.Size                  = UDim2.fromScale(1, 1)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3            = C.GOLD
+    lbl.Font                  = Enum.Font.GothamBold
+    lbl.TextScaled            = true
+    lbl.TextStrokeTransparency = 0.4
+    lbl.TextStrokeColor3      = Color3.fromRGB(0, 0, 0)
+    local parts = {}
+    if coinsAmt and coinsAmt > 0 then table.insert(parts, "+"..coinsAmt.." coins") end
+    if xpAmt    and xpAmt    > 0 then table.insert(parts, "+"..xpAmt.." XP")    end
+    lbl.Text = table.concat(parts, "  ")
+    TweenService:Create(bb,  TI(1.4), { StudsOffset = Vector3.new(0, 7, 0) }):Play()
+    local t = TweenService:Create(lbl, TI(1.4), { TextTransparency = 1 })
+    t:Play()
+    t.Completed:Connect(function() if bb.Parent then bb:Destroy() end end)
+end
 local function cookieName(id)
     if not id then return "" end
     return (id:gsub("_"," "):gsub("(%a)([%w]*)", function(a,b) return a:upper()..b end))
@@ -725,6 +754,7 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
         local t = TweenService:Create(r2, TI(0.3), { TextTransparency = 1 })
         t:Play(); t.Completed:Connect(function() if popup.Parent then popup:Destroy() end end)
     end)
+    spawnFloatingReward(coins, xp)
 end)
 
 npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP)
