@@ -916,4 +916,117 @@ stationStatusRemote.OnClientEvent:Connect(function(model, status, _occupantName)
     dot.BackgroundColor3 = status == "occupied" and STATUS_YELLOW or STATUS_GREEN
 end)
 
+-- ── Work-Available Guidance Arrows ───────────────────────────────────────────
+local ARROW_COLOR = Color3.fromRGB(255, 215, 0)
+
+local function getOrCreateWorkArrow(model)
+    if not model or not model:IsA("Model") then return nil end
+    local part = model:FindFirstChildWhichIsA("BasePart")
+    if not part then return nil end
+    if part:FindFirstChild("WorkArrow") then return part:FindFirstChild("WorkArrow") end
+    local bb = Instance.new("BillboardGui", part)
+    bb.Name = "WorkArrow"; bb.Size = UDim2.new(0, 60, 0, 28)
+    bb.StudsOffset = Vector3.new(0, 6.5, 0); bb.AlwaysOnTop = false
+    bb.ResetOnSpawn = false; bb.Enabled = false
+    local lbl = Instance.new("TextLabel", bb)
+    lbl.Size = UDim2.fromScale(1, 1); lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = ARROW_COLOR; lbl.Font = Enum.Font.GothamBold
+    lbl.TextScaled = true; lbl.Text = "▶ HERE"
+    lbl.TextStrokeTransparency = 0.3; lbl.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+    TweenService:Create(lbl, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+        { TextTransparency = 0.55 }):Play()
+    return bb
+end
+
+local stationModels = { dough = {}, fridge = {}, frost = nil, dress = nil }
+
+task.spawn(function()
+    task.wait(4)
+    for _, d in ipairs(workspace:GetDescendants()) do
+        if d:IsA("ProximityPrompt") then
+            local model = d:FindFirstAncestorOfClass("Model")
+            if model then
+                if d.Name == "DoughPrompt" then
+                    table.insert(stationModels.dough, model)
+                    getOrCreateWorkArrow(model)
+                elseif d.Name == "FrostPrompt" then
+                    stationModels.frost = model
+                    getOrCreateWorkArrow(model)
+                elseif d.Name == "DressPrompt" then
+                    stationModels.dress = model
+                    getOrCreateWorkArrow(model)
+                end
+            end
+        end
+    end
+    local fridgesFolder = workspace:FindFirstChild("Fridges")
+    if fridgesFolder then
+        for _, fridge in ipairs(fridgesFolder:GetChildren()) do
+            local fid = fridge:GetAttribute("FridgeId")
+            if fid then stationModels.fridge[fid] = fridge; getOrCreateWorkArrow(fridge) end
+        end
+    end
+end)
+
+local function setWorkArrow(model, visible)
+    if not model then return end
+    local part = model:FindFirstChildWhichIsA("BasePart")
+    if not part then return end
+    local bb = part:FindFirstChild("WorkArrow")
+    if bb then bb.Enabled = visible end
+end
+
+local lastBatchState, lastFridgeState = nil, nil
+local function refreshWorkArrows()
+    local bs, fs = lastBatchState, lastFridgeState
+    local hasDough = false
+    if bs and bs.batches then
+        for _, b in ipairs(bs.batches) do
+            if b.stage == "dough" then hasDough = true; break end
+        end
+    end
+    for _, m in ipairs(stationModels.dough) do setWorkArrow(m, hasDough) end
+    if fs then
+        for fridgeId, count in pairs(fs) do
+            setWorkArrow(stationModels.fridge[fridgeId], count > 0)
+        end
+    end
+    setWorkArrow(stationModels.frost, bs and (bs.warmerForFrost or 0) > 0)
+    setWorkArrow(stationModels.dress, bs and (bs.warmerForDress or 0) > 0)
+end
+
+RemoteManager.Get("BatchUpdated").OnClientEvent:Connect(function(state)
+    lastBatchState = state; refreshWorkArrows()
+end)
+RemoteManager.Get("FridgeUpdated").OnClientEvent:Connect(function(state)
+    lastFridgeState = state; refreshWorkArrows()
+end)
+
+-- ── New Order Flash ───────────────────────────────────────────────────────────
+local orderAlertSound = Instance.new("Sound")
+orderAlertSound.SoundId  = "rbxassetid://139488704715914"  -- ORDER_BELL
+orderAlertSound.Volume   = 0.65
+orderAlertSound.RollOffMaxDistance = 0
+orderAlertSound.Parent   = playerGui
+
+local orderFlashFrame = Instance.new("Frame")
+orderFlashFrame.Size = UDim2.fromScale(1, 1)
+orderFlashFrame.BackgroundColor3 = Color3.fromRGB(255, 180, 40)
+orderFlashFrame.BackgroundTransparency = 1
+orderFlashFrame.BorderSizePixel = 0
+orderFlashFrame.ZIndex = 15
+orderFlashFrame.Parent = hud
+
+local _flashActive = false
+local function flashNewOrder()
+    if _flashActive then return end
+    _flashActive = true
+    orderAlertSound:Play()
+    orderFlashFrame.BackgroundTransparency = 0.6
+    TweenService:Create(orderFlashFrame, TI(0.5), { BackgroundTransparency = 1 }):Play()
+    task.delay(0.5, function() _flashActive = false end)
+end
+
+RemoteManager.Get("NPCOrderReady").OnClientEvent:Connect(flashNewOrder)
+
 print("[HUDController] Redesign v2 ready.")

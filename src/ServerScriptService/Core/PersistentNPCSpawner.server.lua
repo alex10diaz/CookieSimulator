@@ -388,6 +388,7 @@ local function confirmOrder(player, npcId)
     })
     data.order.orderId = order.orderId
     data.state = "ordered"
+    npcOrderReadyRemote:FireAllClients(order.orderId, data.order.cookieId)
 
     -- Update 3D tablet display
     updateTabletDisplay({
