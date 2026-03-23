@@ -78,6 +78,7 @@ local function showStationBillboard(model, playerName, stationName)
     local lbl = bg:FindFirstChild("OccupiedLabel", true)
     if lbl then lbl.Text = playerName .. " — " .. (STATION_LABELS[stationName] or stationName) end
     bg.Enabled = true
+    StationStatusUpdate:FireAllClients(model, "occupied", playerName)
 end
 
 local function clearStationBillboard(model)
@@ -86,6 +87,7 @@ local function clearStationBillboard(model)
     if not part then return end
     local bg = part:FindFirstChild("OccupiedBillboard")
     if bg then bg.Enabled = false end
+    StationStatusUpdate:FireAllClients(model, "free", nil)
 end
 
 -- M-2 + C-3: shared session starter — records startedAt and arms a timeout watchdog
@@ -144,6 +146,7 @@ end
 -- BROADCAST HELPERS
 -- ============================================================
 local BatchUpdated   = RemoteManager.Get("BatchUpdated")
+local StationStatusUpdate = RemoteManager.Get("StationStatusUpdate")
 local WarmersUpdated = RemoteManager.Get("WarmersUpdated")
 local FridgeUpdated  = RemoteManager.Get("FridgeUpdated")
 local BoxCreated     = RemoteManager.Get("BoxCreated")

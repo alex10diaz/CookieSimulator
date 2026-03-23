@@ -123,6 +123,8 @@ local REMOTES = {
     "DriveThruCarArrived",     -- Server->All: car arrived at window; clients show HUD pill
     -- S-4: NPC left without delivery (order failed)
     "NPCOrderFailed",          -- Server->All: NPC name + orderId; clients flash fail state
+    -- Station status lights
+    "StationStatusUpdate",     -- Server->All: model, "occupied"/"free", playerName
     -- S-9: Combo streak update
     "ComboUpdate",             -- Server->Client: current combo streak count
     -- S-6: NPC patience replication
