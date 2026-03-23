@@ -465,6 +465,7 @@ local comboLbl = Instance.new("TextLabel", comboPill)
 comboLbl.Name = "ComboLabel"; comboLbl.Size = UDim2.new(1,0,1,0)
 comboLbl.BackgroundTransparency = 1; comboLbl.TextColor3 = Color3.fromRGB(255,200,80)
 comboLbl.Font = Enum.Font.GothamBold; comboLbl.TextScaled = true; comboLbl.ZIndex = 31
+comboLbl.Text = ""  -- prevent default "Label" showing as gold text
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- SETTINGS PANEL
@@ -720,6 +721,7 @@ acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
 end)
 
 deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
+    local _qp = hud:FindFirstChild("QualityPreview"); if _qp then _qp:Destroy() end
     removeByIndex(1)
     hideTray()
     coachCount += 1
@@ -835,6 +837,7 @@ comboUpdateEvent.OnClientEvent:Connect(function(streak)
         comboLbl.Text = "🔥 x" .. streak .. " COMBO"
         TweenService:Create(comboPill, TI(0.2), { BackgroundTransparency = 0.15 }):Play()
     else
+        comboLbl.Text = ""
         TweenService:Create(comboPill, TI(0.3), { BackgroundTransparency = 1 }):Play()
     end
 end)
@@ -1058,6 +1061,37 @@ end
 
 RemoteManager.Get("NPCOrderReady").OnClientEvent:Connect(flashNewOrder)
 
-
+-- ── Floating Delivery Review Text ────────────────────────────────────────────
+local STAR_LABELS = { [0]="☆☆☆☆☆ Missed!", [1]="★☆☆☆☆ Oops", [2]="★★☆☆☆ Okay", [3]="★★★☆☆ Good", [4]="★★★★☆ Great!", [5]="★★★★★ Perfect!" }
+deliveryFeedbackEvent.OnClientEvent:Connect(function(position, stars)
+    if not position then return end
+    local s = math.clamp(stars or 0, 0, 5)
+    local label = STAR_LABELS[s] or "★★★★★ Perfect!"
+    local isGood = s >= 4
+    local anchor = Instance.new("Part")
+    anchor.Anchored = true; anchor.CanCollide = false; anchor.Transparency = 1
+    anchor.Size = Vector3.new(1, 1, 1)
+    anchor.CFrame = CFrame.new(position + Vector3.new(0, 2.5, 0))
+    anchor.Parent = workspace
+    local bb = Instance.new("BillboardGui", anchor)
+    bb.Size = UDim2.new(0, 220, 0, 54)
+    bb.AlwaysOnTop = true
+    bb.ResetOnSpawn = false
+    local lbl = Instance.new("TextLabel", bb)
+    lbl.Size = UDim2.fromScale(1, 1)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = label
+    lbl.TextColor3 = isGood and Color3.fromRGB(255, 215, 50) or Color3.fromRGB(220, 120, 120)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextScaled = true
+    lbl.TextStrokeTransparency = 0.3
+    lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    TweenService:Create(anchor, TweenInfo.new(1.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        { CFrame = CFrame.new(position + Vector3.new(0, 5.5, 0)) }):Play()
+    local t = TweenService:Create(lbl, TweenInfo.new(1.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+        { TextTransparency = 1 })
+    t:Play()
+    t.Completed:Connect(function() if anchor.Parent then anchor:Destroy() end end)
+end)
 
 print("[HUDController] Redesign v2 ready.")
