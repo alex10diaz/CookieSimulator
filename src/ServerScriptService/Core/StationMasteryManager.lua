@@ -5,9 +5,12 @@
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
--- Lazy-require PlayerDataManager to avoid circular load order issues
+-- Lazy-require to avoid circular load order issues
 local function getPDM()
     return require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
+end
+local function getUnlockManager()
+    return require(ServerScriptService:WaitForChild("Core"):WaitForChild("UnlockManager"))
 end
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 
@@ -73,6 +76,8 @@ function StationMasteryManager.AddMasteryXP(player, role, amount)
             print(string.format("[StationMastery] %s %s -> Level %d%s",
                 player.Name, role, level,
                 coins and (" +" .. coins .. " coins") or ""))
+            -- Check if any station cosmetics are now unlocked
+            getUnlockManager().CheckMasteryGrants(player)
         else
             break
         end

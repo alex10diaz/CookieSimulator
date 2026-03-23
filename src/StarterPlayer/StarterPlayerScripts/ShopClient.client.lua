@@ -142,28 +142,37 @@ local function renderItems()
         descLabel.TextWrapped            = true
         descLabel.Parent                 = row
 
-        -- Price label
-        local priceLabel = Instance.new("TextLabel")
-        priceLabel.Size                   = UDim2.new(0.22, 0, 0, 20)
-        priceLabel.Position               = UDim2.new(0.73, 0, 0, 8)
-        priceLabel.BackgroundTransparency = 1
-        priceLabel.Text                   = owned
-            and "Owned"
-            or  (tostring(item.price) .. " coins")
-        priceLabel.TextColor3             = owned
-            and Color3.fromRGB(80, 200, 80)
-            or  ((afford and prereq) and Color3.fromRGB(255, 215, 80) or Color3.fromRGB(110, 140, 190))
-        priceLabel.Font                   = Enum.Font.GothamBold
-        priceLabel.TextSize               = 12
-        priceLabel.TextXAlignment         = Enum.TextXAlignment.Center
-        priceLabel.Parent                 = row
+        local isStation = item.source == "station"
 
-        -- Buy button (hidden if owned)
-        if not owned then
+        -- Price / earn label
+        local priceLabel = Instance.new("TextLabel")
+        priceLabel.Size                   = UDim2.new(0.27, 0, 0, 20)
+        priceLabel.Position               = UDim2.new(0.71, 0, 0, 8)
+        priceLabel.BackgroundTransparency = 1
+        priceLabel.Font                   = Enum.Font.GothamBold
+        priceLabel.TextSize               = 11
+        priceLabel.TextXAlignment         = Enum.TextXAlignment.Center
+        priceLabel.TextWrapped            = true
+        priceLabel.Parent                 = row
+        if owned then
+            priceLabel.Text       = "Owned"
+            priceLabel.TextColor3 = Color3.fromRGB(80, 200, 80)
+        elseif isStation then
+            priceLabel.Text       = item.stationReq .. " Lv." .. item.levelReq
+            priceLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
+        else
+            priceLabel.Text       = tostring(item.price) .. " coins"
+            priceLabel.TextColor3 = (afford and prereq)
+                and Color3.fromRGB(255, 215, 80)
+                or  Color3.fromRGB(110, 140, 190)
+        end
+
+        -- Buy button: only for shop cosmetics that aren't owned yet
+        if not owned and not isStation then
             local canBuy = afford and prereq
             local buyBtn = Instance.new("TextButton")
-            buyBtn.Size             = UDim2.new(0.22, 0, 0, 26)
-            buyBtn.Position         = UDim2.new(0.73, 0, 0, 34)
+            buyBtn.Size             = UDim2.new(0.27, 0, 0, 26)
+            buyBtn.Position         = UDim2.new(0.71, 0, 0, 34)
             buyBtn.BackgroundColor3 = canBuy
                 and Color3.fromRGB(200, 40, 100)
                 or  Color3.fromRGB(22, 42, 80)
