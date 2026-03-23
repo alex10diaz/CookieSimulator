@@ -203,4 +203,28 @@ for stationId, acf in pairs(ANCHOR_CF) do
         end
     end)
 end
+-- ── SOLO MODE GATING ─────────────────────────────────────────────────────────
+local function updateSoloMode()
+    local solo = #Players:GetPlayers() == 1
+    for _, anchor in ipairs(workspace:GetChildren()) do
+        if anchor.Name:sub(1, 11) == "HireAnchor_" then
+            local pp = anchor:FindFirstChildOfClass("ProximityPrompt")
+            if pp then pp.Enabled = solo end
+        end
+    end
+    if not solo then
+        for stationId, active in pairs(workers) do
+            if active then
+                workers[stationId] = false
+                workerCount = math.max(0, workerCount - 1)
+                local rig = workspace:FindFirstChild("AIWorker_" .. stationId)
+                if rig then rig:Destroy() end
+            end
+        end
+    end
+end
+Players.PlayerAdded:Connect(function() task.wait(1); updateSoloMode() end)
+Players.PlayerRemoving:Connect(function() task.wait(1); updateSoloMode() end)
+task.delay(2, updateSoloMode)
+
 print("[AIBakerSystem] Loaded and ready")

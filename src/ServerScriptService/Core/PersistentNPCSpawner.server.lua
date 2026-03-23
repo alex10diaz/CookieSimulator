@@ -826,17 +826,27 @@ end)
 
 -- ─── SPAWN LOOP ───────────────────────────────────────────────────────────────
 task.spawn(function()
-    -- Avatar pool skipped (NPCAvatarsReady not used; no wait needed)
-    task.wait(2)  -- brief startup buffer
+    task.wait(2)  -- brief startup buffer before first spawn attempt
     while true do
         if isSpawnAllowed() then spawnNPC() end
         task.wait(rushHourActive and RUSH_SPAWN_INTERVAL or SPAWN_INTERVAL)
     end
 end)
 
--- Stagger second NPC so there are usually 2 in queue
-task.delay(30, function()
+-- Stagger a second NPC 25s after game opens
+task.delay(25, function()
     if isSpawnAllowed() then spawnNPC() end
+end)
+
+-- Spawn NPCs immediately when Open phase begins (no 60s wait)
+workspace:GetAttributeChangedSignal("GameState"):Connect(function()
+    if workspace:GetAttribute("GameState") == "Open" then
+        task.wait(2)
+        spawnNPC()
+        task.delay(20, function()
+            if isSpawnAllowed() then spawnNPC() end
+        end)
+    end
 end)
 
 -- ─── CLEANUP ON PLAYER REMOVE ─────────────────────────────────────────────────
