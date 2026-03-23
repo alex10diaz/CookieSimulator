@@ -456,9 +456,13 @@ local function makeToggle(yPos, icon, label, attrName)
         local on = player:GetAttribute(attrName) ~= false
         btn.BackgroundColor3 = on and C.GREEN or C.RED
         btn.Text = on and "ON" or "OFF"
-        if attrName == "MusicEnabled" then
-            for _, snd in ipairs(workspace:GetDescendants()) do
-                if snd:IsA("Sound") and snd.Name:lower():find("music") then
+        local ss = game:GetService("SoundService")
+        for _, snd in ipairs(ss:GetDescendants()) do
+            if snd:IsA("Sound") then
+                local isMusic = snd.Name:lower():find("music") ~= nil
+                if attrName == "MusicEnabled" and isMusic then
+                    snd.Volume = on and 0.5 or 0
+                elseif attrName == "SFXEnabled" and not isMusic then
                     snd.Volume = on and 0.5 or 0
                 end
             end
