@@ -872,12 +872,20 @@ end)
 
 -- Spawn NPCs immediately when Open phase begins (no 60s wait)
 workspace:GetAttributeChangedSignal("GameState"):Connect(function()
-    if workspace:GetAttribute("GameState") == "Open" then
+    local state = workspace:GetAttribute("GameState")
+    if state == "Open" then
         task.wait(2)
         spawnNPC()
         task.delay(20, function()
             if isSpawnAllowed() then spawnNPC() end
         end)
+    elseif state == "EndOfDay" then
+        -- Clear all active NPCs immediately when the shift ends
+        local ids = {}
+        for id in pairs(npcs) do ids[#ids+1] = id end
+        for _, id in ipairs(ids) do
+            npcLeave(id, "end_of_day")
+        end
     end
 end)
 
