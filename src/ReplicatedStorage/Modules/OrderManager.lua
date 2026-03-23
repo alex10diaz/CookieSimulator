@@ -266,11 +266,6 @@ end
 -- FROST SCORE
 -- ============================================================
 function OrderManager.RecordFrostScore(playerName, batchId, score, snapshot, cookieId)
-    frostPending[playerName] = {
-        batchId  = batchId,
-        score    = score,
-        snapshot = snapshot,
-    }
     print(string.format("[OrderManager] Batch #%d frosted by %s (%d%%)", batchId, playerName, score))
     -- After frost, cookie moves to warmers for dress (needsFrost=false now)
     table.insert(warmers, {
@@ -319,13 +314,6 @@ function OrderManager.TakeFromWarmersByType(cookieId, quantity)
     return nil
 end
 
-function OrderManager.GetFrostPending(playerName)
-    return frostPending[playerName]
-end
-
-function OrderManager.ClearFrostPending(playerName)
-    frostPending[playerName] = nil
-end
 
 -- ============================================================
 -- DRESS / BOX CREATION
@@ -681,7 +669,6 @@ function OrderManager.Reset()
     fridges        = {}
     ovenBatches    = {}
     warmers        = {}
-    frostPending   = {}
     postOvenScores = {}
     npcOrders      = {}
     boxes          = {}

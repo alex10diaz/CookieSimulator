@@ -34,7 +34,6 @@ local MINIGAMES = {
     dough = { start = "StartDoughMinigame", result = "DoughMinigameResult" },
     oven  = { start = "StartOvenMinigame",  result = "OvenMinigameResult"  },
     frost = { start = "StartFrostMinigame", result = "FrostMinigameResult" },
-    dress = { start = "StartDressMinigame", result = "DressMinigameResult" },
 }
 
 -- ============================================================
