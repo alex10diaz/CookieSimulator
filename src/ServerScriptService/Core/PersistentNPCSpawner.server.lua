@@ -469,9 +469,14 @@ npcLeave = function(npcId, reason)
         OrderManager.CancelNPCOrder(data.order.orderId)
         -- Tell HUDController to remove this order from the active-order pill
         npcOrderCancelledRemote:FireAllClients(data.order.orderId, data.order.cookieId, data.order.packSize)
-        -- S-4: if NPC left due to patience expiry, broadcast fail state to all clients
+        -- S-4: if NPC left due to patience expiry, broadcast fail state + apply coin penalty
         if reason == "patience_expired" or reason == "counter_timeout" then
             npcOrderFailedRemote:FireAllClients(data.name, data.order.orderId)
+            -- Deduct penalty from all active players
+            local FAIL_PENALTY = 75
+            for _, p in ipairs(Players:GetPlayers()) do
+                PlayerDataManager.AddCoins(p, -FAIL_PENALTY)
+            end
         end
     end
 
