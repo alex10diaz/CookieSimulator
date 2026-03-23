@@ -11,6 +11,7 @@ local deliveryEvent          = RemoteManager.Get("DeliveryResult")
 local hudUpdateEvent         = RemoteManager.Get("HUDUpdate")
 local dataInitEvent          = RemoteManager.Get("PlayerDataInit")
 local warmersStockEvent      = RemoteManager.Get("WarmersUpdated")
+
 local EffectsModule
 task.spawn(function() local ok,m = pcall(require, ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EffectsModule")); if ok then EffectsModule = m end end)
 local npcOrderCancelledEvent = RemoteManager.Get("NPCOrderCancelledClient")
@@ -39,22 +40,21 @@ end
 
 -- ── Palette (baby blue / toothpaste + hot pink + gold) ─────────────────────
 local C = {
-    BG       = Color3.fromRGB(175, 218, 235),   -- baby blue / toothpaste background
-    PANEL    = Color3.fromRGB(148, 195, 215),   -- slightly deeper blue panels
-    CARD     = Color3.fromRGB(238, 248, 255),   -- near-white order cards
-    WARM_BRN = Color3.fromRGB(220, 50, 120),    -- hot pink accent (borders, headers)
-    BLUSH    = Color3.fromRGB(255, 140, 195),   -- light pink (coach bar stroke)
-    GOLD     = Color3.fromRGB(255, 205, 50),    -- gold (coins, rewards)
-    WHITE    = Color3.fromRGB(255, 255, 255),   -- white
-    TEXT_DRK = Color3.fromRGB(15, 38, 70),      -- dark navy text (on light bg)
-    TEXT_LT  = Color3.fromRGB(60, 95, 135),    -- medium navy (muted text)
-    GREEN    = Color3.fromRGB(80, 215, 115),    -- success / patience high
-    BLUE     = Color3.fromRGB(80, 175, 255),    -- level badge / XP bar
-    ORANGE   = Color3.fromRGB(235, 150, 55),    -- patience warning
-    RED      = Color3.fromRGB(220, 65, 65),     -- patience critical
-    YELLOW   = Color3.fromRGB(255, 225, 70),    -- combo streak
+    BG       = Color3.fromRGB(175, 218, 235),
+    PANEL    = Color3.fromRGB(148, 195, 215),
+    CARD     = Color3.fromRGB(238, 248, 255),
+    WARM_BRN = Color3.fromRGB(220, 50, 120),
+    BLUSH    = Color3.fromRGB(255, 140, 195),
+    GOLD     = Color3.fromRGB(255, 205, 50),
+    WHITE    = Color3.fromRGB(255, 255, 255),
+    TEXT_DRK = Color3.fromRGB(15, 38, 70),
+    TEXT_LT  = Color3.fromRGB(60, 95, 135),
+    GREEN    = Color3.fromRGB(80, 215, 115),
+    BLUE     = Color3.fromRGB(80, 175, 255),
+    ORANGE   = Color3.fromRGB(235, 150, 55),
+    RED      = Color3.fromRGB(220, 65, 65),
+    YELLOW   = Color3.fromRGB(255, 225, 70),
 }
-
 local TI  = function(t) return TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) end
 local TIB = function(t) return TweenInfo.new(t, Enum.EasingStyle.Back, Enum.EasingDirection.Out) end
 
@@ -150,7 +150,7 @@ local coinBadge = Instance.new("Frame", topBar)
 coinBadge.Name = "CoinBadge"
 coinBadge.Size = UDim2.new(0, 148, 0, 36)
 coinBadge.Position = UDim2.new(0, 10, 0.5, -18)
-coinBadge.BackgroundColor3 = Color3.fromRGB(16, 14, 40)
+coinBadge.BackgroundColor3 = Color3.fromRGB(125, 172, 198)
 coinBadge.BackgroundTransparency = 0.15
 coinBadge.BorderSizePixel = 0; coinBadge.ZIndex = 11
 corner(coinBadge, 20); addStroke(coinBadge, C.GOLD, 1.5, 0.4)
@@ -174,7 +174,7 @@ local lvlBadge = Instance.new("Frame", topBar)
 lvlBadge.Name = "LevelBadge"
 lvlBadge.Size = UDim2.new(0, 185, 0, 38)
 lvlBadge.Position = UDim2.new(0, 166, 0.5, -19)
-lvlBadge.BackgroundColor3 = Color3.fromRGB(16, 14, 40)
+lvlBadge.BackgroundColor3 = Color3.fromRGB(125, 172, 198)
 lvlBadge.BackgroundTransparency = 0.15
 lvlBadge.BorderSizePixel = 0; lvlBadge.ZIndex = 11
 corner(lvlBadge, 10)
@@ -198,7 +198,7 @@ xpLbl.Text = "0 xp"; xpLbl.ZIndex = 12
 
 local xpTrack = Instance.new("Frame", lvlBadge)
 xpTrack.Size = UDim2.new(1, -12, 0, 6); xpTrack.Position = UDim2.new(0, 6, 1, -10)
-xpTrack.BackgroundColor3 = Color3.fromRGB(22, 22, 52); xpTrack.BorderSizePixel = 0; xpTrack.ZIndex = 12
+xpTrack.BackgroundColor3 = Color3.fromRGB(155, 195, 215); xpTrack.BorderSizePixel = 0; xpTrack.ZIndex = 12
 corner(xpTrack, 4)
 
 local xpFill = Instance.new("Frame", xpTrack)
@@ -239,18 +239,18 @@ corner(settingsBtn, 10); addStroke(settingsBtn, C.TEXT_LT, 1, 0.65)
 local skipBtn = Instance.new("TextButton", hud)
 skipBtn.Name = "SkipPreOpenBtn"
 skipBtn.Size = UDim2.new(0, 148, 0, 26); skipBtn.Position = UDim2.new(0.5, -74, 0, 60)
-skipBtn.ZIndex = 5; skipBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 52)
-skipBtn.TextColor3 = Color3.fromRGB(150, 155, 210); skipBtn.Font = Enum.Font.Gotham
+skipBtn.ZIndex = 5; skipBtn.BackgroundColor3 = Color3.fromRGB(148, 195, 215)
+skipBtn.TextColor3 = Color3.fromRGB(25, 55, 100); skipBtn.Font = Enum.Font.Gotham
 skipBtn.TextSize = 13; skipBtn.Text = "Skip to Open  →"; skipBtn.Visible = false
-corner(skipBtn, 8); addStroke(skipBtn, Color3.fromRGB(80, 80, 140), 1, 0)
+corner(skipBtn, 8); addStroke(skipBtn, Color3.fromRGB(80, 130, 170), 1, 0)
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- ORDERS PANEL (LEFT)
 -- ══════════════════════════════════════════════════════════════════════════════
 local ordersPanel = Instance.new("Frame", hud)
 ordersPanel.Name = "OrdersPanel"
-ordersPanel.Size = UDim2.new(0, 176, 1, -290)
-ordersPanel.Position = UDim2.new(0, 8, 0, 78)
+ordersPanel.Size = UDim2.new(0, 176, 1, -322)
+ordersPanel.Position = UDim2.new(0, 8, 0, 110)
 ordersPanel.BackgroundColor3 = C.BG
 ordersPanel.BackgroundTransparency = 0.12
 ordersPanel.BorderSizePixel = 0; ordersPanel.ZIndex = 8
@@ -287,6 +287,7 @@ emptyLbl.Text = "No orders yet\n\nWait for\ncustomers!"
 local orderCards   = {}  -- key -> Frame
 local activeOrders = {}  -- { orderId, display, tempKey }
 local patienceMap  = {}  -- orderId -> ratio (0-1)
+local flashTweens  = {}  -- key -> Tween (looping red flash)
 local tempKeyN     = 0
 
 local function cardKey(entry)
@@ -348,7 +349,7 @@ local function createCard(key, displayName, isVIP)
     -- Patience bar
     local pTrack = Instance.new("Frame", card)
     pTrack.Size = UDim2.new(1,-16,0,5); pTrack.Position = UDim2.new(0,8,1,-13)
-    pTrack.BackgroundColor3 = Color3.fromRGB(45, 45, 80); pTrack.BackgroundTransparency = 0.3
+    pTrack.BackgroundColor3 = Color3.fromRGB(190, 215, 228); pTrack.BackgroundTransparency = 0.5
     pTrack.BorderSizePixel = 0; pTrack.ZIndex = 11
     corner(pTrack, 3)
 
@@ -356,6 +357,16 @@ local function createCard(key, displayName, isVIP)
     pFill.Name = "PatienceFill"; pFill.Size = UDim2.new(1,0,1,0)
     pFill.BackgroundColor3 = C.GREEN; pFill.BorderSizePixel = 0; pFill.ZIndex = 12
     corner(pFill, 3)
+
+    -- Flash overlay (red, shown last 15s of patience)
+    local flashOverlay = Instance.new("Frame", card)
+    flashOverlay.Name = "FlashOverlay"
+    flashOverlay.Size = UDim2.new(1, 0, 1, 0)
+    flashOverlay.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    flashOverlay.BackgroundTransparency = 1
+    flashOverlay.BorderSizePixel = 0
+    flashOverlay.ZIndex = 13
+    Instance.new("UICorner", flashOverlay).CornerRadius = UDim.new(0, 8)
 
     -- Slide-in animation (from left)
     card.Position = UDim2.new(-1.5, 0, 0, 0)
@@ -369,6 +380,7 @@ local function removeCard(key)
     local card = orderCards[key]
     if not card then return end
     orderCards[key] = nil
+    if flashTweens[key] then flashTweens[key]:Cancel(); flashTweens[key] = nil end
     local t = TweenService:Create(card, TI(0.22), {
         BackgroundTransparency = 1,
         Position = UDim2.new(1.5, 0, 0, 0),
@@ -382,13 +394,14 @@ local function removeCard(key)
     end)
 end
 
-local function updatePatience(key, ratio)
+local function updatePatience(key, ratio, current)
     local card = orderCards[key]
     if not card then return end
-    local fill = card:FindFirstChild("PatienceFill", true)
-    local dot   = card:FindFirstChild("StatusDot")
-    local slbl  = card:FindFirstChild("StatusLabel")
-    local cstk  = card:FindFirstChildOfClass("UIStroke")
+    local fill    = card:FindFirstChild("PatienceFill", true)
+    local dot     = card:FindFirstChild("StatusDot")
+    local slbl    = card:FindFirstChild("StatusLabel")
+    local cstk    = card:FindFirstChildOfClass("UIStroke")
+    local overlay = card:FindFirstChild("FlashOverlay")
     if not fill then return end
     local col = ratio > 0.5 and C.GREEN or (ratio > 0.25 and C.ORANGE or C.RED)
     local txt = ratio > 0.5 and "NEW" or (ratio > 0.25 and "WAITING" or "LATE!")
@@ -396,6 +409,25 @@ local function updatePatience(key, ratio)
     if dot  then dot.BackgroundColor3 = col end
     if slbl then slbl.TextColor3 = col; slbl.Text = txt end
     if cstk then cstk.Color = col end
+    -- Flash overlay: pulse last 15 seconds
+    if overlay then
+        if current and current <= 15 then
+            if not flashTweens[key] then
+                overlay.BackgroundTransparency = 1
+                local ft = TweenService:Create(overlay,
+                    TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+                    { BackgroundTransparency = 0.95 })
+                ft:Play()
+                flashTweens[key] = ft
+            end
+        else
+            if flashTweens[key] then
+                flashTweens[key]:Cancel()
+                flashTweens[key] = nil
+                if overlay then overlay.BackgroundTransparency = 1 end
+            end
+        end
+    end
 end
 
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -405,7 +437,7 @@ local coachBar = Instance.new("Frame", hud)
 coachBar.Name = "CoachBar"
 coachBar.Size = UDim2.new(0, 390, 0, 34)
 coachBar.Position = UDim2.new(0.5, -195, 1, -50)
-coachBar.BackgroundColor3 = Color3.fromRGB(10, 10, 26)
+coachBar.BackgroundColor3 = Color3.fromRGB(175, 218, 235)
 coachBar.BackgroundTransparency = 0.1; coachBar.BorderSizePixel = 0
 coachBar.ZIndex = 20; coachBar.Visible = false
 corner(coachBar, 20); addStroke(coachBar, C.BLUSH, 1, 0.5)
@@ -424,7 +456,7 @@ coachLbl.Text = "Mix  →  Dough  →  Oven  →  Warmers  →  Dress  →  Deli
 local comboPill = Instance.new("Frame", hud)
 comboPill.Name = "ComboPill"
 comboPill.Size = UDim2.new(0, 138, 0, 34); comboPill.Position = UDim2.new(0.5,-69,1,-90)
-comboPill.BackgroundColor3 = Color3.fromRGB(130, 30, 80); comboPill.BackgroundTransparency = 1
+comboPill.BackgroundColor3 = Color3.fromRGB(185, 30, 95); comboPill.BackgroundTransparency = 1
 comboPill.BorderSizePixel = 0; comboPill.ZIndex = 30
 corner(comboPill, 20)
 
@@ -445,11 +477,9 @@ settingsPanel.BackgroundTransparency = 0.06
 settingsPanel.BorderSizePixel = 0; settingsPanel.ZIndex = 50
 settingsPanel.Visible = false
 corner(settingsPanel, 12); addStroke(settingsPanel, C.WARM_BRN, 2, 0.2)
-
 local sHdr = Instance.new("Frame", settingsPanel)
-sHdr.Size = UDim2.new(1,0,0,34); sHdr.Position = UDim2.new(0,0,0,0)
-sHdr.BackgroundColor3 = C.WARM_BRN; sHdr.BackgroundTransparency = 0.1
-sHdr.BorderSizePixel = 0; sHdr.ZIndex = 51
+sHdr.Size = UDim2.new(1,0,0,34); sHdr.BackgroundColor3 = C.WARM_BRN
+sHdr.BackgroundTransparency = 0.1; sHdr.BorderSizePixel = 0; sHdr.ZIndex = 51
 corner(sHdr, 12)
 local sHdrFlat = Instance.new("Frame", sHdr)
 sHdrFlat.Size = UDim2.new(1,0,0.5,0); sHdrFlat.Position = UDim2.new(0,0,0.5,0)
@@ -460,13 +490,12 @@ sTitle.Size = UDim2.new(1,-40,1,0); sTitle.Position = UDim2.new(0,12,0,0)
 sTitle.BackgroundTransparency = 1; sTitle.TextColor3 = C.WHITE
 sTitle.Font = Enum.Font.GothamBold; sTitle.TextSize = 14
 sTitle.TextXAlignment = Enum.TextXAlignment.Left
-sTitle.Text = "⚙  Settings"; sTitle.ZIndex = 52
+sTitle.Text = "\xe2\x9a\x99  Settings"; sTitle.ZIndex = 52
 local sClose = Instance.new("TextButton", sHdr)
 sClose.Size = UDim2.new(0,30,0,30); sClose.Position = UDim2.new(1,-34,0.5,-15)
 sClose.BackgroundTransparency = 1; sClose.TextColor3 = C.WHITE
 sClose.Font = Enum.Font.GothamBold; sClose.TextSize = 16
-sClose.Text = "✕"; sClose.ZIndex = 52; sClose.BorderSizePixel = 0
-
+sClose.Text = "\xe2\x9c\x95"; sClose.ZIndex = 52; sClose.BorderSizePixel = 0
 local function makeToggle(yPos, icon, label, attrName)
     local row = Instance.new("Frame", settingsPanel)
     row.Size = UDim2.new(1,-16,0,44); row.Position = UDim2.new(0,8,0,yPos)
@@ -490,11 +519,11 @@ local function makeToggle(yPos, icon, label, attrName)
         local ss = game:GetService("SoundService")
         for _, snd in ipairs(ss:GetDescendants()) do
             if snd:IsA("Sound") then
-                local isMusic = snd.Name:lower():find("music") ~= nil
+                local isMusic = snd.Name == "BakeryMusic"
                 if attrName == "MusicEnabled" and isMusic then
-                    snd.Volume = on and 0.5 or 0
+                    snd.Volume = on and 0.10 or 0
                 elseif attrName == "SFXEnabled" and not isMusic then
-                    snd.Volume = on and 0.5 or 0
+                    snd.Volume = on and (snd.Volume > 0 and snd.Volume or 0.25) or 0
                 end
             end
         end
@@ -505,10 +534,8 @@ local function makeToggle(yPos, icon, label, attrName)
         refresh()
     end)
 end
-
-makeToggle(42,  "🎵", "Music",    "MusicEnabled")
-makeToggle(94,  "🔊", "Sound FX", "SFXEnabled")
-
+makeToggle(42, "\xf0\x9f\x8e\xb5", "Music",    "MusicEnabled")
+makeToggle(94, "\xf0\x9f\x94\x8a", "Sound FX", "SFXEnabled")
 local settingsOpen = false
 local function toggleSettings()
     settingsOpen = not settingsOpen
@@ -526,13 +553,12 @@ sClose.MouseButton1Click:Connect(function() settingsOpen = false; settingsPanel.
 local trayPanel = Instance.new("Frame", hud)
 trayPanel.Name = "TrayPanel"
 trayPanel.Size = UDim2.new(0, 160, 0, 92)
-trayPanel.Position = UDim2.new(1, 180, 0, 58)  -- starts off-screen right
+trayPanel.Position = UDim2.new(1, 180, 0, 58)
 trayPanel.BackgroundColor3 = C.CARD
 trayPanel.BackgroundTransparency = 0.06
 trayPanel.BorderSizePixel = 0; trayPanel.ZIndex = 8
 corner(trayPanel, 10); addStroke(trayPanel, C.WARM_BRN, 1.5, 0.3)
 
--- Header
 local trayHdr = Instance.new("Frame", trayPanel)
 trayHdr.Size = UDim2.new(1, 0, 0, 28); trayHdr.Position = UDim2.new(0, 0, 0, 0)
 trayHdr.BackgroundColor3 = C.WARM_BRN; trayHdr.BackgroundTransparency = 0.15
@@ -550,7 +576,6 @@ trayHdrLbl.Font = Enum.Font.GothamBold; trayHdrLbl.TextSize = 12
 trayHdrLbl.TextXAlignment = Enum.TextXAlignment.Left
 trayHdrLbl.Text = "📦  CARRYING"; trayHdrLbl.ZIndex = 10
 
--- Cookie name label
 local trayCookieLbl = Instance.new("TextLabel", trayPanel)
 trayCookieLbl.Name = "TrayCookieLabel"
 trayCookieLbl.Size = UDim2.new(1,-12,0,36); trayCookieLbl.Position = UDim2.new(0,6,0,32)
@@ -560,7 +585,6 @@ trayCookieLbl.TextWrapped = true; trayCookieLbl.TextXAlignment = Enum.TextXAlign
 trayCookieLbl.TextYAlignment = Enum.TextYAlignment.Center
 trayCookieLbl.Text = "🍪 Cookie"; trayCookieLbl.ZIndex = 9
 
--- Quality stars label
 local trayQualityLbl = Instance.new("TextLabel", trayPanel)
 trayQualityLbl.Name = "TrayQualityLabel"
 trayQualityLbl.Size = UDim2.new(1,-12,0,20); trayQualityLbl.Position = UDim2.new(0,6,0,68)
@@ -588,16 +612,12 @@ end
 local function hideTray()
     if not trayVisible then return end
     trayVisible = false
-    local t = TweenService:Create(trayPanel, TI(0.22), { Position = TRAY_HIDE_X })
-    t:Play()
+    TweenService:Create(trayPanel, TI(0.22), { Position = TRAY_HIDE_X }):Play()
 end
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- STATE HANDLERS
 -- ══════════════════════════════════════════════════════════════════════════════
-local STATE_BG = {
-    Open="(20,58,28)", Intermission="(18,38,70)", EndOfDay="(68,40,14)",
-}
 local STATE_LABELS = {
     PreOpen="PRE-OPEN", Open="OPEN", EndOfDay="END OF DAY", Lobby="LOBBY", Intermission="BREAK TIME",
 }
@@ -607,9 +627,9 @@ local coachCount = 0
 
 stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     local bg = STATE_ACCENT[state] and
-        (state == "Open" and Color3.fromRGB(20,58,28) or
-         state == "Intermission" and Color3.fromRGB(18,38,70) or
-         Color3.fromRGB(68,40,14)) or C.PANEL
+        (state == "Open" and Color3.fromRGB(160, 218, 175) or
+         state == "Intermission" and Color3.fromRGB(148, 195, 215) or
+         Color3.fromRGB(235, 200, 155)) or C.PANEL
     TweenService:Create(timerBadge, TI(0.3), { BackgroundColor3 = bg }):Play()
     timerStroke.Color = STATE_ACCENT[state] or C.TEXT_LT
     timerLbl.Text = (STATE_LABELS[state] or state) .. "  " .. formatTime(timeRemaining or 0)
@@ -679,22 +699,9 @@ hudUpdateEvent.OnClientEvent:Connect(function(coins, xp, activeOrderName)
         TweenService:Create(xpFill, TI(0.5), { Size = UDim2.new(ratio,0,1,0) }):Play()
     end
     if activeOrderName ~= nil then
-        local nm = tostring(activeOrderName):gsub("\xC3\x97","x")
+        local nm = tostring(activeOrderName):gsub("\195\151","x")
         addOrder(nil, nm, false)
     end
-end)
-
--- Initialize HUD with actual player data on join (fixes coins showing 0 and level always 1)
-dataInitEvent.OnClientEvent:Connect(function(data)
-    if not data then return end
-    localLevel = data.level or 1
-    coinsLbl.Text  = tostring(data.coins or 0)
-    levelLbl.Text  = "Lv. " .. localLevel
-    local xp  = data.xp or 0
-    xpLbl.Text = xp .. " xp"
-    local req   = xpRequired(localLevel)
-    local ratio = math.clamp((xp % req) / req, 0.03, 1)
-    xpFill.Size = UDim2.new(ratio, 0, 1, 0)
 end)
 
 acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
@@ -719,7 +726,7 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
 
     local s = math.clamp(stars or 0, 0, 5)
     local isGood = s >= 4
-    local bgCol = isGood and Color3.fromRGB(26,80,33) or Color3.fromRGB(88,26,26)
+    local bgCol = isGood and Color3.fromRGB(160, 215, 170) or Color3.fromRGB(235, 175, 175)
     local acCol = isGood and C.GOLD or C.RED
 
     local popup = Instance.new("Frame", hud)
@@ -757,51 +764,20 @@ deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
         t:Play(); t.Completed:Connect(function() if popup.Parent then popup:Destroy() end end)
     end)
     spawnFloatingReward(coins, xp)
+
     do local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart"); if hrp then EffectsModule.Confetti(hrp.Position) end end
 end)
 
-
-local function updatePatienceAura(npcModel, ratio)
-    local head = npcModel:FindFirstChild("Head")
-    if not head then return end
-    local bb = head:FindFirstChild("PatienceAura")
-    if not bb then
-        bb = Instance.new("BillboardGui", head)
-        bb.Name          = "PatienceAura"
-        bb.Size          = UDim2.new(0, 80, 0, 80)
-        bb.StudsOffset   = Vector3.new(0, 1.2, 0)
-        bb.AlwaysOnTop   = false
-        bb.ResetOnSpawn  = false
-        local ring = Instance.new("Frame", bb)
-        ring.Name                   = "Ring"
-        ring.Size                   = UDim2.fromScale(1, 1)
-        ring.BackgroundTransparency = 1
-        ring.BorderSizePixel        = 0
-        Instance.new("UICorner", ring).CornerRadius = UDim.new(1, 0)
-        local stroke = Instance.new("UIStroke", ring)
-        stroke.Name      = "RingStroke"
-        stroke.Thickness = 3.5
-        stroke.Color     = Color3.fromRGB(80, 220, 100)
-    end
-    local stroke = bb:FindFirstChild("RingStroke", true)
-    if not stroke then return end
-    local col = ratio > 0.6 and Color3.fromRGB(80, 220, 100)
-        or ratio > 0.3 and Color3.fromRGB(255, 165, 0)
-        or Color3.fromRGB(220, 60, 60)
-    TweenService:Create(stroke, TweenInfo.new(0.5), { Color = col }):Play()
-end
-
-npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP, npcModel)
+npcPatienceEvent.OnClientEvent:Connect(function(orderId, current, maxP)
     if not orderId then return end
     local ratio = math.clamp((current or 0) / math.max(maxP or 1, 1), 0, 1)
     patienceMap[orderId] = ratio
     local key = tostring(orderId)
     if orderCards[key] then
-        updatePatience(key, ratio)
+        updatePatience(key, ratio, current)
     elseif #activeOrders > 0 and not activeOrders[1].orderId then
-        updatePatience(cardKey(activeOrders[1]), ratio)
+        updatePatience(cardKey(activeOrders[1]), ratio, current)
     end
-    if npcModel and npcModel.Parent then updatePatienceAura(npcModel, ratio) end
 end)
 
 npcOrderCancelledEvent.OnClientEvent:Connect(function(orderId, cookieId, packSize)
@@ -847,11 +823,11 @@ local function showAlert(text, bgColor, accentColor, duration)
 end
 
 driveThruArrivedEvent.OnClientEvent:Connect(function()
-    showAlert("🚗 Drive Thru!", Color3.fromRGB(18,42,88), C.BLUE, 5)
+    showAlert("🚗 Drive Thru!", Color3.fromRGB(155, 200, 230), C.BLUE, 5)
 end)
 npcOrderFailedEvent.OnClientEvent:Connect(function(npcName)
     local txt = (npcName and npcName ~= "") and ("❌ "..npcName.." left!") or "❌ Order Failed!"
-    showAlert(txt, Color3.fromRGB(68,18,18), C.RED, 4)
+    showAlert(txt, Color3.fromRGB(235, 180, 180), C.RED, 4)
 end)
 comboUpdateEvent.OnClientEvent:Connect(function(streak)
     if streak and streak >= 2 then
@@ -863,7 +839,7 @@ comboUpdateEvent.OnClientEvent:Connect(function(streak)
 end)
 
 -- ══════════════════════════════════════════════════════════════════════════════
--- BOX QUALITY PREVIEW (S-8)
+-- BOX QUALITY PREVIEW
 -- ══════════════════════════════════════════════════════════════════════════════
 boxCreatedEvent.OnClientEvent:Connect(function(box)
     if not (box and box.carrier == player.Name) then return end
@@ -876,7 +852,7 @@ boxCreatedEvent.OnClientEvent:Connect(function(box)
     local card = Instance.new("Frame", hud)
     card.Name = "QualityPreview"
     card.Size = UDim2.new(0,220,0,56); card.Position = UDim2.new(0.5,-110,0.5,20)
-    card.BackgroundColor3 = Color3.fromRGB(20,20,36); card.BackgroundTransparency = 1
+    card.BackgroundColor3 = Color3.fromRGB(238, 248, 255); card.BackgroundTransparency = 1
     card.BorderSizePixel = 0; card.ZIndex = 45
     corner(card, 12)
     local cs = addStroke(card, C.GOLD, 1.5, 1)
@@ -885,7 +861,7 @@ boxCreatedEvent.OnClientEvent:Connect(function(box)
     r1.Size = UDim2.new(1,0,0,28); r1.Position = UDim2.new(0,0,0,4)
     r1.BackgroundTransparency = 1; r1.TextColor3 = C.GOLD
     r1.Font = Enum.Font.GothamBold; r1.TextScaled = true; r1.ZIndex = 46
-    r1.Text = string.rep("★",stars)..string.rep("☆",5-stars).."  "..stars.."/5  ("..pct.."%)"
+    r1.Text = string.rep("★",stars)..string.rep("☆",5-stars).."  "..pct.."%"
     r1.TextTransparency = 1
 
     local r2 = Instance.new("TextLabel", card)
@@ -907,6 +883,19 @@ boxCreatedEvent.OnClientEvent:Connect(function(box)
         local t = TweenService:Create(r2, TI(0.3), { TextTransparency = 1 })
         t:Play(); t.Completed:Connect(function() if card.Parent then card:Destroy() end end)
     end)
+end)
+
+-- Initialize HUD with actual player data on join
+dataInitEvent.OnClientEvent:Connect(function(data)
+    if not data then return end
+    localLevel = data.level or 1
+    coinsLbl.Text  = tostring(data.coins or 0)
+    levelLbl.Text  = "Lv. " .. localLevel
+    local xp  = data.xp or 0
+    xpLbl.Text = xp .. " xp"
+    local req   = xpRequired(localLevel)
+    local ratio = math.clamp((xp % req) / req, 0.03, 1)
+    xpFill.Size = UDim2.new(ratio, 0, 1, 0)
 end)
 
 -- ── Station Status Dots ──────────────────────────────────────────────────────
@@ -935,20 +924,24 @@ local function getOrCreateStatusDot(model)
     Instance.new("UICorner", frame).CornerRadius = UDim.new(1, 0)
 
     local stroke = Instance.new("UIStroke", frame)
-    stroke.Color        = Color3.fromRGB(0, 0, 0)
-    stroke.Thickness    = 1.5
+    stroke.Color       = Color3.fromRGB(0, 0, 0)
+    stroke.Thickness   = 1.5
     stroke.Transparency = 0.5
 
     return bb
 end
 
 local stationStatusRemote = RemoteManager.Get("StationStatusUpdate")
-stationStatusRemote.OnClientEvent:Connect(function(model, status, _occupantName)
+stationStatusRemote.OnClientEvent:Connect(function(model, status, occupantName)
     local bb = getOrCreateStatusDot(model)
     if not bb then return end
     local dot = bb:FindFirstChild("Dot")
     if not dot then return end
-    dot.BackgroundColor3 = status == "occupied" and STATUS_YELLOW or STATUS_GREEN
+    if status == "occupied" then
+        dot.BackgroundColor3 = STATUS_YELLOW
+    else
+        dot.BackgroundColor3 = STATUS_GREEN
+    end
 end)
 
 -- ── Work-Available Guidance Arrows ───────────────────────────────────────────
@@ -1039,10 +1032,10 @@ end)
 
 -- ── New Order Flash ───────────────────────────────────────────────────────────
 local orderAlertSound = Instance.new("Sound")
-orderAlertSound.SoundId  = "rbxassetid://139488704715914"  -- ORDER_BELL
-orderAlertSound.Volume   = 0.65
+orderAlertSound.SoundId   = "rbxassetid://139488704715914"  -- ORDER_BELL
+orderAlertSound.Volume    = 0.65
 orderAlertSound.RollOffMaxDistance = 0
-orderAlertSound.Parent   = playerGui
+orderAlertSound.Parent    = playerGui
 
 local orderFlashFrame = Instance.new("Frame")
 orderFlashFrame.Size = UDim2.fromScale(1, 1)
@@ -1050,7 +1043,7 @@ orderFlashFrame.BackgroundColor3 = Color3.fromRGB(255, 180, 40)
 orderFlashFrame.BackgroundTransparency = 1
 orderFlashFrame.BorderSizePixel = 0
 orderFlashFrame.ZIndex = 15
-orderFlashFrame.Parent = hud
+orderFlashFrame.Parent = hud  -- hud is the ScreenGui
 
 local _flashActive = false
 local function flashNewOrder()
