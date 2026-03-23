@@ -720,9 +720,9 @@ acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
     addOrder(orderId, name, orderData.isVIP)
 end)
 
-deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp)
+deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp, orderId)
     local _qp = hud:FindFirstChild("QualityPreview"); if _qp then _qp:Destroy() end
-    removeByIndex(1)
+    if orderId then removeById(orderId) else removeByIndex(1) end
     hideTray()
     coachCount += 1
     if coachCount >= 3 then coachBar.Visible = false end
