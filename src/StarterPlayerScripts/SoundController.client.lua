@@ -51,7 +51,7 @@ local sounds = {
     cashReg     = makeSound(IDS.CASH_REG,      0.8,  false),
     delivFail   = makeSound(IDS.DELIVERY_FAIL, 0.6,  false),
     coinsJingle = makeSound(IDS.COINS_JINGLE,  0.5,  false),
-    npcBell     = makeSound(IDS.NPC_BELL,      0.7,  false),
+    npcBell     = makeSound(IDS.NPC_BELL,      0.35, false),
     fridgeClick = makeSound(IDS.FRIDGE_CLICK,  0.5,  false),
     boxPickup   = makeSound(IDS.BOX_PICKUP,    0.55, false),
     uiClick     = makeSound(IDS.UI_CLICK,      0.4,  false),
@@ -121,8 +121,8 @@ if okO and orderAcc then
     orderAcc.OnClientEvent:Connect(function() sounds.orderBell:Play() end)
 end
 
--- NPC arrival bell (fires when NPC order appears in HUD)
-RemoteManager.Get("NPCOrderReady").OnClientEvent:Connect(function() sounds.npcBell:Play() end)
+-- NPC arrival bell
+RemoteManager.Get("StartOrderCutscene").OnClientEvent:Connect(function() sounds.npcBell:Play() end)
 
 -- Fridge open + box pickup
 local PPS = game:GetService("ProximityPromptService")
