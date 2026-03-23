@@ -40,8 +40,6 @@ local ovenBatches = {}
 -- Warmers: list of { batchId, cookieId, quality, needsFrost=false (already resolved) }
 local warmers    = {}
 
--- Frost pending per player: playerName -> { batchId, cookieId, warmerQuality }
-local frostPending = {}
 
 -- Scores for post-warmer stages keyed by batchId
 local postOvenScores = {}  -- batchId -> { mix, dough, oven, frost(optional) }
