@@ -14,28 +14,28 @@ local playerGui = player:WaitForChild("PlayerGui")
 -- ── Sound IDs ─────────────────────────────────────────────────────────────────
 local IDS = {
     -- Station sounds
-    MIXER_LOOP    = "rbxassetid://9117709834",  -- machine/motor hum (looped)
-    OVEN_DING     = "rbxassetid://4612375233",  -- oven-ready bell
-    OVEN_OPEN     = "rbxassetid://5803015743",  -- oven door thud
-    DOUGH_THUD    = "rbxassetid://5803015743",  -- dough impact / slap
-    DOUGH_DONE    = "rbxassetid://4590662766",  -- dough stage complete chime
-    FROST_SQUIRT  = "rbxassetid://6518383320",  -- frosting squirt / swirl
-    FROST_DONE    = "rbxassetid://4590662766",  -- frost stage complete chime
+    MIXER_LOOP    = "rbxassetid://9125678301",       -- machine/motor hum (looped)
+    OVEN_DING     = "rbxassetid://127688458104225",  -- oven-ready bell
+    OVEN_OPEN     = "rbxassetid://134785860029004",  -- oven door thud
+    DOUGH_THUD    = "rbxassetid://138357469605324",  -- dough impact / slap
+    DOUGH_DONE    = "rbxassetid://96441802692039",   -- dough stage complete chime
+    FROST_SQUIRT  = "rbxassetid://9119512290",       -- frosting squirt / swirl
+    FROST_DONE    = "rbxassetid://4590662766",       -- frost stage complete chime
     -- Delivery & rewards
-    CASH_REG      = "rbxassetid://131070686",   -- cash register ka-ching (delivery success)
-    DELIVERY_FAIL = "rbxassetid://2865227271",  -- low buzzer (delivery fail)
-    COINS_JINGLE  = "rbxassetid://4590662766",  -- coins reward chime
+    CASH_REG      = "rbxassetid://139806997485371",  -- cash register ka-ching (delivery success)
+    DELIVERY_FAIL = "rbxassetid://124571230236752",  -- low buzzer (delivery fail)
+    COINS_JINGLE  = "rbxassetid://106322755125894",  -- coins reward chime
     -- NPC & interactions
-    NPC_BELL      = "rbxassetid://131634004",   -- customer arrives bell
-    FRIDGE_CLICK  = "rbxassetid://6026984224",  -- fridge door open
-    BOX_PICKUP    = "rbxassetid://5804534642",  -- box pickup thud
+    NPC_BELL      = "rbxassetid://135435498618469",  -- customer arrives bell
+    FRIDGE_CLICK  = "rbxassetid://73830484780236",   -- fridge door open
+    BOX_PICKUP    = "rbxassetid://85613175570810",   -- box pickup thud
     -- UI
-    UI_CLICK      = "rbxassetid://608537390",   -- soft UI tap
-    ORDER_BELL    = "rbxassetid://131634004",   -- ding (player accepts NPC order)
-    LEVEL_UP      = "rbxassetid://3331843335",  -- fanfare (bakery level up)
-    MASTERY_UP    = "rbxassetid://4590662766",  -- soft chime (station mastery up)
+    UI_CLICK      = "rbxassetid://133196982070163",  -- soft UI tap
+    ORDER_BELL    = "rbxassetid://139488704715914",  -- ding (player accepts NPC order)
+    LEVEL_UP      = "rbxassetid://122536582003999",  -- fanfare (bakery level up)
+    MASTERY_UP    = "rbxassetid://108161825312558",  -- soft chime (station mastery up)
     -- Ambient
-    MUSIC         = "rbxassetid://1843073454",  -- bakery background loop
+    MUSIC         = "rbxassetid://140699797365730",  -- bakery background loop
 }
 
 -- ── Build sounds ──────────────────────────────────────────────────────────────
