@@ -20,6 +20,7 @@ local npcOrderFailedEvent    = RemoteManager.Get("NPCOrderFailed")
 local comboUpdateEvent       = RemoteManager.Get("ComboUpdate")
 local npcPatienceEvent       = RemoteManager.Get("NPCPatienceUpdate")
 local boxCreatedEvent        = RemoteManager.Get("BoxCreated")
+local deliveryFeedbackEvent  = RemoteManager.Get("DeliveryFeedback")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
