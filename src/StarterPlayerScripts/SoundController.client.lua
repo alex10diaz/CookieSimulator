@@ -55,7 +55,7 @@ local sounds = {
     fridgeClick = makeSound(IDS.FRIDGE_CLICK,  0.5,  false),
     boxPickup   = makeSound(IDS.BOX_PICKUP,    0.55, false),
     uiClick     = makeSound(IDS.UI_CLICK,      0.4,  false),
-    orderBell   = makeSound(IDS.ORDER_BELL,    0.65, false),
+    orderBell   = makeSound(IDS.ORDER_BELL,    0.25, false),
     levelUp     = makeSound(IDS.LEVEL_UP,      0.85, false),
     masteryUp   = makeSound(IDS.MASTERY_UP,    0.55, false),
     music       = makeSound(IDS.MUSIC,         0.10, true),
@@ -121,8 +121,6 @@ if okO and orderAcc then
     orderAcc.OnClientEvent:Connect(function() sounds.orderBell:Play() end)
 end
 
--- NPC arrival bell
-RemoteManager.Get("StartOrderCutscene").OnClientEvent:Connect(function() sounds.npcBell:Play() end)
 
 -- Fridge open + box pickup
 local PPS = game:GetService("ProximityPromptService")
