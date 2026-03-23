@@ -405,7 +405,7 @@ local function confirmOrder(player, npcId)
         local label = data.order.isVariety
             and buildVarietyLabel(data.order.items)
             or  (data.order.cookieName .. " x" .. data.order.packSize)
-        hudUpdate:FireClient(player, nil, nil, label)
+        hudUpdate:FireClient(player, nil, nil, label, order.orderId)
     end)
 
     -- Walk to a waiting area spot
