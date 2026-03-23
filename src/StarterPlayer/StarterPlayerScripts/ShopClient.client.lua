@@ -34,18 +34,24 @@ local equippedCosm    = { hat = nil, apron = nil }
 local playerCoins     = 0
 local activeTab       = "Upgrades"
 
+local setCosmeticRemote = RemoteManager.Get("SetCosmetic")
+
 -- ── CATALOG (mirrors UnlockManager — static) ────────────────────
 local CATALOG = {
-    { id = "tip_boost_1",      tab = "Upgrades",  name = "Tip Boost I",          price = 3000, desc = "+10% NPC tips each shift",              requires = nil },
-    { id = "patience_boost_1", tab = "Upgrades",  name = "Patient Customers I",  price = 2500, desc = "+10s NPC patience",                      requires = nil },
-    { id = "tip_boost_2",      tab = "Upgrades",  name = "Tip Boost II",         price = 6000, desc = "+20% total NPC tips (requires Boost I)",  requires = "tip_boost_1" },
-    { id = "patience_boost_2", tab = "Upgrades",  name = "Patient Customers II", price = 5000, desc = "+20s total patience (requires Boost I)",   requires = "patience_boost_1" },
-    { id = "hat_chef",         tab = "Cosmetics", name = "Chef Hat",             price = 500,  desc = "A classic tall chef's hat",               requires = nil },
-    { id = "hat_beret",        tab = "Cosmetics", name = "Baker's Beret",        price = 750,  desc = "A stylish baker's beret",                 requires = nil },
-    { id = "apron_classic",    tab = "Cosmetics", name = "Classic Apron",        price = 600,  desc = "A timeless white baker's apron",          requires = nil },
-    { id = "apron_pink",       tab = "Cosmetics", name = "Pink Apron",           price = 800,  desc = "Show your sweet side",                    requires = nil },
-    { id = "apron_cookie",     tab = "Cosmetics", name = "Cookie Print Apron",   price = 1200, desc = "Covered in tiny cookie prints",           requires = nil },
-    { id = "hat_cap",          tab = "Cosmetics", name = "Baker's Cap",          price = 400,  desc = "Simple and clean baseball-style cap",     requires = nil },
+    { id = "tip_boost_1",        tab = "Upgrades",  source = "shop",    name = "Tip Boost I",            price = 3000, desc = "+10% NPC tips each shift",              requires = nil },
+    { id = "patience_boost_1",   tab = "Upgrades",  source = "shop",    name = "Patient Customers I",    price = 2500, desc = "+10s NPC patience",                      requires = nil },
+    { id = "tip_boost_2",        tab = "Upgrades",  source = "shop",    name = "Tip Boost II",           price = 6000, desc = "+20% total NPC tips (requires Boost I)",  requires = "tip_boost_1" },
+    { id = "patience_boost_2",   tab = "Upgrades",  source = "shop",    name = "Patient Customers II",   price = 5000, desc = "+20s total patience (requires Boost I)",   requires = "patience_boost_1" },
+    { id = "hat_chef",           tab = "Cosmetics", source = "shop",    name = "Chef Hat",               price = 500,  desc = "A classic tall chef's hat" },
+    { id = "hat_beret",          tab = "Cosmetics", source = "shop",    name = "Baker's Beret",          price = 750,  desc = "A stylish baker's beret" },
+    { id = "hat_cap",            tab = "Cosmetics", source = "shop",    name = "Baker's Cap",            price = 400,  desc = "Simple and clean baseball-style cap" },
+    { id = "apron_classic",      tab = "Cosmetics", source = "shop",    name = "Classic Apron",          price = 600,  desc = "A timeless white baker's apron" },
+    { id = "apron_pink",         tab = "Cosmetics", source = "shop",    name = "Pink Apron",             price = 800,  desc = "Show your sweet side" },
+    { id = "apron_cookie",       tab = "Cosmetics", source = "shop",    name = "Cookie Print Apron",     price = 1200, desc = "Covered in tiny cookie prints" },
+    { id = "hat_station_mix",    tab = "Cosmetics", source = "station", name = "Flour Dusted Cap",       stationReq = "Mixer",     levelReq = 3, desc = "Earned by reaching Mixer level 3" },
+    { id = "apron_station_bake", tab = "Cosmetics", source = "station", name = "Oven Master Apron",      stationReq = "Baker",     levelReq = 3, desc = "Earned by reaching Baker level 3" },
+    { id = "hat_station_dec",    tab = "Cosmetics", source = "station", name = "Decorator's Crown",      stationReq = "Decorator", levelReq = 5, desc = "Earned by reaching Decorator level 5" },
+    { id = "apron_station_frost",tab = "Cosmetics", source = "station", name = "Glazer's Apron",         stationReq = "Glazer",    levelReq = 3, desc = "Earned by reaching Glazer level 3" },
 }
 
 -- ── HELPERS ─────────────────────────────────────────────────────
@@ -155,9 +161,14 @@ local function renderItems()
         priceLabel.TextXAlignment         = Enum.TextXAlignment.Center
         priceLabel.TextWrapped            = true
         priceLabel.Parent                 = row
+        local slot = item.id:sub(1,5) == "apron" and "apron" or "hat"
+        local isEquipped = owned and item.itemType == "cosmetic" and equippedCosm[slot] == item.id
+
         if owned then
-            priceLabel.Text       = "Owned"
-            priceLabel.TextColor3 = Color3.fromRGB(80, 200, 80)
+            priceLabel.Text       = isEquipped and "Equipped" or "Owned"
+            priceLabel.TextColor3 = isEquipped
+                and Color3.fromRGB(255, 200, 0)
+                or  Color3.fromRGB(80, 200, 80)
         elseif isStation then
             priceLabel.Text       = item.stationReq .. " Lv." .. item.levelReq
             priceLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
@@ -166,6 +177,42 @@ local function renderItems()
             priceLabel.TextColor3 = (afford and prereq)
                 and Color3.fromRGB(255, 215, 80)
                 or  Color3.fromRGB(110, 140, 190)
+        end
+
+        -- Equip / Unequip button for owned cosmetics
+        if owned and item.itemType == "cosmetic" then
+            local btn = Instance.new("TextButton")
+            btn.Size             = UDim2.new(0.27, 0, 0, 26)
+            btn.Position         = UDim2.new(0.71, 0, 0, 34)
+            btn.Font             = Enum.Font.GothamBold
+            btn.TextSize         = 12
+            btn.AutoButtonColor  = false
+            btn.BorderSizePixel  = 0
+            btn.Parent           = row
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+            local bStroke = Instance.new("UIStroke", btn)
+            bStroke.Thickness = 1.5
+            if isEquipped then
+                btn.Text             = "Unequip"
+                btn.BackgroundColor3 = Color3.fromRGB(60, 40, 20)
+                btn.TextColor3       = Color3.fromRGB(200, 160, 80)
+                bStroke.Color        = Color3.fromRGB(140, 100, 40)
+                btn.MouseButton1Click:Connect(function()
+                    equippedCosm[slot] = nil
+                    setCosmeticRemote:FireServer(nil, slot)
+                    renderItems()
+                end)
+            else
+                btn.Text             = "Equip"
+                btn.BackgroundColor3 = Color3.fromRGB(30, 80, 160)
+                btn.TextColor3       = Color3.fromRGB(180, 220, 255)
+                bStroke.Color        = Color3.fromRGB(60, 120, 220)
+                btn.MouseButton1Click:Connect(function()
+                    equippedCosm[slot] = item.id
+                    setCosmeticRemote:FireServer(item.id)
+                    renderItems()
+                end)
+            end
         end
 
         -- Buy button: only for shop cosmetics that aren't owned yet
@@ -264,6 +311,7 @@ dataInitRemote.OnClientEvent:Connect(function(data)
     playerCoins    = data.coins or 0
     ownedStations  = data.unlockedStations  or {}
     ownedCosmetics = data.unlockedCosmetics or {}
+    equippedCosm   = data.equippedCosmetics or { hat = nil, apron = nil }
 end)
 
 -- Receive HUD coin updates (keep in sync)
