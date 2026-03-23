@@ -9,16 +9,29 @@ local WORKER_QUALITY = 75
 local SHIRT = "rbxassetid://76531325740097"
 local PANTS = "rbxassetid://98693082132232"
 
--- Baker stand positions (beside each station, not on the interaction spot)
+-- ── Dedicated workspace folders — keeps AI baker objects separate from customer NPCs ──
+local function getFolder(name)
+    local f = workspace:FindFirstChild(name)
+    if not f then
+        f = Instance.new("Folder")
+        f.Name = name
+        f.Parent = workspace
+    end
+    return f
+end
+local BAKERS_FOLDER  = getFolder("AIBakers")   -- all AI worker rigs live here
+local ANCHORS_FOLDER = getFolder("HireAnchors") -- all hire-prompt anchors live here
+
+-- Baker stand positions
 local BAKER_CF = {
-    mix   = CFrame.new(17.68, 4, -14.76) * CFrame.Angles(0, 0,              0), -- face -Z toward mixer
-    dough = CFrame.new(  7,    4, -35.75) * CFrame.Angles(0, math.rad( 90),  0), -- face -X toward dough table
-    oven  = CFrame.new(-5.44, 4, -82.68) * CFrame.Angles(0, math.rad(-45),  0), -- face +X/-Z toward oven cluster
-    frost = CFrame.new( 5.95, 4, -67.81) * CFrame.Angles(0, math.rad( 90),  0), -- face -X toward frost table
-    dress = CFrame.new(-20.09,4, -33.38) * CFrame.Angles(0, math.rad( 90),  0), -- face -X toward dress table
+    mix   = CFrame.new(17.68, 4, -14.76) * CFrame.Angles(0, 0,              0),
+    dough = CFrame.new(  7,    4, -35.75) * CFrame.Angles(0, math.rad( 90),  0),
+    oven  = CFrame.new(-5.44, 4, -82.68) * CFrame.Angles(0, math.rad(-45),  0),
+    frost = CFrame.new( 5.95, 4, -67.81) * CFrame.Angles(0, math.rad( 90),  0),
+    dress = CFrame.new(-20.09,4, -33.38) * CFrame.Angles(0, math.rad( 90),  0),
 }
-local LABELS     = {mix="Mixing",dough="Shaping",oven="Baking",frost="Frosting",dress="Packing"}
-local ANCHOR_CF  = {
+local LABELS    = {mix="Mixing",dough="Shaping",oven="Baking",frost="Frosting",dress="Packing"}
+local ANCHOR_CF = {
     mix=CFrame.new(17.68,2.5,-14.76), dough=CFrame.new(7,2.5,-35.75),
     oven=CFrame.new(-5.44,2.5,-82.68), frost=CFrame.new(5.95,2.5,-67.81),
     dress=CFrame.new(-20.09,2.5,-33.38),
@@ -34,7 +47,6 @@ Players.PlayerAdded:Connect(function(player)
         print("[AIBakerSystem] Gave 500 debug coins to " .. player.Name)
     end
 end)
--- Also give to anyone already in game
 task.spawn(function()
     task.wait(2)
     for _, p in ipairs(Players:GetPlayers()) do
@@ -44,13 +56,13 @@ task.spawn(function()
 end)
 
 local function spawnRig(stationId, hiringPlayer)
-    local existing = workspace:FindFirstChild("AIWorker_"..stationId)
+    -- Scoped to BAKERS_FOLDER — never touches customer NPC objects
+    local existing = BAKERS_FOLDER:FindFirstChild(stationId)
     if existing then existing:Destroy() end
 
     local spawnCF = BAKER_CF[stationId] or CFrame.new(0,2,0)
     local rig
 
-    -- Try character clone from hiring player
     local char = hiringPlayer and hiringPlayer.Character
     if char then
         local ok, result = pcall(function()
@@ -71,7 +83,6 @@ local function spawnRig(stationId, hiringPlayer)
             for _, p in ipairs(clone:GetDescendants()) do
                 if p:IsA("BasePart") then p.Anchored=true; p.CanCollide=false end
             end
-            -- Reset joint transforms so character is in T-pose, not frozen mid-walk
             for _, j in ipairs(clone:GetDescendants()) do
                 if j:IsA("Motor6D") then j.Transform = CFrame.new() end
             end
@@ -93,14 +104,10 @@ local function spawnRig(stationId, hiringPlayer)
             end
             return clone
         end)
-        if ok and result then
-            rig = result
-        else
-            warn("[AIBakerSystem] Clone failed: " .. tostring(result))
-        end
+        if ok and result then rig = result
+        else warn("[AIBakerSystem] Clone failed: " .. tostring(result)) end
     end
 
-    -- Block fallback
     if not rig then
         rig = Instance.new("Model")
         local hrp = Instance.new("Part"); hrp.Name="HumanoidRootPart"; hrp.Size=Vector3.new(2,2,1)
@@ -115,8 +122,8 @@ local function spawnRig(stationId, hiringPlayer)
         Instance.new("Pants",rig).PantsTemplate=PANTS
     end
 
-    rig.Name = "AIWorker_"..stationId
-    rig.Parent = workspace
+    rig.Name = stationId  -- simple name inside its own folder — no "AIWorker_" prefix needed
+    rig.Parent = BAKERS_FOLDER
 
     local hrp2 = rig:FindFirstChild("HumanoidRootPart")
     if hrp2 then
@@ -133,6 +140,7 @@ local function spawnRig(stationId, hiringPlayer)
 end
 
 local function runLoop(stationId, proxy)
+    local MAX_PER_TYPE = 6
     while workers[stationId] do
         pcall(function()
             if stationId == "mix" then
@@ -141,7 +149,6 @@ local function runLoop(stationId, proxy)
                     local c=m:GetAttribute("CookieId")
                     if c and c~="" and not seen[c] then seen[c]=true; table.insert(menu,c) end
                 end end
-                local MAX_PER_TYPE = 6  -- don't overproduce any single cookie type
                 if #menu > 0 then
                     local wc=OrderManager.GetWarmerCountsByType(); local fs=OrderManager.GetFridgeState()
                     local cId=nil; local low=math.huge
@@ -149,7 +156,7 @@ local function runLoop(stationId, proxy)
                         local t=(wc[id] or 0)+(fs["fridge_"..id] or 0)
                         if t<low and (wc[id] or 0)<MAX_PER_TYPE then low=t; cId=id end
                     end
-                    if not cId then task.wait(5) end  -- all types capped, wait before retrying
+                    if not cId then task.wait(5) end
                     local bId=cId and OrderManager.TryStartBatch(proxy,cId)
                     if bId then task.wait(8); OrderManager.RecordStationScore(proxy,"mix",WORKER_QUALITY,bId) end
                 end
@@ -165,7 +172,8 @@ local function runLoop(stationId, proxy)
                     end
                 end end
             elseif stationId == "frost" then
-                if OrderManager.GetWarmerCount()>0 then
+                local forFrost = OrderManager.GetWarmerCount()
+                if forFrost > 0 then
                     local e=OrderManager.TakeFromWarmers(true)
                     if e then task.wait(8); OrderManager.RecordFrostScore(proxy.Name,e.batchId,WORKER_QUALITY,e.snapshot or 0,e.cookieId) end
                 end
@@ -175,20 +183,20 @@ local function runLoop(stationId, proxy)
     end
 end
 
--- Create hire anchors + prompts
+-- Create hire anchors + prompts — scoped to ANCHORS_FOLDER
 for stationId, acf in pairs(ANCHOR_CF) do
     local anchor=Instance.new("Part"); anchor.Name="HireAnchor_"..stationId
     anchor.Anchored=true; anchor.CanCollide=false; anchor.Transparency=1
-    anchor.Size=Vector3.new(1,1,1); anchor.CFrame=acf; anchor.Parent=workspace
+    anchor.Size=Vector3.new(1,1,1); anchor.CFrame=acf; anchor.Parent=ANCHORS_FOLDER
     local pp=Instance.new("ProximityPrompt",anchor)
-    pp.ActionText="Hire Baker (50)"; pp.ObjectText=(LABELS[stationId]).." Station"
+    pp.ActionText="Hire Baker (50)"; pp.ObjectText=LABELS[stationId].." Station"
     pp.KeyboardKeyCode=Enum.KeyCode.H; pp.MaxActivationDistance=10; pp.RequiresLineOfSight=false
 
     local capturedId = stationId
     pp.Triggered:Connect(function(player)
         if workers[capturedId] then
             workers[capturedId]=false; workerCount=math.max(0,workerCount-1)
-            local r=workspace:FindFirstChild("AIWorker_"..capturedId); if r then r:Destroy() end
+            local r=BAKERS_FOLDER:FindFirstChild(capturedId); if r then r:Destroy() end
             pp.ActionText="Hire Baker (50)"; print("[AIBakerSystem] Dismissed "..capturedId)
         else
             if workerCount>=5 then return end
@@ -205,21 +213,20 @@ for stationId, acf in pairs(ANCHOR_CF) do
         end
     end)
 end
--- ── SOLO MODE GATING ─────────────────────────────────────────────────────────
+
+-- ── SOLO MODE GATING — scoped to ANCHORS_FOLDER, never touches workspace directly ──
 local function updateSoloMode()
     local solo = #Players:GetPlayers() == 1
-    for _, anchor in ipairs(workspace:GetChildren()) do
-        if anchor.Name:sub(1, 11) == "HireAnchor_" then
-            local pp = anchor:FindFirstChildOfClass("ProximityPrompt")
-            if pp then pp.Enabled = solo end
-        end
+    for _, anchor in ipairs(ANCHORS_FOLDER:GetChildren()) do
+        local pp = anchor:FindFirstChildOfClass("ProximityPrompt")
+        if pp then pp.Enabled = solo end
     end
     if not solo then
         for stationId, active in pairs(workers) do
             if active then
                 workers[stationId] = false
                 workerCount = math.max(0, workerCount - 1)
-                local rig = workspace:FindFirstChild("AIWorker_" .. stationId)
+                local rig = BAKERS_FOLDER:FindFirstChild(stationId)
                 if rig then rig:Destroy() end
             end
         end
