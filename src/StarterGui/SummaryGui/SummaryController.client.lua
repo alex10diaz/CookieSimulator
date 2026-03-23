@@ -215,6 +215,14 @@ end
 continueBtn.Activated:Connect(dismiss)
 
 -- ── Events ────────────────────────────────────────────────────────────────────
+local GRADE_COLORS = {
+    S = Color3.fromRGB(255, 205,  50),  -- gold
+    A = Color3.fromRGB(  0, 200, 100),  -- green
+    B = Color3.fromRGB( 80, 175, 255),  -- blue
+    C = Color3.fromRGB(255, 160,  50),  -- orange
+    D = Color3.fromRGB(220,  50,  80),  -- red
+}
+
 summaryEvent.OnClientEvent:Connect(function(data)
     if statLabels.orders then statLabels.orders.Text = tostring(data.orders or 0) end
     if statLabels.coins  then statLabels.coins.Text  = tostring(data.coins or 0) end
@@ -224,6 +232,14 @@ summaryEvent.OnClientEvent:Connect(function(data)
         -- UI-7: include numeric so players can read their rating clearly
         statLabels.stars.Text = string.rep("★",s) .. string.rep("☆",5-s) .. "  " .. s .. "/5"
         statLabels.stars.TextColor3 = C.GOLD
+    end
+
+    -- Shift grade badge
+    local sg = data.shiftGrade
+    if sg and gradeValL then
+        local g = sg.grade or "D"
+        gradeValL.Text       = g .. "  (" .. tostring(sg.score) .. " pts)"
+        gradeValL.TextColor3 = GRADE_COLORS[g] or C.WHITE
     end
 
     local emp = data.employees
