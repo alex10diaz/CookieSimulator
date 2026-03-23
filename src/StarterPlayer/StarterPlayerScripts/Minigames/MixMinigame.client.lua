@@ -205,8 +205,8 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     -- m7: exit button (lets player cancel without recording a score)
     do
         local exitBtn = Instance.new("TextButton")
-        exitBtn.Size             = UDim2.new(0, 36, 0, 28)
-        exitBtn.Position         = UDim2.new(1, -40, 0, 8)
+        exitBtn.Size             = UDim2.new(0, 44, 0, 44)
+        exitBtn.Position         = UDim2.new(1, -48, 0, 0)
         exitBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
         exitBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
         exitBtn.TextScaled       = true

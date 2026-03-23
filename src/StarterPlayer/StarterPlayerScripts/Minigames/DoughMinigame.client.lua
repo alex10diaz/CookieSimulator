@@ -128,8 +128,8 @@ startRemote.OnClientEvent:Connect(function()
     -- m7: exit button
     do
         local exitBtn = Instance.new("TextButton")
-        exitBtn.Size             = UDim2.new(0, 36, 0, 28)
-        exitBtn.Position         = UDim2.new(1, -40, 0, 8)
+        exitBtn.Size             = UDim2.new(0, 44, 0, 44)
+        exitBtn.Position         = UDim2.new(1, -48, 0, 0)
         exitBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
         exitBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
         exitBtn.TextScaled       = true
@@ -272,8 +272,8 @@ startRemote.OnClientEvent:Connect(function()
         Instance.new("UICorner", growCircle).CornerRadius = UDim.new(1, 0)
 
         local stopBtn = Instance.new("TextButton")
-        stopBtn.Size             = UDim2.new(0, 120, 0, 44)
-        stopBtn.Position         = UDim2.new(0.5, -60, 1, -50)
+        stopBtn.Size             = UDim2.new(0, 120, 0, 60)
+        stopBtn.Position         = UDim2.new(0.5, -60, 1, -66)
         stopBtn.BackgroundColor3 = Color3.fromRGB(210, 60, 60)
         stopBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
         stopBtn.TextScaled       = true
@@ -358,8 +358,8 @@ startRemote.OnClientEvent:Connect(function()
         Instance.new("UICorner", fillFrame).CornerRadius = UDim.new(0, 8)
 
         local holdBtn = Instance.new("TextButton")
-        holdBtn.Size             = UDim2.new(0, 130, 0, 50)
-        holdBtn.Position         = UDim2.new(0.5, -65, 1, -55)
+        holdBtn.Size             = UDim2.new(0, 130, 0, 60)
+        holdBtn.Position         = UDim2.new(0.5, -65, 1, -66)
         holdBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
         holdBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
         holdBtn.TextScaled       = true

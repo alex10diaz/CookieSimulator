@@ -36,10 +36,11 @@ local function showCarryIndicator(box)
     local cookieName = COOKIE_DISPLAY[box.cookieId] or (box.cookieId or "cookie")
 
     local sg = Instance.new("ScreenGui")
-    sg.Name         = "CarryIndicator"
-    sg.ResetOnSpawn = false
-    sg.DisplayOrder = 2
-    sg.Parent       = playerGui
+    sg.Name                  = "CarryIndicator"
+    sg.ResetOnSpawn          = false
+    sg.DisplayOrder          = 2
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    sg.Parent                = playerGui
 
     local card = Instance.new("Frame", sg)
     card.Size                   = UDim2.new(0, 340, 0, 48)

@@ -75,10 +75,11 @@ local function showLevelUpToast(level)
     -- Build ScreenGui at runtime
     local gui = Instance.new("ScreenGui")
     gui.Name            = "BakeryLevelUpCelebration"
-    gui.DisplayOrder    = 30
-    gui.ResetOnSpawn    = false
-    gui.IgnoreGuiInset  = true
-    gui.Parent          = PlayerGui
+    gui.DisplayOrder          = 30
+    gui.ResetOnSpawn          = false
+    gui.IgnoreGuiInset        = true
+    gui.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    gui.Parent                = PlayerGui
 
     -- Dark backdrop
     local backdrop = Instance.new("Frame")

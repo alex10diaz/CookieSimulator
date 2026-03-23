@@ -82,8 +82,8 @@ stepLbl.Parent                 = headerBar
 -- Skip button in header (top-right, matches minigame exit button style)
 local skipBtn = Instance.new("TextButton")
 skipBtn.Name             = "SkipButton"
-skipBtn.Size             = UDim2.new(0, 54, 0, 28)
-skipBtn.Position         = UDim2.new(1, -62, 0.5, -14)
+skipBtn.Size             = UDim2.new(0, 54, 0, 44)
+skipBtn.Position         = UDim2.new(1, -62, 0, 0)
 skipBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
 skipBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
 skipBtn.TextScaled       = true

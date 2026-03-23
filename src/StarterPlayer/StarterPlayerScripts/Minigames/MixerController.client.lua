@@ -32,8 +32,9 @@ local function showPicker(menuList)
     sg.Name           = "MixPickerGui"
     sg.ResetOnSpawn   = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder   = 22
-    sg.Parent         = playerGui
+    sg.DisplayOrder          = 22
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    sg.Parent                = playerGui
 
     -- ── Main card ──
     local bg = Instance.new("Frame", sg)
@@ -72,8 +73,8 @@ local function showPicker(menuList)
 
     -- ── Cancel button ──
     local cancelBtn = Instance.new("TextButton", bg)
-    cancelBtn.Size             = UDim2.new(0, 30, 0, 30)
-    cancelBtn.Position         = UDim2.new(1, -38, 0, 7)
+    cancelBtn.Size             = UDim2.new(0, 44, 0, 44)
+    cancelBtn.Position         = UDim2.new(1, -50, 0, 0)
     cancelBtn.BackgroundColor3 = Color3.fromRGB(200, 55, 55)
     cancelBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
     cancelBtn.TextScaled       = true

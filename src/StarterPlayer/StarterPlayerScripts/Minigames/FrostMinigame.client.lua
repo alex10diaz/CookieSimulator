@@ -135,8 +135,8 @@ startRemote.OnClientEvent:Connect(function()
     -- m7: exit button
     do
         local exitBtn = Instance.new("TextButton")
-        exitBtn.Size             = UDim2.new(0, 36, 0, 28)
-        exitBtn.Position         = UDim2.new(1, -40, 0, 8)
+        exitBtn.Size             = UDim2.new(0, 44, 0, 44)
+        exitBtn.Position         = UDim2.new(1, -48, 0, 0)
         exitBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
         exitBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
         exitBtn.TextScaled       = true
@@ -161,7 +161,7 @@ startRemote.OnClientEvent:Connect(function()
     local dots = {}
     for i, offset in ipairs(CHECKPOINT_OFFSETS) do
         local dot = Instance.new("TextButton")
-        dot.Size        = UDim2.new(0, 48, 0, 48)
+        dot.Size        = UDim2.new(0, 60, 0, 60)
         dot.AnchorPoint = Vector2.new(0.5, 0.5)
         dot.Position    = UDim2.new(0, AREA_CENTER.X + offset.X,
                                      0, AREA_CENTER.Y + offset.Y)
