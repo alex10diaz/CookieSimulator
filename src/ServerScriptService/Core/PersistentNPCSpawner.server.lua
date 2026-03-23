@@ -632,7 +632,7 @@ addDeliverPrompt = function(npcId)
         local coins = payout.coins
         local xp    = payout.xp
 
-        deliveryResult:FireClient(player, stars, coins, xp)
+        deliveryResult:FireClient(player, stars, coins, xp, d.order.orderId)
         do
             local _sse = game:GetService("ServerStorage"):FindFirstChild("Events")
             local _be  = _sse and _sse:FindFirstChild("DeliveryPayout")
