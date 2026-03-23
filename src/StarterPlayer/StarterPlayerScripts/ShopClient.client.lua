@@ -162,7 +162,7 @@ local function renderItems()
         priceLabel.TextWrapped            = true
         priceLabel.Parent                 = row
         local slot = item.id:sub(1,5) == "apron" and "apron" or "hat"
-        local isEquipped = owned and item.itemType == "cosmetic" and equippedCosm[slot] == item.id
+        local isEquipped = owned and item.tab == "Cosmetics" and equippedCosm[slot] == item.id
 
         if owned then
             priceLabel.Text       = isEquipped and "Equipped" or "Owned"
