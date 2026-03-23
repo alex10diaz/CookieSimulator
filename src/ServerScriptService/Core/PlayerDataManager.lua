@@ -33,6 +33,7 @@ local DEFAULT_PROFILE = {
     stats             = { fastestOrderTime = math.huge },
     unlockedStations  = {},  -- upgrade IDs owned by this player
     unlockedCosmetics = {},  -- cosmetic IDs owned by this player
+    equippedCosmetics = { hat = nil, apron = nil },  -- currently worn items
     bakeryName        = "",  -- set once on first join
     bakeryXP          = 0,
     bakeryLevel       = 1,
@@ -214,6 +215,21 @@ function PlayerDataManager.GetUnlocks(player)
     local p = profiles[player.UserId]
     if not p then return {}, {} end
     return p.unlockedStations, p.unlockedCosmetics
+end
+
+-- Equip a cosmetic into its slot (hat or apron), inferred from id prefix
+function PlayerDataManager.EquipCosmetic(player, cosmeticId)
+    local p = profiles[player.UserId]
+    if not p then return end
+    if not p.equippedCosmetics then p.equippedCosmetics = { hat = nil, apron = nil } end
+    local slot = cosmeticId:sub(1, 5) == "apron" and "apron" or "hat"
+    p.equippedCosmetics[slot] = cosmeticId
+end
+
+function PlayerDataManager.GetEquipped(player)
+    local p = profiles[player.UserId]
+    if not p then return { hat = nil, apron = nil } end
+    return p.equippedCosmetics or { hat = nil, apron = nil }
 end
 
 function PlayerDataManager.GetOwnedCookies(player)
