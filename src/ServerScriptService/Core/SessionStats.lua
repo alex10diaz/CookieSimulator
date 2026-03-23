@@ -10,6 +10,7 @@ local data = {
     cookiesBaked = 0,
     totalStars   = 0,
     peakCombo    = 0,
+    fails        = 0,
 }
 
 -- Per-player station stats for Employee of the Shift
@@ -29,6 +30,10 @@ local function getStationEntry(player)
         }
     end
     return stationData[uid]
+end
+
+function SessionStats.RecordFail()
+    data.fails += 1
 end
 
 function SessionStats.RecordDelivery(stars, coins, comboStreak, cookieCount)
@@ -105,6 +110,25 @@ function SessionStats.GetTopEmployee()
     return best
 end
 
+-- Returns S/A/B/C/D grade based on shift performance.
+-- score = quality(0-40) + volume(0-30) + combo(0-20) - fail_penalty(8 each)
+function SessionStats.GetShiftGrade(s)
+    local score = 0
+    score += math.min((s.avgStars or 0) / 5 * 40, 40)  -- quality component
+    score += math.min((s.orders  or 0) * 3,        30)  -- volume component  (10 orders = max)
+    score += math.min((s.combo   or 0) * 2,        20)  -- combo component
+    score -= (s.fails  or 0) * 8                         -- fail penalty
+    score  = math.max(0, math.floor(score + 0.5))
+    local grade
+    if     score >= 90 then grade = "S"
+    elseif score >= 75 then grade = "A"
+    elseif score >= 60 then grade = "B"
+    elseif score >= 45 then grade = "C"
+    else                     grade = "D"
+    end
+    return { grade = grade, score = score }
+end
+
 function SessionStats.GetSummary()
     local avgStars = data.orders > 0
         and math.floor((data.totalStars / data.orders) * 10 + 0.5) / 10
@@ -115,6 +139,7 @@ function SessionStats.GetSummary()
         cookiesBaked = data.cookiesBaked,
         combo        = data.peakCombo,
         avgStars     = avgStars,
+        fails        = data.fails,
     }
 end
 
