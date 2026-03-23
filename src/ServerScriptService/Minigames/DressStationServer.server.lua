@@ -437,6 +437,7 @@ local function hookWarmerPrompt(prompt, model)
             lock.finalized = box ~= nil
             clearDressLock(player)
             if box then
+                OrderManager.PickupBox(player, box.boxId)
                 print(string.format("[DressStation] %s completed variety pickup -- box #%d for %s",
                     player.Name, box.boxId, lock.npcName))
                 orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
@@ -479,6 +480,7 @@ local function hookWarmerPrompt(prompt, model)
             lock.finalized = box ~= nil
             clearDressLock(player)
             if box then
+                OrderManager.PickupBox(player, box.boxId)
                 print(string.format("[DressStation] %s picked up %s — box #%d created for %s",
                     player.Name, cookieId, box.boxId, lock.npcName))
                 orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
