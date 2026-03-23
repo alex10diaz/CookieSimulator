@@ -70,6 +70,7 @@ local sounds = {
 }
 
 -- Ambient music starts immediately
+sounds.music.Name = "BakeryMusic"  -- used by music toggle in HUDController
 sounds.music:Play()
 
 -- ── Global UI click listener ──────────────────────────────────────────────────

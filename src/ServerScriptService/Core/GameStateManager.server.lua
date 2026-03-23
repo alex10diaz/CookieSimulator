@@ -8,7 +8,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local SessionStats   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
-local DEV_SKIP_PREOPEN    = false     -- false = always run PreOpen (production)
+local DEV_SKIP_PREOPEN    = true      -- TEMP: skip PreOpen for testing
 local skipPreOpenFlag     = false
 local skipPreOpenRemote   = RemoteManager.Get("SkipPreOpen")
 local PREOPEN_DURATION    = 3 * 60   -- 3 minutes: enough time to prep dough before first customers
