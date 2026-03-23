@@ -702,6 +702,19 @@ local function startPatienceTicker(npcId)
                         data.model
                     )
                 end
+                -- Impatient head-bob at <=30% patience
+                local maxP = data.maxPatience or data.patience
+                if maxP > 0 and data.patience == math.floor(maxP * 0.30) then
+                    local head = data.model and data.model:FindFirstChild("Head")
+                    if head then
+                        task.spawn(function()
+                            local TW = game:GetService("TweenService")
+                            local TI = TweenInfo.new(0.18, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 3, true)
+                            local orig = head.CFrame
+                            TW:Create(head, TI, { CFrame = orig * CFrame.Angles(0, 0, math.rad(12)) }):Play()
+                        end)
+                    end
+                end
                 if data.patience <= 0 then
                     npcLeave(npcId, "patience_expired")
                     break
