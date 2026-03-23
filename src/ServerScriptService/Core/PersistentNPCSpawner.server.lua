@@ -65,6 +65,7 @@ local comboUpdateRemote        = RemoteManager.Get("ComboUpdate")       -- S-9
 local npcOrderFailedRemote     = RemoteManager.Get("NPCOrderFailed")    -- S-4
 local npcPatienceRemote        = RemoteManager.Get("NPCPatienceUpdate") -- S-6
 local npcOrderReadyRemote      = RemoteManager.Get("NPCOrderReady")
+local deliveryFeedbackRemote   = RemoteManager.Get("DeliveryFeedback")
 
 -- ─── STATE ────────────────────────────────────────────────────────────────────
 local rushHourActive = false  -- set by RushHourStart/End BindableEvents
@@ -633,6 +634,8 @@ addDeliverPrompt = function(npcId)
         local xp    = payout.xp
 
         deliveryResult:FireClient(player, stars, coins, xp, d.order.orderId)
+        local _npcHead = d.model and d.model:FindFirstChild("Head")
+        if _npcHead then deliveryFeedbackRemote:FireAllClients(_npcHead.Position, stars, player.Name) end
         do
             local _sse = game:GetService("ServerStorage"):FindFirstChild("Events")
             local _be  = _sse and _sse:FindFirstChild("DeliveryPayout")

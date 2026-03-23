@@ -1106,7 +1106,8 @@ RemoteManager.Get("NPCOrderReady").OnClientEvent:Connect(flashNewOrder)
 
 -- ── Floating Delivery Review Text ────────────────────────────────────────────
 local STAR_LABELS = { [0]="☆☆☆☆☆ Missed!", [1]="★☆☆☆☆ Oops", [2]="★★☆☆☆ Okay", [3]="★★★☆☆ Good", [4]="★★★★☆ Great!", [5]="★★★★★ Perfect!" }
-deliveryFeedbackEvent.OnClientEvent:Connect(function(position, stars)
+deliveryFeedbackEvent.OnClientEvent:Connect(function(position, stars, carrierName)
+    if carrierName then clearCarryingVisual(carrierName) end
     if not position then return end
     local s = math.clamp(stars or 0, 0, 5)
     local label = STAR_LABELS[s] or "★★★★★ Perfect!"
