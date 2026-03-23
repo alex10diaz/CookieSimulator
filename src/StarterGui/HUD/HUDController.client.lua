@@ -21,6 +21,7 @@ local comboUpdateEvent       = RemoteManager.Get("ComboUpdate")
 local npcPatienceEvent       = RemoteManager.Get("NPCPatienceUpdate")
 local boxCreatedEvent        = RemoteManager.Get("BoxCreated")
 local deliveryFeedbackEvent  = RemoteManager.Get("DeliveryFeedback")
+local workerFeedbackEvent    = RemoteManager.Get("WorkerFeedback")
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -1133,6 +1134,41 @@ deliveryFeedbackEvent.OnClientEvent:Connect(function(position, stars, carrierNam
     TweenService:Create(anchor, TweenInfo.new(1.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
         { CFrame = CFrame.new(position + Vector3.new(0, 5.5, 0)) }):Play()
     local t = TweenService:Create(lbl, TweenInfo.new(1.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+        { TextTransparency = 1 })
+    t:Play()
+    t.Completed:Connect(function() if anchor.Parent then anchor:Destroy() end end)
+end)
+
+-- ── Station Worker Feedback ───────────────────────────────────────────────────
+local STATION_LABELS = { mix="Mixed", dough="Shaped", oven="Baked", frost="Frosted", dress="Packed" }
+workerFeedbackEvent.OnClientEvent:Connect(function(targetPlayer, stationName, score, pos)
+    if not (targetPlayer and pos) then return end
+    local pct   = math.clamp(math.round(score or 0), 0, 100)
+    local stars = math.clamp(math.round(pct / 20), 0, 5)
+    local label = STATION_LABELS[stationName] or stationName
+    local txt
+    if pct >= 90 then txt = "PERFECT! " .. string.rep("★", stars)
+    elseif pct >= 70 then txt = label .. "! " .. string.rep("★", stars) .. string.rep("☆", 5 - stars)
+    elseif pct >= 50 then txt = label .. " " .. string.rep("★", stars) .. string.rep("☆", 5 - stars)
+    else txt = "Missed..." end
+    local anchor = Instance.new("Part")
+    anchor.Anchored = true; anchor.CanCollide = false; anchor.Transparency = 1
+    anchor.Size = Vector3.new(1,1,1)
+    anchor.CFrame = CFrame.new(pos + Vector3.new(0, 0.5, 0))
+    anchor.Parent = workspace
+    local bb = Instance.new("BillboardGui", anchor)
+    bb.Size = UDim2.new(0, 200, 0, 36)
+    bb.AlwaysOnTop = false; bb.ResetOnSpawn = false
+    local lbl = Instance.new("TextLabel", bb)
+    lbl.Size = UDim2.fromScale(1, 1)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = txt
+    lbl.TextColor3 = pct >= 70 and Color3.fromRGB(255, 215, 50) or Color3.fromRGB(220, 130, 80)
+    lbl.Font = Enum.Font.GothamBold; lbl.TextScaled = true
+    lbl.TextStrokeTransparency = 0.35; lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    TweenService:Create(anchor, TweenInfo.new(1.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        { CFrame = CFrame.new(pos + Vector3.new(0, 4.5, 0)) }):Play()
+    local t = TweenService:Create(lbl, TweenInfo.new(1.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
         { TextTransparency = 1 })
     t:Play()
     t.Completed:Connect(function() if anchor.Parent then anchor:Destroy() end end)

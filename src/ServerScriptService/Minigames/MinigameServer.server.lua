@@ -70,7 +70,8 @@ local function getOrCreateBillboard(part)
     return bg
 end
 
-local StationStatusUpdate = RemoteManager.Get("StationStatusUpdate")
+local StationStatusUpdate  = RemoteManager.Get("StationStatusUpdate")
+local workerFeedbackRemote = RemoteManager.Get("WorkerFeedback")
 
 local function showStationBillboard(model, playerName, stationName)
     if not model then return end
@@ -274,6 +275,10 @@ local function endSession(player, stationName, score)
         end
     end
 
+    -- Fire worker feedback floating text to all clients
+    do local _hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+       if _hrp then workerFeedbackRemote:FireAllClients(player, stationName, score, _hrp.Position) end
+    end
     -- Award station mastery XP and record Employee of the Shift stat
     StationMasteryManager.AwardFromScore(player, stationName, score)
     SessionStats.RecordStationScore(player, stationName, score)
