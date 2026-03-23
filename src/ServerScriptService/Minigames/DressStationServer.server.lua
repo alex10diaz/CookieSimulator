@@ -532,6 +532,7 @@ toppingCompleteRemote.OnServerEvent:Connect(function(player, elapsed)
         lock.finalized = box ~= nil
         clearDressLock(player)
         if box then
+            OrderManager.PickupBox(player, box.boxId)
             print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- variety box #%d",
                 player.Name, elapsed, score, box.boxId))
             orderLocked:FireClient(player, { state = "done", boxId = box.boxId })
@@ -545,6 +546,7 @@ toppingCompleteRemote.OnServerEvent:Connect(function(player, elapsed)
         lock.finalized = box ~= nil
         clearDressLock(player)
         if box then
+            OrderManager.PickupBox(player, box.boxId)
             print(string.format("[DressStation] %s topping done (%.1fs, score=%d) -- box #%d",
                 player.Name, elapsed, score, box.boxId))
             orderLocked:FireClient(player, { state = "done", boxId = box.boxId })

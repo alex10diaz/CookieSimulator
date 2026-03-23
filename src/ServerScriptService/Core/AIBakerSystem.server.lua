@@ -141,14 +141,16 @@ local function runLoop(stationId, proxy)
                     local c=m:GetAttribute("CookieId")
                     if c and c~="" and not seen[c] then seen[c]=true; table.insert(menu,c) end
                 end end
+                local MAX_PER_TYPE = 6  -- don't overproduce any single cookie type
                 if #menu > 0 then
                     local wc=OrderManager.GetWarmerCountsByType(); local fs=OrderManager.GetFridgeState()
-                    local cId=menu[1]; local low=math.huge
+                    local cId=nil; local low=math.huge
                     for _,id in ipairs(menu) do
                         local t=(wc[id] or 0)+(fs["fridge_"..id] or 0)
-                        if t<low then low=t; cId=id end
+                        if t<low and (wc[id] or 0)<MAX_PER_TYPE then low=t; cId=id end
                     end
-                    local bId=OrderManager.TryStartBatch(proxy,cId)
+                    if not cId then task.wait(5) end  -- all types capped, wait before retrying
+                    local bId=cId and OrderManager.TryStartBatch(proxy,cId)
                     if bId then task.wait(8); OrderManager.RecordStationScore(proxy,"mix",WORKER_QUALITY,bId) end
                 end
             elseif stationId == "dough" then
