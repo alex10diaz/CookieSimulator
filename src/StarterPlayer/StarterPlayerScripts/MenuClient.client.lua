@@ -50,9 +50,10 @@ local function createBlackFade()
     local fadeGui = Instance.new("ScreenGui")
     fadeGui.Name           = "MenuFadeGui"
     fadeGui.ResetOnSpawn   = false
-    fadeGui.DisplayOrder   = 100
-    fadeGui.IgnoreGuiInset = true
-    fadeGui.Parent         = playerGui
+    fadeGui.DisplayOrder          = 100
+    fadeGui.IgnoreGuiInset        = true
+    fadeGui.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    fadeGui.Parent                = playerGui
 
     local fill = Instance.new("Frame", fadeGui)
     fill.Size                   = UDim2.new(1, 0, 1, 0)
@@ -116,9 +117,10 @@ local function buildMenuBoard(payload)
     local sg = Instance.new("ScreenGui")
     sg.Name           = "MenuBoardGui"
     sg.ResetOnSpawn   = false
-    sg.DisplayOrder   = 20
-    sg.IgnoreGuiInset = false
-    sg.Parent         = playerGui
+    sg.DisplayOrder          = 20
+    sg.IgnoreGuiInset        = false
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    sg.Parent                = playerGui
 
     local overlay = Instance.new("Frame", sg)
     overlay.Size                   = UDim2.new(1, 0, 1, 0)

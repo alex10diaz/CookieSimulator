@@ -115,11 +115,12 @@ local function showToppingMinigame(data)
     local completed    = false
 
     local sg = Instance.new("ScreenGui")
-    sg.Name           = "ToppingMinigameGui"
-    sg.ResetOnSpawn   = false
-    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder   = 22
-    sg.Parent         = playerGui
+    sg.Name                  = "ToppingMinigameGui"
+    sg.ResetOnSpawn          = false
+    sg.ZIndexBehavior        = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder          = 22
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    sg.Parent                = playerGui
 
     local bg = Instance.new("Frame", sg)
     bg.Size                   = UDim2.new(0, 400, 0, 200)
@@ -257,10 +258,11 @@ end
 -- ─── Flash message ────────────────────────────────────────────────────────────
 local function flashMsg(text, success)
     local sg = Instance.new("ScreenGui")
-    sg.Name         = "DressFlash"
-    sg.ResetOnSpawn = false
-    sg.DisplayOrder = 22
-    sg.Parent       = playerGui
+    sg.Name                  = "DressFlash"
+    sg.ResetOnSpawn          = false
+    sg.DisplayOrder          = 22
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    sg.Parent                = playerGui
     local lbl = Instance.new("TextLabel", sg)
     lbl.Size             = UDim2.new(0, 380, 0, 60)
     lbl.Position         = UDim2.new(0.5, -190, 0.5, 80)
@@ -284,10 +286,11 @@ local function showWarmerOverlay(cookieName, cookieId, step, total)
     local cookColor = COOKIE_COLOR[cookieId] or ACCENT
 
     local sg = Instance.new("ScreenGui")
-    sg.Name         = "DressWarmerGui"
-    sg.ResetOnSpawn = false
-    sg.DisplayOrder = 22
-    sg.Parent       = playerGui
+    sg.Name                  = "DressWarmerGui"
+    sg.ResetOnSpawn          = false
+    sg.DisplayOrder          = 22
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    sg.Parent                = playerGui
 
     local bg = Instance.new("Frame", sg)
     bg.Size                   = UDim2.new(0, 420, 0, 70)
@@ -320,8 +323,8 @@ local function showWarmerOverlay(cookieName, cookieId, step, total)
     msg.TextXAlignment         = Enum.TextXAlignment.Left
 
     local cancelBtn = Instance.new("TextButton", bg)
-    cancelBtn.Size             = UDim2.new(0, 40, 0, 34)
-    cancelBtn.Position         = UDim2.new(1, -46, 0.5, -17)
+    cancelBtn.Size             = UDim2.new(0, 60, 0, 60)
+    cancelBtn.Position         = UDim2.new(1, -66, 0.5, -30)
     cancelBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
     cancelBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
     cancelBtn.TextScaled       = true
@@ -347,11 +350,12 @@ local function showKDS(payload)
     if #orders == 0 then panelH = 180 end
 
     local sg = Instance.new("ScreenGui")
-    sg.Name           = "DressKDSGui"
-    sg.ResetOnSpawn   = false
-    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder   = 22
-    sg.Parent         = playerGui
+    sg.Name                  = "DressKDSGui"
+    sg.ResetOnSpawn          = false
+    sg.ZIndexBehavior        = Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder          = 22
+    sg.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+    sg.Parent                = playerGui
 
     local bg = Instance.new("Frame", sg)
     bg.Size                   = UDim2.new(0, 450, 0, panelH)
@@ -369,8 +373,8 @@ local function showKDS(payload)
 
     -- X close button
     local closeBtn = Instance.new("TextButton", bg)
-    closeBtn.Size             = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position         = UDim2.new(1, -38, 0, 8)
+    closeBtn.Size             = UDim2.new(0, 44, 0, 44)
+    closeBtn.Position         = UDim2.new(1, -50, 0, 1)
     closeBtn.BackgroundColor3 = Color3.fromRGB(200, 55, 55)
     closeBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
     closeBtn.TextScaled       = true
