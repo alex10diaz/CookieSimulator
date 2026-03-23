@@ -414,7 +414,13 @@ local function confirmOrder(player, npcId)
         data.waitSpot   = spot.Name
         data.state      = "walking_to_seat"
         data.cancelMove = NPCSpawner.MoveTo(data.model, spot.Position + Vector3.new(0, 2, 0), function()
-            if npcs[npcId] then data.state = "seated" end
+            local d = npcs[npcId]
+            if not d then return end
+            d.state = "seated"
+            if d.pendingCallToCounter then
+                d.pendingCallToCounter = nil
+                callNPCToCounter(npcId)
+            end
         end)
     else
         data.state = "seated"
@@ -789,15 +795,37 @@ local function spawnNPC()
 end
 
 -- ─── BOX READY → CALL NPC TO COUNTER ─────────────────────────────────────────
+local COUNTER_TIMEOUT = 90  -- seconds before NPC gives up at counter
+
+local function callNPCToCounter(npcId)
+    local data = npcs[npcId]
+    if not data then return end
+    data.state      = "walking_to_counter"
+    data.cancelMove = NPCSpawner.MoveTo(data.model, getCounterPos(), function()
+        local d = npcs[npcId]
+        if not d then return end
+        d.state      = "at_counter"
+        d.cancelMove = nil
+        addDeliverPrompt(npcId)
+        print(string.format("[NPCController] %s at counter, ready for delivery", d.name))
+        task.delay(COUNTER_TIMEOUT, function()
+            local still = npcs[npcId]
+            if still and still.state == "at_counter" then
+                npcLeave(npcId, "counter_timeout")
+            end
+        end)
+    end)
+end
+
 OrderManager.On("BoxCreated", function(box)
     if not box.cookieId then return end
 
-    -- Find a seated NPC waiting for this box (variety or single-type match)
+    -- Find an NPC waiting for this box (seated, walking to seat, or just ordered)
     for npcId, data in pairs(npcs) do
-        local cookieMatch = not box.isVariety and data.order and data.order.cookieId == box.cookieId
+        local cookieMatch  = not box.isVariety and data.order and data.order.cookieId == box.cookieId
         local varietyMatch = box.isVariety and data.order and data.order.isVariety == true
-        if data.state == "seated" and (cookieMatch or varietyMatch) then
-            data.state         = "walking_to_counter"
+        local stateOk      = data.state == "seated" or data.state == "walking_to_seat" or data.state == "ordered"
+        if stateOk and (cookieMatch or varietyMatch) then
             data.assignedBoxId = box.boxId
             -- If box was made by an AI worker (not a real player), any player can deliver
             local isRealPlayer = Players:FindFirstChild(box.carrier) ~= nil
@@ -807,23 +835,12 @@ OrderManager.On("BoxCreated", function(box)
                 npcId   = npcId,
             }
 
-            local COUNTER_TIMEOUT = 90  -- seconds before NPC gives up at counter
-            data.cancelMove = NPCSpawner.MoveTo(data.model, getCounterPos(), function()
-                local d = npcs[npcId]
-                if not d then return end
-                d.state      = "at_counter"
-                d.cancelMove = nil
-                addDeliverPrompt(npcId)
-                print(string.format("[NPCController] %s at counter, ready for delivery", d.name))
-
-                -- Counter timeout: leave if box not delivered in time
-                task.delay(COUNTER_TIMEOUT, function()
-                    local still = npcs[npcId]
-                    if still and still.state == "at_counter" then
-                        npcLeave(npcId, "counter_timeout")
-                    end
-                end)
-            end)
+            if data.state == "seated" then
+                callNPCToCounter(npcId)
+            else
+                -- NPC is still walking to their seat; flag them to head to counter once seated
+                data.pendingCallToCounter = true
+            end
 
             print(string.format("[NPCController] Calling %s to counter (box #%d, %s)",
                 data.name, box.boxId, box.cookieId))
