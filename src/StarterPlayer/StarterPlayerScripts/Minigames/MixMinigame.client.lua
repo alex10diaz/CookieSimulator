@@ -18,7 +18,8 @@ local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForC
 local startRemote   = RemoteManager.Get("StartMixMinigame")
 local resultRemote  = RemoteManager.Get("MixMinigameResult")
 local cancelRemote  = RemoteManager.Get("CancelMinigame")
-local EffectsModule = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EffectsModule"))
+local EffectsModule
+task.spawn(function() local ok,m = pcall(require, ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EffectsModule")); if ok then EffectsModule = m end end)
 
 local player = Players.LocalPlayer
 
