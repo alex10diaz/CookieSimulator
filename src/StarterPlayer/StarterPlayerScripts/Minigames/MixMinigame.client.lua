@@ -18,6 +18,7 @@ local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForC
 local startRemote   = RemoteManager.Get("StartMixMinigame")
 local resultRemote  = RemoteManager.Get("MixMinigameResult")
 local cancelRemote  = RemoteManager.Get("CancelMinigame")
+local EffectsModule = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EffectsModule"))
 
 local player = Players.LocalPlayer
 
@@ -200,6 +201,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
         humanoid.JumpHeight = 7.2
         sg:Destroy()
         resultRemote:FireServer(math.floor(numHit / NUM_CHECKPOINTS * 100))
+        do local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart"); if hrp then EffectsModule.Flour(hrp.Position) end end
     end
 
     -- m7: exit button (lets player cancel without recording a score)

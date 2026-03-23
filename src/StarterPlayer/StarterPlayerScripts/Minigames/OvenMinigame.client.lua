@@ -10,6 +10,7 @@ local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForC
 local startRemote   = RemoteManager.Get("StartOvenMinigame")
 local resultRemote  = RemoteManager.Get("OvenMinigameResult")
 local cancelRemote  = RemoteManager.Get("CancelMinigame")
+local EffectsModule = require(game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("EffectsModule"))
 
 local player = Players.LocalPlayer
 
@@ -118,6 +119,7 @@ startRemote.OnClientEvent:Connect(function()
         humanoid.JumpHeight = 7.2
         sg:Destroy()
         resultRemote:FireServer(math.clamp(score, 0, 100))
+        do local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart"); if hrp then EffectsModule.Steam(hrp.Position) end end
     end
 
     -- m7: exit button
