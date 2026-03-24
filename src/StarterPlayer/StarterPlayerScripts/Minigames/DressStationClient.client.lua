@@ -411,8 +411,8 @@ local function showKDS(payload)
     scroll.BorderSizePixel      = 0
     scroll.ScrollBarThickness   = 6
     scroll.ScrollBarImageColor3 = ACCENT
-    scroll.CanvasSize           = UDim2.new(0, 0, 0, #orders * ROW_H + 8)
-    scroll.AutomaticCanvasSize  = Enum.AutomaticSize.None
+    scroll.CanvasSize           = UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
 
     local listLayout = Instance.new("UIListLayout", scroll)
     listLayout.SortOrder    = Enum.SortOrder.LayoutOrder
