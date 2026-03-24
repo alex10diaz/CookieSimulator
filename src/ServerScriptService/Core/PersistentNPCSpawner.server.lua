@@ -482,7 +482,12 @@ npcLeave = function(npcId, reason)
         OrderManager.CancelBox(pending.boxId)
         if pending.carrier then
             local carrier = Players:FindFirstChild(pending.carrier)
-            if carrier then forceDropBoxRemote:FireClient(carrier) end
+            if carrier then
+                forceDropBoxRemote:FireClient(carrier)
+                -- Destroy physical carry model
+                local boxModel = workspace:FindFirstChild("CarriedBox_" .. pending.carrier)
+                if boxModel then boxModel:Destroy() end
+            end
         end
         pendingBoxes[pendingKey] = nil
     end
