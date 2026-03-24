@@ -403,8 +403,26 @@ local function showKDS(payload)
         return
     end
 
+    -- Scrollable order list
+    local scroll = Instance.new("ScrollingFrame", bg)
+    scroll.Size                 = UDim2.new(1, 0, 1, -56)
+    scroll.Position             = UDim2.new(0, 0, 0, 56)
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel      = 0
+    scroll.ScrollBarThickness   = 6
+    scroll.ScrollBarImageColor3 = ACCENT
+    scroll.CanvasSize           = UDim2.new(0, 0, 0, #orders * ROW_H + 8)
+    scroll.AutomaticCanvasSize  = Enum.AutomaticSize.None
+
+    local listLayout = Instance.new("UIListLayout", scroll)
+    listLayout.SortOrder    = Enum.SortOrder.LayoutOrder
+    listLayout.Padding      = UDim.new(0, 6)
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    local listPad = Instance.new("UIPadding", scroll)
+    listPad.PaddingTop = UDim.new(0, 6)
+
     for i, order in ipairs(orders) do
-        local yOff   = 54 + (i - 1) * 94
         local cookId = order.cookieId
         local hasStock, anyStock
         if order.isVariety and order.items then
@@ -426,9 +444,9 @@ local function showKDS(payload)
             anyStock = avail > 0
         end
 
-        local row = Instance.new("Frame", bg)
-        row.Size             = UDim2.new(1, -20, 0, 84)
-        row.Position         = UDim2.new(0, 10, 0, yOff)
+        local row = Instance.new("Frame", scroll)
+        row.Size             = UDim2.new(1, -12, 0, 84)
+        row.LayoutOrder      = i
         row.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
         row.BorderSizePixel  = 0
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
