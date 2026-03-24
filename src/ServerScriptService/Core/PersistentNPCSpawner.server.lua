@@ -316,6 +316,17 @@ takeOrder = function(player, npcId)
             -- ── Single-type order ─────────────────────────────────────────────
             cookie   = CookieData.GetRandomFromMenu(MenuManager.GetActiveMenu())
             packSize = PACK_SIZES[math.random(1, #PACK_SIZES)]
+            -- Clamp packSize to available warmer stock so we never order more
+            -- cookies than exist (e.g. no 4-pack when only 1 is in the warmer)
+            local available = warmerCounts[cookie.id] or 0
+            if available > 0 and packSize > available then
+                -- Find largest PACK_SIZE that fits
+                local clamped = 1
+                for _, sz in ipairs(PACK_SIZES) do
+                    if sz <= available then clamped = sz end
+                end
+                packSize = clamped
+            end
             price    = calcPrice(cookie.id, packSize)
         end
     end
