@@ -42,7 +42,7 @@
 ### MULTIPLAYER SYSTEMS
 | System | Verification Status | Notes |
 |---|---|---|
-| Station Locking (movement) | ❌ Missing | **CRITICAL** — players walk away mid-session, holds batch lock 60s |
+| Station Locking (movement) | ✅ Verified Implemented | WalkSpeed/JumpPower/JumpHeight=0 on session start; restored in endSession, cleanupPlayerSession, watchdog |
 | Item Ownership | ✅ Verified Implemented | doughLock, ovenSession, dressPending all prevent double-grab |
 | Delivery Ownership | ⚠️ Needs Improvement | Box welded to player but no lock when two players fire DeliverBox for same NPC |
 | Player Leaving Mid-Task | ✅ Verified Implemented | cleanupPlayerSession on PlayerRemoving; 60s watchdog clears orphans |
