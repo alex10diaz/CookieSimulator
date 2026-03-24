@@ -403,18 +403,24 @@ local function showKDS(payload)
     for i, order in ipairs(orders) do
         local yOff   = 54 + (i - 1) * 94
         local cookId = order.cookieId
-        local hasStock
+        local hasStock, anyStock
         if order.isVariety and order.items then
-            hasStock = true
-            local seen = {}
+            -- Count how many of each type this order needs
+            local needed = {}
             for _, id in ipairs(order.items) do
-                if not seen[id] then
-                    seen[id] = true
-                    if (warmers[id] or 0) == 0 then hasStock = false; break end
-                end
+                needed[id] = (needed[id] or 0) + 1
+            end
+            hasStock = true
+            anyStock = true
+            for id, qty in pairs(needed) do
+                local avail = warmers[id] or 0
+                if avail == 0 then anyStock = false end
+                if avail < qty then hasStock = false end
             end
         else
-            hasStock = (warmers[cookId] or 0) > 0
+            local avail = warmers[cookId] or 0
+            hasStock = avail >= order.packSize
+            anyStock = avail > 0
         end
 
         local row = Instance.new("Frame", bg)
@@ -481,16 +487,25 @@ local function showKDS(payload)
         local pb = Instance.new("TextButton", row)
         pb.Size             = UDim2.new(0, 126, 0, 56)
         pb.Position         = UDim2.new(1, -138, 0.5, -28)
-        pb.BackgroundColor3 = hasStock and Color3.fromRGB(30, 100, 40) or Color3.fromRGB(22, 22, 40)
-        pb.TextColor3       = hasStock and Color3.fromRGB(200, 255, 200) or Color3.fromRGB(60, 60, 80)
+        local btnText = hasStock and "TAKE ORDER"
+            or (anyStock and "NOT ENOUGH" or "NO STOCK")
+        -- amber tint for "not enough" to distinguish from hard no-stock
+        local btnBg  = hasStock and Color3.fromRGB(30, 100, 40)
+            or (anyStock and Color3.fromRGB(80, 55, 10) or Color3.fromRGB(22, 22, 40))
+        local btnFg  = hasStock and Color3.fromRGB(200, 255, 200)
+            or (anyStock and Color3.fromRGB(255, 195, 80) or Color3.fromRGB(60, 60, 80))
+        local btnBorder = hasStock and Color3.fromRGB(50, 185, 75)
+            or (anyStock and Color3.fromRGB(160, 110, 20) or Color3.fromRGB(40, 40, 65))
+        pb.BackgroundColor3 = btnBg
+        pb.TextColor3       = btnFg
         pb.TextScaled       = true
         pb.Font             = Enum.Font.GothamBold
-        pb.Text             = hasStock and "TAKE ORDER" or "NO STOCK"
+        pb.Text             = btnText
         pb.Active           = hasStock
         pb.BorderSizePixel  = 0
         Instance.new("UICorner", pb).CornerRadius = UDim.new(0, 10)
         local pbStroke = Instance.new("UIStroke", pb)
-        pbStroke.Color     = hasStock and Color3.fromRGB(50, 185, 75) or Color3.fromRGB(40, 40, 65)
+        pbStroke.Color     = btnBorder
         pbStroke.Thickness = 1.5
 
         if hasStock then
