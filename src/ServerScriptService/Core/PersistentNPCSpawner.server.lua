@@ -814,6 +814,36 @@ local function spawnNPC()
         if slot == 1 then NPCSpawner.SetPromptEnabled(model, true) end
     end
 
+    -- Safety: if still queuing after 15s (stuck on rope/barrier en route to queue spot),
+    -- teleport directly to the queue position and transition to waiting_in_queue.
+    task.delay(15, function()
+        local d = npcs[npcId]
+        if not d or d.state ~= "queuing" then return end
+        warn("[NPCController] " .. d.name .. " stuck queuing — teleporting to queue spot")
+        if d.cancelMove then pcall(d.cancelMove); d.cancelMove = nil end
+        local qp = getQueuePos(d.queueSlot)
+        if qp and d.model and d.model.PrimaryPart then
+            d.model:SetPrimaryPartCFrame(CFrame.new(qp))
+        end
+        d.state = "waiting_in_queue"
+        faceClosestPOS(d.model)
+        if not d.promptConnected then
+            d.promptConnected = true
+            local pp = NPCSpawner.GetPrompt(d.model)
+            if pp then
+                pp.Triggered:Connect(function(player)
+                    local current = npcs[npcId]
+                    if current and current.queueSlot == 1 and current.state == "waiting_in_queue" then
+                        takeOrder(player, npcId)
+                    end
+                end)
+            end
+        end
+        if d.queueSlot == 1 then
+            NPCSpawner.SetPromptEnabled(d.model, true)
+        end
+    end)
+
     startPatienceTicker(npcId)
     print(string.format("[NPCController] Spawned %s (id=%d, VIP=%s, slot=%d)", name, npcId, tostring(isVIP), slot))
 end
