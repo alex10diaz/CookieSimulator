@@ -241,14 +241,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `C-1 — Station Movement Locking`
+**TASK:** `C-2 — "What Next?" Guidance System`
 **Status:** Not Started → Ready to begin
-**What it is:** Lock player movement (disable Humanoid WalkSpeed + freeze input) when a minigame session begins. Unlock when session ends, times out, or player disconnects.
+**What it is:** Add a coach tip bar or world-space waypoint arrows pointing players to the correct next station. Without this, new players quit immediately after tutorial.
 **Files affected:**
-- `ServerScriptService/Minigames/MinigameServer.server.lua` — set WalkSpeed=0 on session start, restore on end/timeout/disconnect
-- `StarterPlayerScripts/UIController.client.lua` (or new script) — optionally disable jump + character movement on client side too
-
-**Success criteria:** Player cannot move while a minigame popup is on screen. Movement fully restores after session ends.
+- New or existing client HUD script — display a bottom-center tip strip showing current action needed
+- TutorialController.server.lua (possibly) — feed step hints to HUD remote
+**Success criteria:** A first-time player can complete a full cookie cycle without asking where to go next.
 
 ---
 
@@ -287,6 +286,7 @@
 | 2026-03-24 | DEV_SKIP_PREOPEN set to false | PreOpen (3 min) now runs in live play |
 | 2026-03-24 | OPEN_DURATION set to 8 minutes | Agreed pacing after discussion |
 | 2026-03-24 | Variety pack (VARIETY_CHANCE) set to 40% | NPCs now order mixed cookie types |
+| 2026-03-24 | **C-1 Station Movement Locking** | WalkSpeed/JumpPower/JumpHeight=0 in startSession; unlocked in endSession + cleanupPlayerSession + watchdog (MinigameServer.server.lua) |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
