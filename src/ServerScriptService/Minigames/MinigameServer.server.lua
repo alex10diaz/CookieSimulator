@@ -46,6 +46,33 @@ local dressPending   = {}       -- player -> warmerEntry taken for dress
 local doughLock      = {}       -- batchId -> true  (prevents two players grabbing same dough batch)
 
 -- ============================================================
+-- C-1: MOVEMENT LOCKING — freeze/restore player during minigame
+-- ============================================================
+local DEFAULT_WALK_SPEED  = 16
+local DEFAULT_JUMP_POWER  = 50
+local DEFAULT_JUMP_HEIGHT = 7.2
+
+local function lockMovement(player)
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    hum.WalkSpeed  = 0
+    hum.JumpPower  = 0
+    hum.JumpHeight = 0
+end
+
+local function unlockMovement(player)
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    hum.WalkSpeed  = DEFAULT_WALK_SPEED
+    hum.JumpPower  = DEFAULT_JUMP_POWER
+    hum.JumpHeight = DEFAULT_JUMP_HEIGHT
+end
+
+-- ============================================================
 -- S-2: STATION OCCUPIED BILLBOARD
 -- ============================================================
 local STATION_LABELS = { mix="Mixing", dough="Shaping Dough", oven="Baking", frost="Frosting", dress="Packing" }
@@ -103,6 +130,8 @@ local function startSession(player, sessionData)
     local capturedModel     = sessionData.stationModel
     -- S-2: show occupied billboard
     showStationBillboard(capturedModel, player.Name, capturedStation)
+    -- C-1: freeze player movement for the duration of the minigame
+    lockMovement(player)
     -- M-2: watchdog clears stuck sessions if client crashes mid-minigame
     task.delay(SESSION_TIMEOUT, function()
         local s = activeSessions[player]
@@ -120,6 +149,8 @@ local function startSession(player, sessionData)
             dressPending[player]   = nil
             -- S-2: clear billboard on watchdog timeout
             clearStationBillboard(capturedModel)
+            -- C-1: restore movement after watchdog clears session
+            unlockMovement(player)
         end
     end)
 end
@@ -136,6 +167,8 @@ local function cleanupPlayerSession(player, reason)
             OrderManager.ClearPostOvenScore(session.batchId)
         end
         clearStationBillboard(session.stationModel)
+        -- C-1: restore movement on cancel / disconnect / character reset
+        unlockMovement(player)
     end
     activeSessions[player] = nil
     ovenSession[player]    = nil
@@ -240,6 +273,8 @@ local function endSession(player, stationName, score)
     local batchId = session.batchId
     -- S-2: clear occupied billboard
     clearStationBillboard(session.stationModel)
+    -- C-1: restore movement now that minigame is complete
+    unlockMovement(player)
     activeSessions[player] = nil
     score = math.clamp(score, 0, 100)
 
