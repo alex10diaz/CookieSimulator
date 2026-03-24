@@ -304,6 +304,7 @@
 | 2026-03-24 | OPEN_DURATION set to 8 minutes | Agreed pacing after discussion |
 | 2026-03-24 | Variety pack (VARIETY_CHANCE) set to 40% | NPCs now order mixed cookie types |
 | 2026-03-24 | **C-1 Station Movement Locking** | WalkSpeed/JumpPower/JumpHeight=0 in startSession; unlocked in endSession + cleanupPlayerSession + watchdog (MinigameServer.server.lua) |
+| 2026-03-24 | **BUG-14/15/16 GameStateManager Studio sync** | Root cause: stale Studio script required deleted RS/Modules/OrderManager. Fixed: pushed correct source (SSS/Core path, PREOPEN_DURATION=3m, OPEN_DURATION=8m, SSS declared before require). All 3 bugs resolved. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -330,9 +331,9 @@
 | BUG-11 | 🟡 Medium | Dough | doughLock may not clear in rare race on disconnect during session start | Suspected |
 | BUG-12 | 🟡 Medium | Box Carry | Box transfer BindableEvent fires but client NPCCarryPoseUpdate may desync | Open |
 | BUG-13 | 🟡 Medium | NPC | NPCs colliding while walking can lift to ceiling and block entry queue | Confirmed by user |
-| BUG-14 | 🔴 Critical | GameStateManager | "Could not start minigame" — Studio has stale GameStateManager requiring deleted RS/Modules/OrderManager → WaitForChild hang → runCycle never starts | Open |
-| BUG-15 | 🔴 Critical | GameStateManager | Phase name stuck at "Loading" — same root as BUG-14; GameStateChanged never fires "Open" because runCycle is frozen | Open |
-| BUG-16 | 🔴 Critical | Challenge UI | Daily/Weekly UI panels hidden in bottom-left — DailyChallengeClient only shows when gameState=="Open"; state never reaches Open due to BUG-14 | Open |
+| BUG-14 | 🔴 Critical | GameStateManager | "Could not start minigame" — Studio had stale GameStateManager requiring deleted RS/Modules/OrderManager → WaitForChild hang → runCycle never started | ✅ Resolved 2026-03-24 |
+| BUG-15 | 🔴 Critical | GameStateManager | Phase name stuck at "Loading" — same root as BUG-14; GameStateChanged never fired "Open" because runCycle was frozen | ✅ Resolved 2026-03-24 |
+| BUG-16 | 🔴 Critical | Challenge UI | Daily/Weekly UI panels hidden — DailyChallengeClient only shows when gameState=="Open"; state never reached Open due to BUG-14 | ✅ Resolved 2026-03-24 |
 | RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Risk |
 | RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | Design Gap |
 | RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | Design Gap |
