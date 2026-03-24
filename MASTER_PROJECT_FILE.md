@@ -317,7 +317,7 @@
 
 | ID | Severity | System | Description | Status |
 |---|---|---|---|---|
-| BUG-1 | 🔴 Critical | Minigames | No movement lock — players walk away mid-session | Open |
+| BUG-1 | 🔴 Critical | Minigames | No movement lock — players walk away mid-session | ✅ Resolved 2026-03-24 |
 | BUG-2 | 🔴 Critical | NPC System | NPCs face wall during wait_in_queue despite facePosition() call | Open |
 | BUG-3 | 🟠 High | Quality Scoring | DRESS_SCORE = 85 hardcoded — dress quality always 85 regardless of performance | Open |
 | BUG-4 | 🟠 High | Box Carry | Arms detach when carrying box (Motor6D.Enabled = false disconnects joint) | Open |
@@ -330,6 +330,9 @@
 | BUG-11 | 🟡 Medium | Dough | doughLock may not clear in rare race on disconnect during session start | Suspected |
 | BUG-12 | 🟡 Medium | Box Carry | Box transfer BindableEvent fires but client NPCCarryPoseUpdate may desync | Open |
 | BUG-13 | 🟡 Medium | NPC | NPCs colliding while walking can lift to ceiling and block entry queue | Confirmed by user |
+| BUG-14 | 🔴 Critical | GameStateManager | "Could not start minigame" — Studio has stale GameStateManager requiring deleted RS/Modules/OrderManager → WaitForChild hang → runCycle never starts | Open |
+| BUG-15 | 🔴 Critical | GameStateManager | Phase name stuck at "Loading" — same root as BUG-14; GameStateChanged never fires "Open" because runCycle is frozen | Open |
+| BUG-16 | 🔴 Critical | Challenge UI | Daily/Weekly UI panels hidden in bottom-left — DailyChallengeClient only shows when gameState=="Open"; state never reaches Open due to BUG-14 | Open |
 | RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Risk |
 | RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | Design Gap |
 | RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | Design Gap |
@@ -340,7 +343,7 @@
 ## ☑️ SECTION 8 — ALPHA CHECKLIST
 
 ### MUST HAVE (Blockers)
-- [ ] **C-1** Station movement locking during minigames
+- [x] **C-1** Station movement locking during minigames
 - [ ] **C-2** "What Next?" guidance (waypoints or coach tip bar)
 - [ ] **H-1** NPC facing counter correctly
 - [ ] **H-2** Dress station quality scoring (remove hardcode)
