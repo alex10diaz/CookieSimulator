@@ -719,6 +719,9 @@ acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
         end
     end
     addOrder(orderId, name, orderData.isVIP)
+    if orderData.isVIP then
+        showAlert("⭐ VIP Customer!", Color3.fromRGB(50,40,10), C.GOLD, 4)
+    end
 end)
 
 deliveryEvent.OnClientEvent:Connect(function(stars, coins, xp, orderId)
