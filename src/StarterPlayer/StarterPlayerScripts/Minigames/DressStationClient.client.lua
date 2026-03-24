@@ -346,7 +346,10 @@ local function showKDS(payload)
     local orders  = payload.orders  or {}
     local warmers = payload.warmers or {}
 
-    local panelH = 70 + (#orders * 94) + 16
+    local ROW_H    = 94
+    local MAX_ROWS = 3   -- max visible rows before scrolling
+    local listH    = #orders == 0 and 110 or math.min(#orders, MAX_ROWS) * ROW_H
+    local panelH   = 56 + listH + 8
     if #orders == 0 then panelH = 180 end
 
     local sg = Instance.new("ScreenGui")
