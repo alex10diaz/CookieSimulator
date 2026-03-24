@@ -31,7 +31,7 @@ local PATIENCE_PER_PLAYER  = 20      -- extra seconds per additional player
 local VIP_CHANCE           = 0.10
 local PACK_SIZES           = { 1, 4, 6 }
 local VARIETY_PACK_SIZES   = { 4, 6 }
-local VARIETY_CHANCE       = 0  -- disabled for Alpha; re-enable post-playtest
+local VARIETY_CHANCE       = 0.40  -- 40% chance of variety pack when 2+ types in warmer
 
 local SPAWN_STATES = { "Open" }  -- NPCs only arrive when the store is open
 
