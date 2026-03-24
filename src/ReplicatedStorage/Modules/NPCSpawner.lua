@@ -132,6 +132,17 @@ function NPCSpawner.CreateNPC(config)
     local pg0   = head0 and head0:FindFirstChild("PatienceGui")
     if pg0 then pg0.Enabled = false end
 
+    -- Disable NPC-NPC collisions so NPCs pass through each other instead of
+    -- stacking/launching when they converge in doorways or queue spots.
+    for _, part in ipairs(npc:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+    -- Re-enable the HumanoidRootPart so the humanoid can still stand on floors
+    local hrp = npc:FindFirstChild("HumanoidRootPart")
+    if hrp then hrp.CanCollide = true end
+
     local spawnCF = config.spawnCFrame or CFrame.new(Vector3.new(-5, 2, 30))
     npc:SetPrimaryPartCFrame(spawnCF)
 

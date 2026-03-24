@@ -422,6 +422,20 @@ local function confirmOrder(player, npcId)
                 callNPCToCounter(npcId)
             end
         end)
+        -- Safety timeout: if still walking_to_seat after 12s (pathfinding stuck),
+        -- force to seated so pendingCallToCounter can fire.
+        task.delay(12, function()
+            local d = npcs[npcId]
+            if d and d.state == "walking_to_seat" then
+                warn("[NPCController] " .. d.name .. " stuck walking to seat — forcing seated")
+                d.state = "seated"
+                if d.cancelMove then pcall(d.cancelMove); d.cancelMove = nil end
+                if d.pendingCallToCounter then
+                    d.pendingCallToCounter = nil
+                    callNPCToCounter(npcId)
+                end
+            end
+        end)
     else
         data.state = "seated"
     end
@@ -923,14 +937,7 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Immediately spawn NPCs when Open phase begins (don't wait 60s loop)
-Workspace:GetAttributeChangedSignal("GameState"):Connect(function()
-    if Workspace:GetAttribute("GameState") == "Open" then
-        task.wait(3)   -- brief pause so OrderManager resets first
-        spawnNPC()
-        task.delay(25, spawnNPC)
-    end
-end)
+-- (duplicate GameState listener removed — first one at line ~887 handles this)
 
 -- Wire Rush Hour BindableEvents
 local ssEvents = game:GetService("ServerStorage"):FindFirstChild("Events")
