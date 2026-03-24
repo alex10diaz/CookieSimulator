@@ -176,15 +176,20 @@ end
 -- Rotates the NPC to face the nearest POS station model.
 local POS_FOLDER = Workspace:WaitForChild("POS", 10)
 
--- Face NPC toward a world position (flattened to XZ plane)
+-- Face NPC toward a world position (flattened to XZ plane).
+-- Deferred one frame so pathfinding physics fully settles first.
 local function facePosition(npcModel, targetPos)
-    local hrp = npcModel:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    local npcPos = hrp.Position
-    local dir = Vector3.new(targetPos.X - npcPos.X, 0, targetPos.Z - npcPos.Z)
-    if dir.Magnitude > 0.1 then
-        hrp.CFrame = CFrame.new(npcPos, npcPos + dir)
-    end
+    task.defer(function()
+        local hrp = npcModel and npcModel:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local npcPos = hrp.Position
+        local dir = Vector3.new(targetPos.X - npcPos.X, 0, targetPos.Z - npcPos.Z)
+        if dir.Magnitude > 0.1 then
+            hrp.CFrame = CFrame.new(npcPos, npcPos + dir)
+            hrp.AssemblyLinearVelocity  = Vector3.zero
+            hrp.AssemblyAngularVelocity = Vector3.zero
+        end
+    end)
 end
 
 local function faceClosestPOS(npcModel)
