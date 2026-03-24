@@ -4,8 +4,9 @@
 --   needsFrost=true  → Frost → Warmers → Dress
 --   needsFrost=false → Warmers → Dress
 
-local Players    = game:GetService("Players")
-local CookieData = require(script.Parent:WaitForChild("CookieData"))
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 
 local OrderManager = {}
 
