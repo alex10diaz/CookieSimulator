@@ -291,6 +291,7 @@ local activeOrders = {}  -- { orderId, display, tempKey }
 local patienceMap  = {}  -- orderId -> ratio (0-1)
 local flashTweens  = {}  -- key -> Tween (looping red flash)
 local tempKeyN     = 0
+local showAlert    -- forward declaration (defined later, used in acceptedEvent handler)
 
 local function cardKey(entry)
     return entry.orderId and tostring(entry.orderId) or entry.tempKey
@@ -802,7 +803,7 @@ warmersStockEvent.OnClientEvent:Connect(function() end)  -- reserved
 -- ══════════════════════════════════════════════════════════════════════════════
 -- ALERT HELPER
 -- ══════════════════════════════════════════════════════════════════════════════
-local function showAlert(text, bgColor, accentColor, duration)
+showAlert = function(text, bgColor, accentColor, duration)
     local existing = hud:FindFirstChild("AlertPill")
     if existing then existing:Destroy() end
     local alert = Instance.new("Frame", hud)
