@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-24
-**Overall Alpha Readiness:** 🟡 69%
+**Last Updated:** 2026-03-24 (Session 2 end)
+**Overall Alpha Readiness:** 🟡 71%
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -307,6 +307,8 @@
 | 2026-03-24 | **BUG-14/15/16 GameStateManager Studio sync** | Root cause: stale Studio script required deleted RS/Modules/OrderManager. Fixed: pushed correct source (SSS/Core path, PREOPEN_DURATION=3m, OPEN_DURATION=8m, SSS declared before require). All 3 bugs resolved. |
 | 2026-03-24 | **Studio-wide OrderManager path migration** | 9 additional scripts (DressStationServer, FridgeDisplayServer, PersistentNPCSpawner, StaffManager, LeaderboardManager, DriveThruServer, StationRemapService, POSController, BoxCarryServer) still had RS/Modules path in Studio — fixed via targeted string replace. SSS declaration added to 4 that were missing it. |
 | 2026-03-24 | **OrderManager CookieData require fix** | OrderManager used `script.Parent:WaitForChild("CookieData")` — CookieData is in RS/Modules not SSS/Core. Fixed to `ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData")` on disk + Studio. |
+| 2026-03-24 | **AIBakerSystem Studio sync** | Used aliased vars (RS/SSS) so wasn't caught by first scan. Studio had `RS:WaitForChild("Modules")` for OrderManager — fixed to `SSS:WaitForChild("Core")`. Disk was already correct. |
+| 2026-03-24 | **REGRESSION/NEW BUG RULE added** | 8-step protocol section added to MASTER_PROJECT_FILE: log first, root cause required, fix narrowly, verify in Studio, mark resolved. Studio Sync Rule added. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
