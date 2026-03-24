@@ -39,9 +39,14 @@ local function spawnCarryModel(playerName, hand)
         return
     end
 
-    model.Name   = "CarriedBox_" .. playerName
-    model.Parent = workspace
+    model.Name = "CarriedBox_" .. playerName
 
+    -- Unanchor all parts so the weld can move them with the character
+    for _, p in ipairs(model:GetDescendants()) do
+        if p:IsA("BasePart") then p.Anchored = false end
+    end
+
+    model.Parent = workspace
     model:SetPrimaryPartCFrame(hand.CFrame * HOLD_OFFSET)
 
     local weld   = Instance.new("WeldConstraint")
