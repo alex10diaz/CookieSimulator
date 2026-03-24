@@ -175,6 +175,18 @@ end
 
 -- Rotates the NPC to face the nearest POS station model.
 local POS_FOLDER = Workspace:WaitForChild("POS", 10)
+
+-- Face NPC toward a world position (flattened to XZ plane)
+local function facePosition(npcModel, targetPos)
+    local hrp = npcModel:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local npcPos = hrp.Position
+    local dir = Vector3.new(targetPos.X - npcPos.X, 0, targetPos.Z - npcPos.Z)
+    if dir.Magnitude > 0.1 then
+        hrp.CFrame = CFrame.new(npcPos, npcPos + dir)
+    end
+end
+
 local function faceClosestPOS(npcModel)
     if not POS_FOLDER then return end
     local hrp = npcModel:FindFirstChild("HumanoidRootPart")
@@ -802,8 +814,8 @@ local function spawnNPC()
             d.state      = "waiting_in_queue"
             d.cancelMove = nil
 
-            -- Turn to face the nearest POS station
-            faceClosestPOS(model)
+            -- Face counter while waiting to order
+            facePosition(model, getCounterPos())
 
             -- Connect order prompt once
             if not d.promptConnected then
@@ -843,7 +855,7 @@ local function spawnNPC()
             d.model:SetPrimaryPartCFrame(CFrame.new(qp))
         end
         d.state = "waiting_in_queue"
-        faceClosestPOS(d.model)
+        facePosition(d.model, getCounterPos())
         if not d.promptConnected then
             d.promptConnected = true
             local pp = NPCSpawner.GetPrompt(d.model)
