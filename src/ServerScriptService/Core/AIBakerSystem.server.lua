@@ -1,7 +1,7 @@
 local Players      = game:GetService("Players")
 local RS           = game:GetService("ReplicatedStorage")
 local SSS          = game:GetService("ServerScriptService")
-local OrderManager = require(RS:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local OrderManager = require(SSS:WaitForChild("Core"):WaitForChild("OrderManager"))
 local PDM          = require(SSS:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
 local HIRE_COST      = 50
