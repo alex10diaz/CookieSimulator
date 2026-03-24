@@ -7,7 +7,7 @@ local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local OrderManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local OrderManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 
 local carryPoseRemote    = RemoteManager.Get("CarryPoseUpdate")
 local npcPoseRemote      = RemoteManager.Get("NPCCarryPoseUpdate")

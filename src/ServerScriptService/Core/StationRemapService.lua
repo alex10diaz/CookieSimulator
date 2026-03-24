@@ -8,7 +8,7 @@ local Workspace         = game:GetService("Workspace")
 
 local CookieData    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local OrderManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local OrderManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 
 local stationRemappedRemote = RemoteManager.Get("StationRemapped")
 

@@ -9,7 +9,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage       = game:GetService("ServerStorage")
 
 local RemoteManager          = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local OrderManager           = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local OrderManager           = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 local CookieData             = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local MenuManager            = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
 local StationMasteryManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("StationMasteryManager"))

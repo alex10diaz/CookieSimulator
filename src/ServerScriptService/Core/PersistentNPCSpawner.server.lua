@@ -10,7 +10,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace           = game:GetService("Workspace")
 
 local NPCSpawner        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("NPCSpawner"))
-local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local EconomyManager    = require(ServerScriptService:WaitForChild("Core"):WaitForChild("EconomyManager"))

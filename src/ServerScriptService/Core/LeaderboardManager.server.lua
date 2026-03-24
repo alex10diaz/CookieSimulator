@@ -12,7 +12,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage       = game:GetService("ServerStorage")
 local Workspace           = game:GetService("Workspace")
 
-local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 

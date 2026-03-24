@@ -3,7 +3,7 @@ local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local OrderManager   = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local OrderManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 
 local acceptRemote   = RemoteManager.Get("AcceptOrder")
 local acceptedRemote = RemoteManager.Get("OrderAccepted")

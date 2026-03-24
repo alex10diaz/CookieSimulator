@@ -2,8 +2,9 @@
 -- Keeps fridge BillboardGuis in sync with OrderManager stock.
 -- Runs server-side so all players see correct stock without extra remotes.
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local OrderManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("OrderManager"))
+local ReplicatedStorage   = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local OrderManager        = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 
 local MAX_STOCK = 4
 
