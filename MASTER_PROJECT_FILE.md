@@ -17,6 +17,23 @@
 
 ---
 
+## 🚨 REGRESSION / NEW BUG RULE
+
+**When a regression or new bug is reported, follow this protocol EVERY TIME — no exceptions:**
+
+1. **LOG FIRST** — Add the bug to Section 7 (Known Bugs) with ID, severity, system, description, and Status = Open before writing any code
+2. **ROOT CAUSE REQUIRED** — Identify the root cause explicitly before patching. Do not patch symptoms.
+3. **IMPACT SCOPE** — State which other systems could be affected by the fix before applying it
+4. **FIX NARROWLY** — Touch only the files required to fix the root cause. Do not refactor adjacent code.
+5. **VERIFY IN STUDIO** — After every fix, confirm the bug is gone via MCP console output or manual test
+6. **MARK RESOLVED** — Update the bug Status in Section 7 to "Resolved — [date]" after verification
+7. **LOG TO COMPLETED** — Add a row to Section 6 (Completed Tasks) with the fix summary
+8. **NEVER SILENT-FIX** — A bug that is patched but not logged is a bug that will reappear
+
+> **Studio Sync Rule:** Every disk change MUST be pushed to Studio via MCP `run_code` in the same session it is made. A disk edit that never reaches Studio is not a fix — it is a pending fix that will create confusion next session.
+
+---
+
 ## 📋 SECTION 1 — SYSTEM VERIFICATION BOARD
 
 > Legend: ✅ Verified Implemented | ⚠️ Needs Improvement | 🔶 Partially Implemented | 📋 Planned | ❌ Missing | 🔍 Needs Verification
