@@ -600,6 +600,10 @@ addDeliverPrompt = function(npcId)
             return
         end
 
+        -- Transfer physical box model to NPC's arm
+        local transferEvent = ServerScriptService:FindFirstChild("BoxTransferToNPC")
+        if transferEvent then transferEvent:Fire(player.Name, d.model) end
+
         pendingBoxes[pendingKey] = nil
 
         -- Stars from quality (0-100 weighted aggregate → 1-5 stars)
