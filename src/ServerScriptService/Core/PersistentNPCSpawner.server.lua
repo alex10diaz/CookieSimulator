@@ -484,9 +484,17 @@ npcLeave = function(npcId, reason)
             local carrier = Players:FindFirstChild(pending.carrier)
             if carrier then
                 forceDropBoxRemote:FireClient(carrier)
-                -- Destroy physical carry model
+                -- Destroy physical carry model and restore player arms
                 local boxModel = workspace:FindFirstChild("CarriedBox_" .. pending.carrier)
                 if boxModel then boxModel:Destroy() end
+                local char = carrier.Character
+                local torso = char and char:FindFirstChild("Torso")
+                if torso then
+                    local rs = torso:FindFirstChild("Right Shoulder")
+                    local ls = torso:FindFirstChild("Left Shoulder")
+                    if rs then rs.C0 = CFrame.new(1,  0.5, 0) * CFrame.Angles(0,  math.pi/2, 0) end
+                    if ls then ls.C0 = CFrame.new(-1, 0.5, 0) * CFrame.Angles(0, -math.pi/2, 0) end
+                end
             end
         end
         pendingBoxes[pendingKey] = nil
