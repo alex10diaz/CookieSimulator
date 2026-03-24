@@ -62,6 +62,8 @@ local REMOTES = {
     "BoxDelivered",
     "BoxCreated",
     "ForceDropBox",
+    "CarryPoseUpdate",
+    "NPCCarryPoseUpdate",
     -- M1: Game state & session
     "GameStateChanged",
     "AcceptOrder",
