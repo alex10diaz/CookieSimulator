@@ -133,6 +133,8 @@ local REMOTES = {
     "NPCPatienceUpdate",       -- Server->All: orderId, currentPatience, maxPatience
     "DeliveryFeedback",        -- Server->All: npcHeadPos, stars, carrierName
     "WorkerFeedback",          -- Server->All: player, stationName, score, hrpPos
+    -- C-2: Coach tip bar
+    "PlayerTipUpdate",         -- Server->Client: coach tip string shown in bottom-center bar
 }
 
 -- Server creates all remotes; client waits for server-created ones.
