@@ -15,6 +15,12 @@ local MenuManager            = require(ServerScriptService:WaitForChild("Core"):
 local StationMasteryManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("StationMasteryManager"))
 local SessionStats           = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
+-- C-2: coach tip remote
+local tipRemote = RemoteManager.Get("PlayerTipUpdate")
+local function fireTip(player, msg)
+    tipRemote:FireClient(player, msg)
+end
+
 -- M1: declared early so endSession() closure can capture it as an upvalue
 -- Assigned asynchronously below once ServerStorage/Events is ready
 local stationCompletedEvent = nil
@@ -286,20 +292,24 @@ local function endSession(player, stationName, score)
             return
         end
         OrderManager.RecordStationScore(player, "mix", score, batchId)
+        fireTip(player, "Nice mix! Take the dough to the Dough Table.")
 
     elseif stationName == "dough" then
         doughLock[batchId] = nil
         OrderManager.RecordStationScore(player, "dough", score, batchId)
+        fireTip(player, "Dough shaped! Put it in the Fridge.")
 
     elseif stationName == "oven" then
         OrderManager.RecordOvenScore(player, score, batchId)
         ovenSession[player] = nil
+        fireTip(player, "Baked! Cookies will appear in the warmers — go to the Dress Station.")
 
     elseif stationName == "frost" then
         local entry = session.warmerEntry
         local snapshot = entry and entry.snapshot or 0
         local cookieId = entry and entry.cookieId or nil
         OrderManager.RecordFrostScore(player.Name, batchId, score, snapshot, cookieId)
+        fireTip(player, "Frosted! Head to the Dress Station to box them up.")
 
     elseif stationName == "dress" then
         local entry = dressPending[player]
@@ -307,6 +317,7 @@ local function endSession(player, stationName, score)
         dressPending[player] = nil
         if box then
             print("[MinigameServer] Box #" .. box.boxId .. " ready | Quality: " .. box.quality .. "%")
+            fireTip(player, "Box ready! Bring it to a waiting customer.")
         end
     end
 

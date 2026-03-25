@@ -7,6 +7,9 @@ local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForC
 local OrderManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 local SessionStats  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
+-- C-2: coach tip remote
+local tipRemote = RemoteManager.Get("PlayerTipUpdate")
+
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local DEV_SKIP_PREOPEN    = false     -- PreOpen enabled for live play
 local skipPreOpenFlag     = false
@@ -100,6 +103,7 @@ local function runCycle()
         OrderManager.Reset()   -- wipe pipeline state before every new shift
         SessionStats.Reset()
         if not DEV_SKIP_PREOPEN then
+            tipRemote:FireAllClients("Pick today's cookie menu from the board!")
             runPhase(PREOPEN_DURATION, "PreOpen")
         end
         -- S-1: Open phase with rush hour at 70% elapsed
@@ -110,6 +114,7 @@ local function runCycle()
             local remaining = OPEN_DURATION
             local rushFired = false
             broadcast("Open", remaining)
+            tipRemote:FireAllClients("Head to a Mix Station to start baking!")
             while remaining > 0 do
                 task.wait(1)
                 remaining -= 1
@@ -131,6 +136,7 @@ local function runCycle()
         end
 
         -- End of day
+        tipRemote:FireAllClients("Shift over! Check your results.")
         broadcast("EndOfDay", SUMMARY_DURATION)
         local summary = SessionStats.GetSummary()
         summary.employees = SessionStats.GetEmployeeOfShift()
@@ -140,6 +146,7 @@ local function runCycle()
 
         -- Intermission — teleport to back room
         teleportAllTo(BACK_ROOM_CF)
+        tipRemote:FireAllClients("Break time! Next shift starts soon.")
         runPhase(INTERMISSION_DURATION, "Intermission")
 
         -- Return players to front for next shift

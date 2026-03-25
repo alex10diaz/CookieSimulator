@@ -1178,4 +1178,47 @@ workerFeedbackEvent.OnClientEvent:Connect(function(targetPlayer, stationName, sc
     t.Completed:Connect(function() if anchor.Parent then anchor:Destroy() end end)
 end)
 
+-- ══════════════════════════════════════════════════════════════════════════════
+-- C-2: COACH BAR — bottom-center hint strip
+-- ══════════════════════════════════════════════════════════════════════════════
+local coachBar = Instance.new("Frame", hud)
+coachBar.Name               = "CoachBar"
+coachBar.Size               = UDim2.new(0, 520, 0, 42)
+coachBar.Position           = UDim2.new(0.5, -260, 1, -70)
+coachBar.BackgroundColor3   = Color3.fromRGB(20, 20, 40)
+coachBar.BackgroundTransparency = 0.15
+coachBar.BorderSizePixel    = 0
+coachBar.ZIndex             = 25
+coachBar.Visible            = false
+corner(coachBar, 21)
+addStroke(coachBar, C.BLUSH, 1.5, 0.3)
+
+local coachLbl = Instance.new("TextLabel", coachBar)
+coachLbl.Size               = UDim2.new(1, -20, 1, 0)
+coachLbl.Position           = UDim2.new(0, 10, 0, 0)
+coachLbl.BackgroundTransparency = 1
+coachLbl.TextColor3         = C.WHITE
+coachLbl.Font               = Enum.Font.GothamBold
+coachLbl.TextScaled         = true
+coachLbl.TextXAlignment     = Enum.TextXAlignment.Center
+coachLbl.Text               = ""
+coachLbl.ZIndex             = 26
+
+local coachDismissThread = nil
+local function showCoachTip(msg)
+    if coachDismissThread then task.cancel(coachDismissThread) end
+    coachLbl.Text = "->  " .. msg
+    coachBar.BackgroundTransparency = 0.15
+    coachLbl.TextTransparency = 0
+    coachBar.Visible = true
+    coachDismissThread = task.delay(8, function()
+        TweenService:Create(coachBar, TI(0.4), { BackgroundTransparency = 1 }):Play()
+        TweenService:Create(coachLbl, TI(0.4), { TextTransparency = 1 }):Play()
+        task.wait(0.5)
+        coachBar.Visible = false
+    end)
+end
+
+RemoteManager.Get("PlayerTipUpdate").OnClientEvent:Connect(showCoachTip)
+
 print("[HUDController] Redesign v2 ready.")
