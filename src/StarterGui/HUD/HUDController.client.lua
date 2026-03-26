@@ -798,7 +798,20 @@ npcOrderCancelledEvent.OnClientEvent:Connect(function(orderId, cookieId, packSiz
     removeByIndex(1)
 end)
 
-warmersStockEvent.OnClientEvent:Connect(function() end)  -- reserved
+-- M-2: Order Ready Alert — toast when a cookie enters the warmer
+local _prevWarmerCount = 0
+warmersStockEvent.OnClientEvent:Connect(function(warmerState)
+    local count = 0
+    if type(warmerState) == "table" then
+        for _ in pairs(warmerState) do count += 1 end
+    end
+    if count > _prevWarmerCount then
+        -- Warmer just filled — show toast and play chime
+        showAlert("Cookie ready to box!", Color3.fromRGB(255, 200, 60), Color3.fromRGB(255, 240, 120), 2.5)
+        orderAlertSound:Play()
+    end
+    _prevWarmerCount = count
+end)
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- ALERT HELPER

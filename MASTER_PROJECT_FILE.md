@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-03-25 (Session 3)
-**Overall Alpha Readiness:** 🟡 74%
+**Overall Alpha Readiness:** 🟡 77%
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -109,7 +109,7 @@
 | Screen Effects | ❌ Missing | No ColorCorrection, no screen flash on level-up |
 | Station Progress Bars | ✅ Verified Implemented | Each minigame has its own progress visualization |
 | NPC Patience Indicator (in-world) | ✅ Verified Implemented | BarFill injected into PatienceGui on spawn; green→yellow→red; SetPatienceBar called every patience tick |
-| Order Ready Alerts | ❌ Missing | No sound/visual when warmers fill up (ready for Dress station) |
+| Order Ready Alerts | ✅ Verified Implemented | WarmersUpdated count diff → "Cookie ready to box!" showAlert toast (2.5s) + orderAlertSound chime |
 | Level Up Celebration | 🔶 Partially Implemented | MasteryLevelUp remote fires. Client-side celebration not confirmed |
 
 ### PROGRESSION
@@ -179,7 +179,7 @@
 | "What Next?" Guidance | Not Started | **CRITICAL** | Before |
 | Carry Indicator UI | Complete | HIGH | ✅ Done |
 | In-World NPC Patience | Complete | MEDIUM | ✅ Done |
-| Order Ready Alert | Not Started | MEDIUM | Before |
+| Order Ready Alert | Complete | MEDIUM | ✅ Done |
 | Rush Hour Announcement | Not Started | MEDIUM | Before |
 | Dress Station Quality Fix | Not Started | HIGH | Before |
 | Tutorial Fridge→Oven Step | Not Started | HIGH | Before |
@@ -258,14 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-2 — Order Ready Alert`
+**TASK:** `M-3 — Rush Hour Visual Announcement`
 **Status:** Not Started → Ready to begin
-**What it is:** Players don't know when warmers fill up. Need a sound + brief HUD pill when a cookie enters a warmer slot.
+**What it is:** Rush Hour starts silently — players don't notice the faster NPC spawn rate.
 **Files affected:**
-- `PersistentNPCSpawner.server.lua` OR `OrderManager.lua` — fire `OrderReady` remote when warmer receives a cookie
-- `HUDController.client.lua` — show a brief "🍪 Order ready!" toast at top of screen + play a chime sound
-- `SoundController.client.lua` — may already have a relevant sound; verify
-**Success criteria:** When a warmer slot fills, a short "Order ready!" toast flashes at top-center of screen and a chime plays. Auto-dismisses after 2.5s.
+- `GameStateManager.server.lua` OR `PersistentNPCSpawner.server.lua` — fire a `RushHourStarted` remote when Rush Hour triggers
+- `HUDController.client.lua` — show a "🔥 RUSH HOUR!" banner that slides in and holds for ~4s
+**Success criteria:** At Rush Hour trigger, a bold banner slides down from top-center and auto-dismisses after 4s. Uses `showAlert` or a dedicated banner frame.
 
 ---
 
@@ -273,7 +272,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-2** | Order Ready Alert | Current task — Sound + HUD toast when warmers receive a cookie |
+| 1 | **M-3** | Rush Hour Announcement | Current task — "🔥 RUSH HOUR!" banner on Rush Hour trigger |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
