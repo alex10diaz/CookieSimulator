@@ -108,7 +108,7 @@
 | Combo Popups | 🔶 Partially Implemented | ComboUpdate fires, HUD updates. No "COMBO BROKEN!" popup |
 | Screen Effects | ❌ Missing | No ColorCorrection, no screen flash on level-up |
 | Station Progress Bars | ✅ Verified Implemented | Each minigame has its own progress visualization |
-| NPC Patience Indicator (in-world) | ❌ Missing | Patience on HUD only. No above-head BillboardGui bar |
+| NPC Patience Indicator (in-world) | ✅ Verified Implemented | BarFill injected into PatienceGui on spawn; green→yellow→red; SetPatienceBar called every patience tick |
 | Order Ready Alerts | ❌ Missing | No sound/visual when warmers fill up (ready for Dress station) |
 | Level Up Celebration | 🔶 Partially Implemented | MasteryLevelUp remote fires. Client-side celebration not confirmed |
 
@@ -178,7 +178,7 @@
 | Daily/Weekly/Lifetime Challenges | Complete | — | ✅ Done |
 | "What Next?" Guidance | Not Started | **CRITICAL** | Before |
 | Carry Indicator UI | Complete | HIGH | ✅ Done |
-| In-World NPC Patience | Not Started | MEDIUM | Before |
+| In-World NPC Patience | Complete | MEDIUM | ✅ Done |
 | Order Ready Alert | Not Started | MEDIUM | Before |
 | Rush Hour Announcement | Not Started | MEDIUM | Before |
 | Dress Station Quality Fix | Not Started | HIGH | Before |
@@ -258,13 +258,14 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-1 — In-World NPC Patience Indicator`
+**TASK:** `M-2 — Order Ready Alert`
 **Status:** Not Started → Ready to begin
-**What it is:** Players at stations can't see NPC patience draining. Need a BillboardGui bar above each NPC's head.
+**What it is:** Players don't know when warmers fill up. Need a sound + brief HUD pill when a cookie enters a warmer slot.
 **Files affected:**
-- `PersistentNPCSpawner.server.lua` — attach BillboardGui to NPC model; fire NPCPatienceUpdate remote each tick
-- `HUDController.client.lua` OR a dedicated client script — listen to NPCPatienceUpdate, update the in-world bar
-**Success criteria:** A patience bar floats above each waiting NPC's head. Bar color shifts green→yellow→red as patience drains. Disappears when NPC leaves.
+- `PersistentNPCSpawner.server.lua` OR `OrderManager.lua` — fire `OrderReady` remote when warmer receives a cookie
+- `HUDController.client.lua` — show a brief "🍪 Order ready!" toast at top of screen + play a chime sound
+- `SoundController.client.lua` — may already have a relevant sound; verify
+**Success criteria:** When a warmer slot fills, a short "Order ready!" toast flashes at top-center of screen and a chime plays. Auto-dismisses after 2.5s.
 
 ---
 
@@ -272,8 +273,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-1** | In-World NPC Patience Indicator | Current task — BillboardGui above NPC head, updates live |
-| 2 | **M-2** | Order Ready Alert | Sound + HUD pill when warmers receive a cookie |
+| 1 | **M-2** | Order Ready Alert | Current task — Sound + HUD toast when warmers receive a cookie |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -308,6 +308,7 @@
 | 2026-03-25 | **H-6 Tutorial Fridge→Oven Step** | Already implemented — step 3 msg covers fridge pull + oven, gates on oven StationCompleted. Verified in code. |
 | 2026-03-25 | **H-7 Remote Rate Limiting** | lastPurchaseTime table + 1s throttle in UnlockManager.PurchaseItem handler. lastMixRequestTime table + 0.5s throttle in MinigameServer.RequestMixStart handler. Silent drop (no error sent). |
 | 2026-03-25 | **H-8 Carry Indicator UI** | CarryPill (orange, bottom-center) in HUDController. boxCarriedRemote fires from PersistentNPCSpawner on BoxCreated (with NPC name) and after delivery (nil to clear). All 6 checks verified in Studio. |
+| 2026-03-25 | **M-1 In-World NPC Patience Indicator** | BarFill injected into existing PatienceGui on NPC spawn (NPCSpawner.CreateNPC). PatienceGui resized 120×52, TimerLabel shrunk to 65%, BarBg+BarFill strip added. SetPatienceBar(model, ratio) fn added. Called every patience tick in PersistentNPCSpawner alongside SetTimerText. Color: green>60%, yellow 30–60%, red<30%. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -361,7 +362,7 @@
 - [ ] BUG-13 NPC collision ceiling lift fixed
 
 ### SHOULD HAVE (Quality bar)
-- [ ] **M-1** In-world NPC patience indicator
+- [x] **M-1** In-world NPC patience indicator
 - [ ] **M-2** Order ready alert (sound + HUD pill)
 - [ ] **M-3** Rush Hour announcement banner
 - [ ] **M-4** Warmer stock sync for joining players
