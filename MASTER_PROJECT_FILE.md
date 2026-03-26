@@ -321,6 +321,7 @@
 | 2026-03-25 | **M-11 Loading Indicator** | coinsLbl.Text="..." and levelLbl.Text="..." set before dataInitEvent fires. Replaced by real values on PlayerDataInit. Two-line change, zero new UI required. |
 | 2026-03-25 | **M-12 Gamepass Scaffold** | New GamepassManager.server.lua: SpeedPass + VIPPass + BoostToken stubs. MarketplaceService.UserOwnsGamePassAsync on PlayerAdded. ProcessReceipt for BoostToken. HasSpeedPass/HasVIPPass/HasBoostActive API for other systems. IDs=0 (replace before launch). |
 | 2026-03-25 | **BUG-4 Box Carry Arms Detach** | Root cause: ManualWeld "Part Terrain Joint" baked into CookieBox template conflicted with WeldConstraint-to-HRP, causing physics solver to tear character Motor6D joints. Fix: `weldAllParts()` in BoxCarryServer now destroys all ManualWelds before welding. |
+| 2026-03-25 | **Nice-to-Have: Per-Station Breakdown** | SessionStats.GetPlayerBreakdown(userId) added. GameStateManager switches from FireAllClients to per-player FireClient with stationBreakdown attached. SummaryController: new 48px station strip (Mix/Dough/Oven/Frost/Dress) between grade row and divider; color-coded green/yellow/orange/red by score; frame height 570→630px; all lower elements shifted 56px. |
 | 2026-03-25 | **BUG-13 NPC Ceiling Lift** | Root cause: NPC HumanoidRootParts (CanCollide=true) collided with each other in narrow doorways, physics solver launched NPCs upward. Fix: PhysicsService "NPCs" collision group registered at startup (self-non-collidable); every spawned NPC HRP assigned to the group via SetPartCollisionGroup. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
@@ -389,7 +390,7 @@
 - [x] **M-12** Gamepass scaffold (Speed Pass stub)
 
 ### NICE TO HAVE (Polish for Alpha)
-- [ ] Per-station breakdown in shift results
+- [x] Per-station breakdown in shift results
 - [ ] Cosmetic preview in shop
 - [ ] Upgrade tooltips in shop
 - [ ] Cookie type icon/thumbnail on order cards
