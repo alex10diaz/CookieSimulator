@@ -690,6 +690,7 @@ addDeliverPrompt = function(npcId)
         local xp    = payout.xp
 
         deliveryResult:FireClient(player, stars, coins, xp, d.order.orderId)
+        boxCarriedRemote:FireClient(player, nil)  -- H-8: clear carry indicator
         local _npcHead = d.model and d.model:FindFirstChild("Head")
         if _npcHead then deliveryFeedbackRemote:FireAllClients(_npcHead.Position, stars, player.Name) end
         do
@@ -929,6 +930,13 @@ OrderManager.On("BoxCreated", function(box)
                 carrier = isRealPlayer and box.carrier or nil,
                 npcId   = npcId,
             }
+            -- H-8: notify the carrier so the HUD carry pill shows the NPC name
+            if isRealPlayer then
+                local carrierPlayer = Players:FindFirstChild(box.carrier)
+                if carrierPlayer then
+                    boxCarriedRemote:FireClient(carrierPlayer, data.name)
+                end
+            end
 
             if data.state == "seated" then
                 callNPCToCounter(npcId)
