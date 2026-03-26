@@ -8,6 +8,7 @@ local Players             = game:GetService("Players")
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace           = game:GetService("Workspace")
+local PhysicsService      = game:GetService("PhysicsService")
 
 local NPCSpawner        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("NPCSpawner"))
 local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
