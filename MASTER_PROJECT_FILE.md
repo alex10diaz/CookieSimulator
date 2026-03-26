@@ -258,12 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `H-4 — Dress Order Lock Timeout`
+**TASK:** `H-5 — Level Unlock Content`
 **Status:** Not Started → Ready to begin
-**What it is:** If a player disconnects while holding a dress order lock, `dressLocked[player]` and `orderLockedBy[orderId]` are never cleared — that order slot is dead for the entire shift.
+**What it is:** Leveling up does nothing — no content is gated. Players have zero incentive to grind.
 **Files affected:**
-- `DressStationServer.server.lua` — add Players.PlayerRemoving cleanup + 90s server-side timeout
-**Success criteria:** A disconnected player's dress lock clears within 90s; the order reappears on the KDS.
+- `UnlockManager.lua` — add level-gated unlock checks
+- `GameStateManager` or `BakeryManager` — fire level-up events
+**Success criteria:** Level 3 unlocks tip boost upgrade, level 5 unlocks snickerdoodle, level 10 unlocks C&C.
 
 ---
 
@@ -271,9 +272,9 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **H-4** | Dress Order Lock Timeout | Current task — 90s timeout + PlayerRemoving cleanup in DressStationServer |
-| 2 | **H-5** | Level Unlock Content | 3 things: level 3=tip upgrade, level 5=snickerdoodle, level 10=C&C |
-| 3 | **H-6** | Tutorial Fridge→Oven Step | Add step 4.5 teaching pull-from-fridge |
+| 1 | **H-5** | Level Unlock Content | Current task — level 3=tip upgrade, level 5=snickerdoodle, level 10=C&C |
+| 2 | **H-6** | Tutorial Fridge→Oven Step | Add step 4.5 teaching pull-from-fridge |
+| 3 | **H-7** | Remote Rate Limiting | 1 req/s on PurchaseItem; 1/2s on RequestMixStart |
 | 4 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
 | 5 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
 | 6 | **H-4** | Dress Order Lock Timeout | 90s timeout; unlock on disconnect or timeout |
@@ -329,7 +330,7 @@
 | BUG-3 | 🟠 High | Quality Scoring | DRESS_SCORE = 85 hardcoded — dress quality always 85 regardless of performance | ✅ Resolved 2026-03-25 |
 | BUG-4 | 🟠 High | Box Carry | Arms detach when carrying box (Motor6D.Enabled = false disconnects joint) | Open |
 | BUG-5 | 🟠 High | Delivery | Two players can fire DeliverBox to same NPC simultaneously (no delivery lock) | ✅ Resolved — deliveryLocked flag already present (atomic check+set, 7 sites) |
-| BUG-6 | 🟠 High | Dress Station | dressLocked[player] has no timeout — disconnected player locks order slot forever | Open |
+| BUG-6 | 🟠 High | Dress Station | dressLocked[player] has no timeout — disconnected player locks order slot forever | ✅ Resolved 2026-03-25 — PlayerRemoving+CharacterRemoving clear lock; 90s task.delay auto-release for AFK |
 | BUG-7 | 🟠 High | Multiplayer | New joiner mid-shift doesn't receive current warmer stock snapshot | Open |
 | BUG-8 | 🟡 Medium | Data | In-memory challenge counters reset on server crash (daily/weekly progress loss) | Known Limitation |
 | BUG-9 | 🟡 Medium | Exploits | No rate limit on RequestMixStart — can spam server-side batch creation attempts | Open |
