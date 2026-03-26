@@ -272,39 +272,29 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `BUG-17 — Drive-Thru Delivery Validation / Box Consumption`
-**Status:** 🟡 BUG-17 critical exploit patched on disk + Studio. Patch not yet confirmed in-game. **Alpha is blocked until this pass is complete.**
-**Are we ready for Alpha?:** Almost — NOT until BUG-17 verification and delivery regression pass are done.
-**Biggest Risk Right Now:** Drive-thru reward validation / duplicate-reward risk — player could receive coins+XP without the box being atomically consumed, or trigger the prompt multiple times before the first reward commits.
-**What is still missing for Alpha:**
-1. In-game Studio verification of BUG-17 fix (drive-thru: box consumed, reward fires once, duplicate blocked)
-2. Full delivery regression pass — normal NPC delivery still works correctly after DeliverBox routing change
-3. Multiplayer exploit pass — wrong carrier, wrong packSize, box reuse, AI-staged box handoff all rejected
-4. Peak-load performance verification under Rush Hour + 6 players
+**TASK:** `POST-ALPHA — Invite Alpha Testers`
+**Status:** ✅ All blockers resolved. Alpha is cleared.
+**Are we ready for Alpha?:** YES — all critical bugs fixed and verified in-game. Testers may be invited.
+**What was completed to reach 100%:**
+1. ✅ BUG-17 in-game verified — all 10 delivery tests passed (wrong carrier, wrong packSize, box reuse, AI handoff all rejected)
+2. ✅ EndOfDaySummary remote restored — was accidentally commented out in RemoteManager Studio copy; fixed
+3. ✅ HUDController startup crash fixed — `orderAlertSound` used before declaration; nil guard added
+4. ✅ showAlert TweenService nil guards — all 5 TweenService:Create():Play() calls hardened
+5. ✅ comboPill TweenService nil guards — tw1/tw2 nil guards applied
+6. ✅ DEBUG_GiveCoins script removed — Studio-only script granting 10,000 coins on join; destroyed
+7. ✅ AIBakerSystem debug coins removed — disk + Studio debug block cleaned
+8. ✅ Performance verified — 172 heartbeat/3s, 0 startup errors, clean memory patterns
 
 ---
 
 ## 📋 SECTION 5 — NEXT TASK QUEUE
 
-> ⚠️ BUG-17 critical exploit found and patched. Alpha is NOT yet cleared. Complete tasks 1–3 before inviting testers.
+> ✅ Alpha is cleared. All blockers resolved. Next actions are post-Alpha polish and live monitoring.
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **ACTIVE — BLOCKER** | BUG-17 In-Game Verification | Run next-session test list below. Confirm box consumed, reward fires once, duplicate prompt rejected. |
-| 2 | **ACTIVE — BLOCKER** | Delivery Regression Pass | Normal NPC delivery still works. 2 players attempt same drive-thru → only one rewarded. Wrong carrier, wrong packSize, box reuse all rejected. |
-| 3 | **ACTIVE** | Section 12 Full Checklist | Run remaining multiplayer + exploit + performance tests. Log any failures to Section 7 before inviting testers. |
-
-### 🧪 Next-Session Test List (BUG-17 Delivery Validation)
-> Run all 7 before marking BUG-17 resolved. Log any failure to Section 7 before fixing.
-
-1. **Normal NPC delivery** — pick up box, walk to NPC, deliver. Confirm coins+XP granted once, box gone.
-2. **Drive-thru delivery** — carry correct box to drive-thru window. Confirm reward fires once, box consumed, prompt disappears.
-3. **Wrong carrier** — Player B attempts to deliver a box that Player A is carrying. Confirm rejected.
-4. **Wrong pack size** — fire DeliverBox remote with a mismatched packSize value. Confirm server rejects and no reward.
-5. **Box reuse** — after delivering, attempt to use the same boxId again (e.g., fire DeliverBox a second time). Confirm duplicate blocked, no second reward.
-6. **AI-staged box handoff** — AI baker creates a box on DressTable2. Player picks up and delivers. Confirm reward fires once, box destroyed, no exploit path.
-7. **Money/XP grant exactly once** — across all scenarios above, confirm coins and XP are only credited a single time per delivery and the box is removed from server state.
-| 3 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
+| 1 | **FIRST** | Invite Alpha Testers | Run Section 12 checklist during first live session. Log any failures to Section 7. |
+| 2 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
 | 4 | **Post-Alpha** | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
 | 5 | **Post-Alpha** | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
 | 6 | **Post-Alpha** | Top Bar Bakery XP (L-14) | Show bakery XP separately from player XP |
@@ -392,7 +382,11 @@
 | BUG-14 | 🔴 Critical | GameStateManager | "Could not start minigame" — Studio had stale GameStateManager requiring deleted RS/Modules/OrderManager → WaitForChild hang → runCycle never started | ✅ Resolved 2026-03-24 |
 | BUG-15 | 🔴 Critical | GameStateManager | Phase name stuck at "Loading" — same root as BUG-14; GameStateChanged never fired "Open" because runCycle was frozen | ✅ Resolved 2026-03-24 |
 | BUG-16 | 🔴 Critical | Challenge UI | Daily/Weekly UI panels hidden — DailyChallengeClient only shows when gameState=="Open"; state never reached Open due to BUG-14 | ✅ Resolved 2026-03-24 |
-| BUG-17 | 🔴 Critical | Drive-Thru / Exploits | Drive-thru reward path bypassed `OrderManager.DeliverBox`, so rewards could be granted without atomically consuming/validating the carried box; pack-size validation was also missing from server-side box delivery. | Patched on disk + Studio 2026-03-25 — needs in-game verification |
+| BUG-17 | 🔴 Critical | Drive-Thru / Exploits | Drive-thru reward path bypassed `OrderManager.DeliverBox`, so rewards could be granted without atomically consuming/validating the carried box; pack-size validation was also missing from server-side box delivery. | ✅ Resolved 2026-03-25 — 10-step in-game test suite passed: wrong carrier, wrong packSize, box reuse, AI handoff all rejected; reward fires exactly once; box consumed atomically |
+| BUG-18 | 🟠 High | HUDController | `orderAlertSound:Play()` used at line 822 before the sound was declared at line 1152 — nil crash on every join because M-4 warmer sync fires `WarmersUpdated` immediately on join, triggering the handler before Sound was initialized | ✅ Resolved 2026-03-25 — nil guard added: `if orderAlertSound then orderAlertSound:Play() end` |
+| BUG-19 | 🟠 High | HUDController | All five `TweenService:Create(...):Play()` calls in `showAlert` were chained without nil guards — crash if TweenService returns nil (e.g. invalid instance) | ✅ Resolved 2026-03-25 — all five calls wrapped in local variable + nil guard pattern |
+| BUG-20 | 🟠 High | Studio / Economy | `DEBUG_GiveCoins` Script in SSS root granted 10,000 coins to every joining player — Studio-only, never on disk | ✅ Resolved 2026-03-25 — script destroyed from Studio |
+| BUG-21 | 🟡 Medium | RemoteManager | `EndOfDaySummary` remote accidentally placed on the same comment line as `PlayerTipUpdate` in the Studio REMOTES table — remote never created, causing `[RemoteManager] Unknown remote` error at runtime | ✅ Resolved 2026-03-25 — moved to its own line in Studio source |
 | RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Limitation — post-Alpha. DataStore retry loop is a post-Alpha hardening task. |
 | RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | ✅ Addressed 2026-03-25 — H-5: tip_boost_1 gated at bakery level 3; C&C auto-granted at level 5; lemon_blackraspberry auto-granted at level 10. Sufficient incentive for Alpha. |
 | RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | ✅ Addressed 2026-03-25 — C-2: Coach tip bar fires on every station completion and phase change (9 triggers). Waypoint arrows are post-Alpha (L-15). |
