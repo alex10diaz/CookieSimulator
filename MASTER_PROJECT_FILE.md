@@ -43,32 +43,32 @@
 |---|---|---|
 | Order System (batch pipeline) | ✅ Verified Implemented | Mix→Dough→Fridge→Oven→[Frost]→Warmers→Dress. Well-architected, event-driven |
 | NPC System | ✅ Verified Implemented | Spawning/lifecycle complete. facePosition fixed: task.spawn+0.2s wait, AutoRotate disabled during CFrame snap. |
-| Station System (Mix/Dough/Oven/Frost) | ⚠️ Needs Improvement | All 4 stations functional. **Movement not locked during minigames** |
-| Box System | ⚠️ Needs Improvement | Physical box welded to HRP, transfers to NPC. Arms fall off (Motor6D bug) |
-| Delivery System | ⚠️ Needs Improvement | Payout works. No delivery lock — two players can race same NPC |
+| Station System (Mix/Dough/Oven/Frost) | ✅ Verified Implemented | All 4 stations functional. Movement locked (WalkSpeed/JumpPower/JumpHeight=0) on session start — C-1 ✅ |
+| Box System | ✅ Verified Implemented | Physical box welded to HRP, transfers to NPC. ManualWeld conflict fixed — BUG-4 ✅ |
+| Delivery System | ✅ Verified Implemented | Payout works. deliveryLocked flag prevents race (atomic check+set, 7 sites) — H-3 ✅ |
 | Shift System | ✅ Verified Implemented | PreOpen(3m)→Open(8m)→EndOfDay(30s)→Intermission(3m). Rush Hour at 70% elapsed |
 | Round Reset | ✅ Verified Implemented | SessionStats.Reset(), OrderManager clear, NPC cleanup |
 | Money System | ✅ Verified Implemented | Server-authoritative. Base×speed×accuracy×combo×VIP, capped 3× |
 | XP System | ✅ Verified Implemented | Player XP + Bakery XP (separate tracks). `100 × level^1.35` curve |
-| Level System | 🔶 Partially Implemented | Level tracked and displayed. **Nothing is gated by level** |
-| Quality Scoring | ⚠️ Needs Improvement | Mix/Dough/Oven/Frost scored correctly. **Dress hardcoded to 85** |
+| Level System | ✅ Verified Implemented | Bakery lvl 3 gates tip_boost_1. Lvl 5 auto-grants C&C. Lvl 10 auto-grants lemon_blackraspberry — H-5 ✅ |
+| Quality Scoring | ✅ Verified Implemented | Mix/Dough/Oven/Frost scored correctly. Dress now uses avgSnapshot() from batch — H-2 ✅ |
 | Combo System | ✅ Verified Implemented | IncrementCombo/ResetCombo, capped at 20, 1.05× per stack, ComboUpdate remote |
-| Customer Patience | ⚠️ Needs Improvement | Patience logic complete. HUD shows it. **No in-world indicator above NPC head** |
-| Bakery Rating | 🔶 Partially Implemented | Shift grade A–D calculated. No persistent reputation across shifts |
+| Customer Patience | ✅ Verified Implemented | Patience logic + HUD bar + in-world color bar above NPC head (green→red) — M-1 ✅ |
+| Bakery Rating | 🔶 Post-Alpha | Shift grade S/A/B/C/D calculated and shown. Persistent reputation across shifts is post-Alpha by design. |
 
 ### MULTIPLAYER SYSTEMS
 | System | Verification Status | Notes |
 |---|---|---|
 | Station Locking (movement) | ✅ Verified Implemented | WalkSpeed/JumpPower/JumpHeight=0 on session start; restored in endSession, cleanupPlayerSession, watchdog |
 | Item Ownership | ✅ Verified Implemented | doughLock, ovenSession, dressPending all prevent double-grab |
-| Delivery Ownership | ⚠️ Needs Improvement | Box welded to player but no lock when two players fire DeliverBox for same NPC |
+| Delivery Ownership | ✅ Verified Implemented | deliveryLocked flag confirmed present (atomic check+set, 7 sites). First delivery wins — H-3 ✅ |
 | Player Leaving Mid-Task | ✅ Verified Implemented | cleanupPlayerSession on PlayerRemoving; 60s watchdog clears orphans |
-| Player Joining Mid-Shift | 🔶 Partially Implemented | Data loads, player teleported. **Warmer stock not synced to joining player** |
-| Remote Spam Protection | 🔶 Partially Implemented | M-4 debounce on state broadcasts. **PurchaseItem / RequestMixStart have no rate limit** |
+| Player Joining Mid-Shift | ✅ Verified Implemented | task.defer in PlayerAdded fires BatchUpdated + FridgeUpdated + WarmersUpdated snapshot — M-4 ✅ |
+| Remote Spam Protection | ✅ Verified Implemented | 1s throttle on PurchaseItem; 0.5s throttle on RequestMixStart (silent drop) — H-7 ✅ |
 | Server Validation | ✅ Verified Implemented | Score range, type, session match, cookieId, menu lock all validated |
 | Anti-Exploit Checks | ✅ Verified Implemented | 3s min duration, score is-number, station type match, cookieId validation |
 | Session Validation | ✅ Verified Implemented | activeSessions[player] keyed and cross-checked on end |
-| Race Condition Protection | ⚠️ Needs Improvement | doughLock / orderLockedBy present. Fridge pull + dress delivery can still race |
+| Race Condition Protection | 🔶 Post-Alpha | doughLock / orderLockedBy / deliveryLocked all present. Fridge pull + dress delivery edge case is a known low-risk gap — post-Alpha. |
 
 ### DATA SYSTEMS
 | System | Verification Status | Notes |
@@ -79,24 +79,24 @@
 | Cosmetics Saving | ✅ Verified Implemented | equippedCosmetics {hat, apron}, unlockedCosmetics array |
 | Upgrades Saving | ✅ Verified Implemented | unlockedStations array in profile |
 | Level Saving | ✅ Verified Implemented | xp, level, bakeryXP, bakeryLevel all persisted |
-| Daily/Weekly Challenge Saving | 🔶 Partially Implemented | Profile-persisted. **In-memory counters reset on server crash** |
+| Daily/Weekly Challenge Saving | 🔶 Post-Alpha | Profile-persisted. In-memory counters reset on server crash — known limitation, acceptable for Alpha. |
 
 ### UI / UX SYSTEMS
 | System | Verification Status | Notes |
 |---|---|---|
-| Orders UI | ⚠️ Needs Improvement | HUD order cards with patience meter exist. No cookie type icon/thumbnail |
+| Orders UI | ✅ Verified Implemented | Order cards + patience bar + cookie-type colored border/dot (pink/brown/yellow/gray/cinnamon/lime per type) — Nice-to-have ✅ |
 | Tray / Inventory UI | ✅ Verified Implemented | CarryPill shows NPC name when holding box; fires on BoxCreated, clears on delivery |
-| Top Bar | ⚠️ Needs Improvement | Coins + level/XP + timer exist. Bakery XP not shown separately |
+| Top Bar | 🔶 Post-Alpha | Coins + level/XP + timer implemented. Bakery XP not shown separately — post-Alpha polish. |
 | Station/Minigame UI | ✅ Verified Implemented | Per-station UI, result popup (emoji+%), MinigameBase.ShowResult |
-| Tutorial UI | 🔶 Partially Implemented | 5-step panel + skip button. No waypoint arrows to stations |
-| Results Screen UI | ✅ Verified Implemented | Slide-up from below, stat counters tick up (staggered), grade badge fades in with Back ease |
-| Shop UI | ⚠️ Needs Improvement | Two tabs, buy/equip buttons, owned states. No cosmetic preview |
+| Tutorial UI | 🔶 Post-Alpha | 5-step panel + skip button covers full pipeline (incl. fridge→oven step verified). No waypoint arrows — post-Alpha. |
+| Results Screen UI | ✅ Verified Implemented | Slide-up + staggered counters + grade bounce. Per-station strip (Mix/Dough/Oven/Frost/Dress) — Nice-to-have ✅ |
+| Shop UI | 🔶 Post-Alpha | Two tabs, buy/equip, owned states, desc tooltips. No cosmetic avatar preview — post-Alpha. |
 | Daily Challenges UI | ✅ Verified Implemented | DailyChallengeClient, WeeklyChallengeClient, LifetimeChallengeClient all exist |
 | Settings UI | ✅ Verified Implemented | ⚙️ icon top-right opens panel with Music ON/OFF + SFX ON/OFF toggles. Both directly control Sound.Volume. |
 | Mobile UI Scaling | ✅ Verified Implemented | All fixed-px frames >360 converted to scale: CoachBar 0.88, CoachTip 0.88, CarryPill 0.82. All station prompts dist=12. |
-| Controller Support | ❌ Missing | No gamepad input for minigames |
-| Visual Feedback | ✅ Verified Implemented | Floating reward text, worker score, delivery stars, patience color |
-| "What Next?" UI | ❌ Missing | **CRITICAL** — no waypoints, hints, or coach tips after tutorial |
+| Controller Support | ❌ Post-Alpha | No gamepad input for minigames — post-Alpha. ProximityPrompts work by default. |
+| Visual Feedback | ✅ Verified Implemented | Floating reward text, worker score, delivery stars, patience color, satisfaction emoji, order-expired X |
+| "What Next?" UI | ✅ Verified Implemented | Coach tip bar (bottom-center dark pill). 9 triggers: PreOpen, Open, each station completion, EndOfDay, Intermission — C-2 ✅ |
 
 ### FEEDBACK / GAME FEEL
 | System | Verification Status | Notes |
