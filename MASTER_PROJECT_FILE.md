@@ -339,7 +339,7 @@
 | 2026-03-25 | **M-10 Combo Break Popup** | Added _prevComboStreak tracking. When streak resets from ≥2 to 0: showAlert "STREAK BROKEN!" (2s, red). Combo pill emoji removed from text (was showing raw emoji bytes on some clients). |
 | 2026-03-25 | **M-11 Loading Indicator** | coinsLbl.Text="..." and levelLbl.Text="..." set before dataInitEvent fires. Replaced by real values on PlayerDataInit. Two-line change, zero new UI required. |
 | 2026-03-25 | **M-12 Gamepass Scaffold** | New GamepassManager.server.lua: SpeedPass + VIPPass + BoostToken stubs. MarketplaceService.UserOwnsGamePassAsync on PlayerAdded. ProcessReceipt for BoostToken. HasSpeedPass/HasVIPPass/HasBoostActive API for other systems. IDs=0 (replace before launch). |
-| 2026-03-25 | **BUG-17 Drive-Thru Box Consumption Exploit** | Root cause: DriveThruServer rewarded delivery through a custom path and never consumed the carried box via OrderManager. Fix: boxes now store `packSize`, `OrderManager.DeliverBox()` validates `packSize`, and drive-thru hand-in now requires the correct carried box and consumes it atomically. Needs Studio verification. |
+| 2026-03-25 | **BUG-17 Drive-Thru Box Consumption Exploit** | Root cause: DriveThruServer rewarded delivery through a custom path and never consumed the carried box via OrderManager. Fix: boxes now store `packSize`, `OrderManager.DeliverBox()` validates `packSize`, and drive-thru hand-in now requires the correct carried box and consumes it atomically. Patched on disk + Studio — needs in-game verification. |
 | 2026-03-25 | **BUG-4 Box Carry Arms Detach** | Root cause: ManualWeld "Part Terrain Joint" baked into CookieBox template conflicted with WeldConstraint-to-HRP, causing physics solver to tear character Motor6D joints. Fix: `weldAllParts()` in BoxCarryServer now destroys all ManualWelds before welding. |
 | 2026-03-25 | **Nice-to-Have: Cookie Type Order Card Colors** | COOKIE_COLORS lookup table added to HUDController. createCard/addOrder signatures extended with cookieId arg. Card border stroke, status dot, and "NEW" label all use cookieAccent(cookieId) — pink/brown/yellow/gray/cinnamon/lime per type. acceptedEvent passes orderData.cookieId (nil for variety orders). Zero server changes. |
 | 2026-03-25 | **Nice-to-Have: Upgrade Tooltips** | Already implemented — ShopClient descLabel renders item.desc (72px row, y=32). No changes needed. |
@@ -687,15 +687,16 @@ StarterGui/
 | UI/UX | ✅ 98% | Coach tips, carry pill, order colors, satisfaction emoji, expired visual, station breakdown, mobile scaling, cosmetic 3D preview all complete. |
 | Progression/Retention | ✅ 90% | 3-tier level unlocks, daily/weekly/lifetime challenges, mastery system, shift grades all present. Daily login reward post-Alpha. |
 | Performance | ✅ 90% | Memory patterns verified clean. All while-true loops confirmed intentional. OrderManager/SessionStats reset each shift. Only gap: live Rush Hour + 6 player profiler run. |
-| Anti-Exploit | ✅ 95% | Rate limits confirmed on PurchaseItem + RequestMixStart. All score/session validation present. BUG-9/10 confirmed resolved. Session farming gap is post-Alpha. |
+| Anti-Exploit | 🟡 88% | Rate limits + score validation present. BUG-17 patched on disk + Studio but drive-thru delivery exploit path not yet in-game verified. |
 | Game Feel/Polish | ✅ 95% | 15 SFX, combo popups, rush hour banner, results animation, per-station breakdown, VIP NPC glow, patience color bar all complete. Screen effects post-Alpha. |
-| **OVERALL** | **🟢 99%** | **Alpha Ready — all bugs fixed, all nice-to-haves done. Run Section 12 in-game before inviting testers.** |
+| **OVERALL** | **🟡 93%** | **Almost Alpha Ready — BUG-17 patch in Studio but not in-game verified. Run Section 12 delivery tests before inviting testers.** |
 
 ### Remaining Risks for Alpha
-1. **Performance under load** — Patterns verified clean. Rush Hour + 6 players needs live profiler run to confirm no RemoteEvent spike.
-2. **Box carry desync (BUG-12)** — BindableEvent/RemoteEvent timing gap. Known low-risk; CarryPill clears on delivery. Monitor during Alpha playtest.
-3. **No retry on DataStore save failure** — crash during shift = silent data loss. Known limitation; post-Alpha hardening.
-4. **In-game challenge counters reset on crash** — daily/weekly progress non-persistent in-memory. Known limitation; acceptable for Alpha.
+1. **BUG-17 delivery exploit (BLOCKER)** — Drive-thru `DeliverBox` patch is in Studio but not in-game verified. Must confirm box consumed, reward fires once, duplicate rejected before inviting testers.
+2. **Performance under load** — Patterns verified clean. Rush Hour + 6 players needs live profiler run to confirm no RemoteEvent spike.
+3. **Box carry desync (BUG-12)** — BindableEvent/RemoteEvent timing gap. Known low-risk; CarryPill clears on delivery. Monitor during Alpha playtest.
+4. **No retry on DataStore save failure** — crash during shift = silent data loss. Known limitation; post-Alpha hardening.
+5. **In-game challenge counters reset on crash** — daily/weekly progress non-persistent in-memory. Known limitation; acceptable for Alpha.
 
 ### What Changed Since Original 69% Assessment
 - C-1 Movement lock: prevents batch starvation ✅
