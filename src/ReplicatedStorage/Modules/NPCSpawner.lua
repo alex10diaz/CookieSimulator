@@ -130,7 +130,39 @@ function NPCSpawner.CreateNPC(config)
     -- Hide patience timer immediately — will be shown only when NPC is seated.
     local head0 = npc:FindFirstChild("Head")
     local pg0   = head0 and head0:FindFirstChild("PatienceGui")
-    if pg0 then pg0.Enabled = false end
+    if pg0 then
+        pg0.Enabled = false
+        -- M-1: inject patience progress bar into the existing PatienceGui
+        -- Resize billboard to give space for bar strip below the text
+        pg0.Size = UDim2.new(0, 120, 0, 52)
+        pg0.StudsOffset = Vector3.new(0, 3.2, 0)
+        local frame0 = pg0:FindFirstChildOfClass("Frame")
+        if frame0 then
+            -- Shrink text area to top 65%
+            local lbl0 = frame0:FindFirstChild("TimerLabel")
+            if lbl0 then
+                lbl0.Size     = UDim2.new(1, 0, 0.65, 0)
+                lbl0.Position = UDim2.new(0, 0, 0, 0)
+            end
+            -- Bar background strip (bottom 28%)
+            local barBg = Instance.new("Frame", frame0)
+            barBg.Name                    = "BarBg"
+            barBg.Size                    = UDim2.new(0.92, 0, 0.26, 0)
+            barBg.Position                = UDim2.new(0.04, 0, 0.70, 0)
+            barBg.BackgroundColor3        = Color3.fromRGB(30, 30, 50)
+            barBg.BackgroundTransparency  = 0.2
+            barBg.BorderSizePixel         = 0
+            Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
+            -- Bar fill
+            local barFill = Instance.new("Frame", barBg)
+            barFill.Name                   = "BarFill"
+            barFill.Size                   = UDim2.new(1, 0, 1, 0)
+            barFill.BackgroundColor3       = Color3.fromRGB(80, 220, 80)
+            barFill.BackgroundTransparency = 0
+            barFill.BorderSizePixel        = 0
+            Instance.new("UICorner", barFill).CornerRadius = UDim.new(1, 0)
+        end
+    end
 
     -- Disable NPC-NPC collisions so NPCs pass through each other instead of
     -- stacking/launching when they converge in doorways or queue spots.
@@ -251,6 +283,41 @@ function NPCSpawner.SetTimerText(npcModel, text)
     if not frame then return end
     local lbl   = frame:FindFirstChild("TimerLabel")
     if lbl then lbl.Text = text end
+end
+
+-- ─── SetPatienceBar ───────────────────────────────────────────────────────────
+-- M-1: ratio 0.0–1.0; colors green→yellow→red; hides bar when ratio<=0
+function NPCSpawner.SetPatienceBar(npcModel, ratio)
+    local head = npcModel:FindFirstChild("Head")
+    if not head then return end
+    local pg = head:FindFirstChild("PatienceGui")
+    if not pg then return end
+    local frame = pg:FindFirstChildOfClass("Frame")
+    if not frame then return end
+    local barBg = frame:FindFirstChild("BarBg")
+    if not barBg then return end
+    local barFill = barBg:FindFirstChild("BarFill")
+    if not barFill then return end
+
+    ratio = math.clamp(ratio, 0, 1)
+    barFill.Size = UDim2.new(ratio, 0, 1, 0)
+
+    -- Color: green (>60%) → yellow (30–60%) → red (<30%)
+    local r, g, b
+    if ratio > 0.6 then
+        r, g, b = 80, 220, 80
+    elseif ratio > 0.3 then
+        local t = (ratio - 0.3) / 0.3  -- 0→1 from yellow to green
+        r = math.floor(80  + (1 - t) * (230 - 80))
+        g = math.floor(220 - (1 - t) * (220 - 200))
+        b = 50
+    else
+        local t = ratio / 0.3  -- 0→1 from red to orange
+        r = 230
+        g = math.floor(t * 130)
+        b = 50
+    end
+    barFill.BackgroundColor3 = Color3.fromRGB(r, g, b)
 end
 
 -- ─── SetPromptEnabled ─────────────────────────────────────────────────────────

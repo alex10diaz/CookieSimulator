@@ -749,6 +749,11 @@ local function startPatienceTicker(npcId)
                 -- Patience only ticks after order is taken (seated/at_counter), not while waiting in queue
                 data.patience -= 1
                 NPCSpawner.SetTimerText(data.model, formatTime(data.patience))
+                -- M-1: update in-world patience bar every tick
+                local maxP = data.maxPatience or data.patience
+                if maxP > 0 then
+                    NPCSpawner.SetPatienceBar(data.model, data.patience / maxP)
+                end
                 -- S-6: broadcast patience ratio to all clients every 5 ticks
                 if data.patience % 5 == 0 and data.order then
                     npcPatienceRemote:FireAllClients(
