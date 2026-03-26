@@ -312,6 +312,8 @@
 | 2026-03-25 | **C-2 "What Next?" Guidance System** | PlayerTipUpdate remote added. Coach bar (bottom-center dark pill) in HUDController. 9 tip triggers: PreOpen, Open, mix/dough/oven/frost/dress completions, EndOfDay, Intermission. 8s auto-dismiss with fade tween. |
 | 2026-03-25 | **H-1 NPC Facing Direction Fix** | Root cause: task.defer fired before Humanoid AutoRotate physics settled. Fix: task.spawn+task.wait(0.2), AutoRotate=false during CFrame snap, re-enable after 0.1s. Applied to facePosition() in PersistentNPCSpawner. |
 | 2026-03-25 | **H-2 Dress Station Quality Scoring** | Root cause: DRESS_SCORE=85 hardcoded in both CreateBox and CreateVarietyBox calls on the no-topping path. Fix: removed constant, added avgSnapshot() helper, no-topping path now uses entry.snapshot (accumulated station quality). Topping-minigame path already used real score — untouched. |
+| 2026-03-25 | **H-3 Delivery Race Lock** | Already implemented — deliveryLocked flag in PersistentNPCSpawner, atomic check+set, 7 sites. Verified in Studio. BUG-5 closed. |
+| 2026-03-25 | **H-4 Dress Order Lock Timeout** | PlayerRemoving + CharacterRemoving cleanup already present. Added LOCK_TIMEOUT=90 constant + task.delay(90) auto-release on both variety and single-order lock paths in DressStationServer. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
