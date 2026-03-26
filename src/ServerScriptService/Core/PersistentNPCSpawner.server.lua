@@ -177,17 +177,23 @@ end
 local POS_FOLDER = Workspace:WaitForChild("POS", 10)
 
 -- Face NPC toward a world position (flattened to XZ plane).
--- Deferred one frame so pathfinding physics fully settles first.
+-- H-1 fix: wait 0.2s so Humanoid pathfinding fully settles, then disable
+-- AutoRotate while snapping CFrame so physics can't override it.
 local function facePosition(npcModel, targetPos)
-    task.defer(function()
+    task.spawn(function()
+        task.wait(0.2)
         local hrp = npcModel and npcModel:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
+        local hum = npcModel and npcModel:FindFirstChildOfClass("Humanoid")
+        if not hrp or not hum then return end
         local npcPos = hrp.Position
         local dir = Vector3.new(targetPos.X - npcPos.X, 0, targetPos.Z - npcPos.Z)
         if dir.Magnitude > 0.1 then
+            hum.AutoRotate = false
             hrp.CFrame = CFrame.new(npcPos, npcPos + dir)
             hrp.AssemblyLinearVelocity  = Vector3.zero
             hrp.AssemblyAngularVelocity = Vector3.zero
+            task.wait(0.1)
+            hum.AutoRotate = true
         end
     end)
 end
