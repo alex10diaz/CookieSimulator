@@ -588,7 +588,11 @@ advanceQueue = function()
                 local newPos = getQueuePos(pos)
                 if newPos then
                     if data.cancelMove then pcall(data.cancelMove) end
-                    data.cancelMove = NPCSpawner.MoveTo(data.model, newPos, function() end)
+                    local advModel = data.model
+                    data.cancelMove = NPCSpawner.MoveTo(data.model, newPos, function()
+                        -- BUG-2: re-face counter after advancing to new queue slot
+                        facePosition(advModel, getCounterPos())
+                    end)
                 end
             end
         end
