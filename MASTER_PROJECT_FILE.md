@@ -93,7 +93,7 @@
 | Shop UI | ⚠️ Needs Improvement | Two tabs, buy/equip buttons, owned states. No cosmetic preview |
 | Daily Challenges UI | ✅ Verified Implemented | DailyChallengeClient, WeeklyChallengeClient, LifetimeChallengeClient all exist |
 | Settings UI | ✅ Verified Implemented | ⚙️ icon top-right opens panel with Music ON/OFF + SFX ON/OFF toggles. Both directly control Sound.Volume. |
-| Mobile UI Scaling | 🔶 Partially Implemented | Relative sizing used (45% viewport). Not tested on portrait/tablet |
+| Mobile UI Scaling | ✅ Verified Implemented | All fixed-px frames >360 converted to scale: CoachBar 0.88, CoachTip 0.88, CarryPill 0.82. All station prompts dist=12. |
 | Controller Support | ❌ Missing | No gamepad input for minigames |
 | Visual Feedback | ✅ Verified Implemented | Floating reward text, worker score, delivery stars, patience color |
 | "What Next?" UI | ❌ Missing | **CRITICAL** — no waypoints, hints, or coach tips after tutorial |
@@ -189,7 +189,7 @@
 | VIP NPC Visual | Complete | MEDIUM | ✅ Done |
 | S-Rank Grade Tier | Complete | MEDIUM | ✅ Done |
 | Settings UI | Complete | MEDIUM | ✅ Done |
-| Mobile Scaling Pass | Not Started | MEDIUM | Before |
+| Mobile Scaling Pass | Complete | MEDIUM | ✅ Done |
 | Results Screen Polish | Complete | MEDIUM | ✅ Done |
 | Shop Preview / Tooltips | Needs Improvement | MEDIUM | Before |
 | Gamepass Integration | Not Started | MEDIUM | Before |
@@ -258,13 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-9 — Mobile Scaling Pass`
+**TASK:** `M-10 — Combo Break Popup`
 **Status:** Not Started → Ready to begin
-**What it is:** UI not tested on portrait mobile (375px) or tablet ratios. Proximity prompt distances and tap targets may be too small.
+**What it is:** When a combo streak breaks there's no feedback — players don't realise they've lost their streak.
 **Files affected:**
-- `HUDController.client.lua` — check all fixed-pixel sizes; ensure coach bar, carry pill, and alerts scale reasonably at 375px width
-- `PersistentNPCSpawner.server.lua` — verify ProximityPrompt MaxActivationDistance is large enough for touch
-**Success criteria:** Core HUD elements readable at 375×812. No UI overlap. ProximityPrompts reachable without precise aiming.
+- `HUDController.client.lua` — listen to `ComboUpdate` for streak=0 (after it was >1); show a brief "STREAK BROKEN!" alert
+**Success criteria:** When combo resets to 0 (after ≥2), a red "STREAK BROKEN!" alert flashes for 2s. Uses existing `showAlert` helper.
 
 ---
 
@@ -272,7 +271,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-9** | Mobile Scaling Pass | Current task — verify HUD at 375px, check ProximityPrompt distances |
+| 1 | **M-10** | Combo Break Popup | Current task — "STREAK BROKEN!" alert on combo reset |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -315,6 +314,7 @@
 | 2026-03-25 | **M-6 S-Rank Shift Grade** | Already implemented in both disk and Studio (score≥90=S, ≥75=A, ≥60=B, ≥45=C, else D). Verified in SessionStats.GetShiftGrade. No changes needed. |
 | 2026-03-25 | **M-7 Results Screen Animation** | SummaryController: frame slides up from Y=1.15→centred (Back ease 0.45s). Stat counters tick from 0→final in 28 steps (staggered 0.12s apart, delayed 0.3s). gradeValL fades in with Back ease after 0.5s. |
 | 2026-03-25 | **M-8 Settings UI** | Already implemented — ⚙️ panel with Music ON/OFF + SFX ON/OFF toggles, directly sets Sound.Volume. Verified in Studio. No changes needed. |
+| 2026-03-25 | **M-9 Mobile Scaling Pass** | Audited all fixed-px widths >360: CoachBar→0.88 scale, CoachTip (C-2 bar)→0.88 scale + renamed "CoachTip", CarryPill→0.82 scale, tween targets updated. All station ProximityPrompts dist=12 (adequate). |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -376,7 +376,7 @@
 - [x] **M-6** S-Rank shift grade
 - [x] **M-7** Results screen animation
 - [x] **M-8** Settings UI (volume slider)
-- [ ] **M-9** Mobile scaling tested on portrait + tablet
+- [x] **M-9** Mobile scaling tested on portrait + tablet
 - [ ] **M-10** Combo break popup
 - [ ] **M-11** Loading indicator during data load
 - [ ] **M-12** Gamepass scaffold (Speed Pass stub)

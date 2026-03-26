@@ -857,14 +857,21 @@ npcOrderFailedEvent.OnClientEvent:Connect(function(npcName)
     local txt = (npcName and npcName ~= "") and ("❌ "..npcName.." left!") or "❌ Order Failed!"
     showAlert(txt, Color3.fromRGB(235, 180, 180), C.RED, 4)
 end)
+local _prevComboStreak = 0
 comboUpdateEvent.OnClientEvent:Connect(function(streak)
-    if streak and streak >= 2 then
-        comboLbl.Text = "🔥 x" .. streak .. " COMBO"
+    streak = streak or 0
+    if streak >= 2 then
+        comboLbl.Text = "x" .. streak .. " COMBO"
         TweenService:Create(comboPill, TI(0.2), { BackgroundTransparency = 0.15 }):Play()
     else
+        -- M-10: show STREAK BROKEN alert when combo resets from ≥2
+        if _prevComboStreak >= 2 then
+            showAlert("STREAK BROKEN!", Color3.fromRGB(180, 30, 60), Color3.fromRGB(255, 100, 130), 2)
+        end
         comboLbl.Text = ""
         TweenService:Create(comboPill, TI(0.3), { BackgroundTransparency = 1 }):Play()
     end
+    _prevComboStreak = streak
 end)
 
 -- ── Carrying Visual (visible to all players) ──────────────────────────────────
