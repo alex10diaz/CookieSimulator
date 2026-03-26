@@ -452,10 +452,15 @@
 | BUG-31 | 🟡 Medium | MinigameServer / GameStateManager | M-4 snapshot fires BatchUpdated/FridgeUpdated/WarmersUpdated to new joiners but does NOT resend the current `PlayerTipUpdate` tip. Players joining mid-shift receive no coach guidance until the next station event fires. | Open — fix: track lastTip per-phase; resend in M-4 joiner snapshot block |
 | BUG-32 | 🟡 Medium | AIBakerSystem | `updateSoloMode()` instantly destroys all hired AI workers the moment a second player joins, with no warning and no coin refund. Player who spent 50 coins per worker loses all investment silently. | Open — fix: fire a notification to the hiring player + refund HIRE_COST per dismissed worker |
 | BUG-33 | 🟡 Medium | PlayerDataManager / Economy | New players start with `coins = 0`. Cheapest cosmetic is 400 coins; cheapest upgrade is 2500. Average new player earns ~300-600 coins in a first 8-minute shift. Shop is completely inaccessible for the entire first session, making it feel pointless. | Open — fix: set `coins = 500` in newProfile() DEFAULT_PROFILE |
-| RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Limitation — post-Alpha. DataStore retry loop is a post-Alpha hardening task. |
+| BUG-34 | 🔴 Critical | PlayerDataManager | `saveProfile` writes `_serverLock = SESSION_ID` in UpdateAsync but **never clears or expires the lock**. If the server shuts down abnormally, the next server starts with a different `SESSION_ID`. It reads the lock, sees a mismatch, calls `return nil` (skips save), and the profile is never saved again on that server. This is not just a crash edge case — any server restart produces a permanently stuck lock that causes silent data loss for every player on the new server until they rejoin yet again. Root: lock is write-only with no expiry. Fix: on `BindToClose` write `_serverLock = nil`; or add `lockExpiry = os.time() + 120` and ignore locks older than 120s. | Open — Codex audit 2026-03-26 |
+| BUG-35 | 🔴 Critical | MenuManager / MinigameServer | `MenuManager.DEFAULT_MENU` contains all 6 cookies including `cookies_and_cream` and `lemon_blackraspberry`. `DEFAULT_PROFILE.unlockedRecipes` only grants `{chocolate_chip, snickerdoodle, pink_sugar, birthday_cake}` — the 2 premium cookies are excluded. However `RequestMixStart.OnServerEvent` validates `cookieId` against `GetActiveMenu()` only, not against the player's `unlockedRecipes`. Any new player can immediately mix C&C and Lemon cookies that are supposed to be earned via bakery levels 5 and 10. Confirmed by reading MenuManager.lua: DEFAULT_MENU has 6, unlockedRecipes has 4. Fix: add `profile.unlockedRecipes` ownership check in RequestMixStart handler before TryStartBatch. | Open — Codex audit 2026-03-26 |
+| BUG-36 | 🟠 High | AIBakerSystem / StaffManager | Both `StaffManager.server.lua` and `AIBakerSystem.server.lua` are active production scripts in `SSS/Core`. StaffManager handles AI workers during PreOpen/Open with a dress-worker + frost-worker pattern. AIBakerSystem provides hire-able workers at 4 stations with proximity prompts. They both access `OrderManager`, both spawn NPC-like models, and both have solo-mode logic. Running both simultaneously risks: double-processing of batches, conflicting worker counts, unexpected interactions when one worker's batch is claimed by the other system. Decision required: pick one as canonical, disable or gate the other. | Open — Codex audit 2026-03-26 |
+| BUG-37 | 🟡 Medium | TutorialController | `completeTutorial()` is called on both the natural 5-step completion path AND the skip path (when player presses the skip button). The completion function grants a reward (coins/XP) and sets `tutorialCompleted = true`. Skipping should NOT grant the reward — it should only set the flag. A player who skips tutorial gets the same reward as one who completes it, making the reward meaningless and making skipping strictly dominant. Fix: pass a `natural` boolean to `completeTutorial()`; only grant reward when `natural == true`. | Open — Codex audit 2026-03-26 |
+| RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Limitation — post-Alpha. DataStore retry loop is a post-Alpha hardening task. BUG-34 is the active blocker form of this risk. |
 | RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | ✅ Addressed 2026-03-25 — H-5: tip_boost_1 gated at bakery level 3; C&C auto-granted at level 5; lemon_blackraspberry auto-granted at level 10. Sufficient incentive for Alpha. |
 | RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | ✅ Addressed 2026-03-25 — C-2: Coach tip bar fires on every station completion and phase change (9 triggers). Waypoint arrows are post-Alpha (L-15). |
 | RISK-4 | 🟡 Medium | Retention | No daily login reward = no daily pull-back mechanic | Post-Alpha — L-1. Daily challenges provide adequate short-term retention for Alpha. |
+| RISK-5 | 🟠 High | Performance | Rush Hour + 4–6 player full live load has NEVER been profiler-verified in a real game session. Solo baseline (172 Heartbeat/3s, 0 errors) passes but is not representative. With 6 players simultaneously baking, mixing, and delivering during Rush Hour, server load is 3–6× higher. A crash or severe lag during Alpha would be highly visible. Must do a controlled 4–6 player test session before opening to testers. | Active Risk — elevate from post-Alpha to pre-Alpha verification required. Run the Section 12 Performance Testing checklist with 4+ players before invite. |
 
 ---
 
@@ -474,12 +479,15 @@
 - [x] **H-8** Carry indicator UI (box icon + destination)
 - [x] BUG-4 Box carry arms not detaching
 - [x] BUG-13 NPC collision ceiling lift fixed
+- [ ] **BUG-34** PlayerDataManager `_serverLock` cleared on BindToClose / expiry logic added — no more silent save-skip on new server
+- [ ] **BUG-35** RequestMixStart validates player's `unlockedRecipes`, not just menu — locked recipe bypass closed
 - [ ] **BUG-22** Oven batch orphan on disconnect — add oven cleanup to cleanupPlayerSession
 - [ ] **BUG-23** comboStreak resets each shift — fix profile streak persistence
 - [ ] **BUG-24** "ShowAlert" added to RemoteManager REMOTES table
 - [ ] **BUG-25** GamepassManager VIP/Speed actually wired to behavior (even with ID=0)
 - [ ] **BUG-26** Rate-limit tables use UserId not player object + PlayerRemoving cleanup
 - [ ] **BUG-27** Player receives feedback when batch cap is reached (no silent fail)
+- [ ] **BUG-36** Duplicate AI worker systems resolved — one system canonical, other disabled/removed
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
@@ -500,6 +508,8 @@
 - [ ] **BUG-31** Mid-shift joiner receives current coach tip
 - [ ] **BUG-32** AI worker dismiss — notification + refund fired to owner
 - [ ] **BUG-33** New players start with 500 starter coins
+- [ ] **BUG-37** Tutorial skip path does NOT grant completion reward — only natural completion does
+- [ ] **RISK-5** 4–6 player Rush Hour live load test completed with no server crash or severe lag
 
 ### NICE TO HAVE (Polish for Alpha)
 - [x] Per-station breakdown in shift results
