@@ -133,20 +133,20 @@
 | System | Verification Status | Notes |
 |---|---|---|
 | Remote Event Frequency | ✅ Verified Implemented | M-4 debounce on broadcasts |
-| Memory Leaks | 🔍 Needs Verification | NPC models destroyed on leave, MinigameBase tracker prevents stacking |
-| NPC Cleanup | ✅ Verified Implemented | AncestryChanged + PlayerRemoving handlers |
-| Connection Cleanup | ✅ Verified Implemented | MinigameBase.NewTracker() used across all minigames |
-| Too Many UI Elements | 🔍 Needs Verification | Order cards dynamically created; need to verify cap |
-| Too Many Loops | 🔍 Needs Verification | No obvious RunService loops seen; needs profiler check |
-| Server Heavy Operations | 🔍 Needs Verification | Rush Hour + 6 players is peak load scenario |
-| Lag Sources | 🔍 Needs Verification | OrderManager batch table growth not capped; needs shift-reset verification |
+| Memory Leaks | ✅ Verified | NPCSpawner.Remove + 15s safety Destroy on leave; removeCard() destroys UI cards; sounds created once at init in SoundService — no per-play allocation |
+| NPC Cleanup | ✅ Verified | npcs[npcId]=nil + MoveTo exit walk + NPCSpawner.Remove + task.delay(15) safety Destroy |
+| Connection Cleanup | ✅ Verified | Minigame clients: all have manual Disconnect(); DriveThruServer: disconnect present; ShopClient preview: clearPreview() disconnects Heartbeat |
+| Too Many UI Elements | ✅ Verified | Order cards capped by NPC max (6). removeCard() destroys frame on delivery/expire. No accumulation. |
+| Too Many Loops | ✅ Verified | 4 while-true loops confirmed intentional: GameStateManager shift cycle, PersistentNPCSpawner spawn + patience ticker, LeaderboardManager 30s broadcast. All gated on GameState. |
+| Server Heavy Operations | 🔍 Needs Live Test | Patterns look clean. Rush Hour + 6 players peak load needs in-game profiler run to confirm. |
+| Lag Sources | ✅ Verified | OrderManager.Reset() clears all 7 tables (batches/fridges/ovenBatches/warmers/postOvenScores/npcOrders/boxes) at each shift start. SessionStats.Reset() also called. |
 
 ### POLISH
 | System | Verification Status | Notes |
 |---|---|---|
 | End-of-Shift Results Screen | ✅ Verified Implemented | Slide-up + staggered counters + grade bounce + per-station breakdown strip (Mix/Dough/Oven/Frost/Dress, color-coded). |
 | Tutorial | ✅ Verified Implemented | 5-step linear flow covers full pipeline incl. fridge→oven (H-6 verified). No waypoint arrows — post-Alpha. |
-| Main Menu | 🔍 Needs Verification | MainMenuController.client.lua exists; test in-game to confirm flow. |
+| Main Menu | ✅ Verified | MainMenuGui with MainMenuController (8209 chars). PlayButton.Activated hides menu. GameStateChanged listener auto-hides on non-Lobby state. ResetOnSpawn=false. Touch-compatible (Activated not MouseButton1Click). |
 | Settings Menu | ✅ Verified Implemented | ⚙️ panel with Music + SFX toggles — already live in HUDController |
 | Credits | ❌ Post-Alpha | Not found — post-Alpha. |
 | Intro / Cutscene | ❌ Post-Alpha | Not found — post-Alpha. |
@@ -198,7 +198,7 @@
 | Customer Satisfaction Emoji | Complete | — | ✅ Done |
 | Order Expired Visual | Complete | — | ✅ Done |
 | Per-Station Results Breakdown | Complete | — | ✅ Done |
-| Shop Cosmetic Preview | Not Started | LOW | After Alpha |
+| Shop Cosmetic Preview | Complete | — | ✅ Done |
 | Bakery Rating (persistent) | Not Started | LOW | After Alpha |
 | Daily Login Rewards | Not Started | LOW | After Alpha |
 | Event System | Not Started | LOW | After Alpha |
@@ -338,6 +338,10 @@
 | 2026-03-25 | **Nice-to-Have: Order Expired Visual** | Server: npcOrderFailedRemote now sends NPC head Position as 3rd arg. Client: npcOrderFailedEvent handler spawns 80px red circle billboard with "X" at NPC position, floats up 3 studs, fades over 1.6s. HUD alert text cleaned up (removed raw emoji bytes). |
 | 2026-03-25 | **Nice-to-Have: Per-Station Breakdown** | SessionStats.GetPlayerBreakdown(userId) added. GameStateManager switches from FireAllClients to per-player FireClient with stationBreakdown attached. SummaryController: new 48px station strip (Mix/Dough/Oven/Frost/Dress) between grade row and divider; color-coded green/yellow/orange/red by score; frame height 570→630px; all lower elements shifted 56px. |
 | 2026-03-25 | **BUG-13 NPC Ceiling Lift** | Root cause: NPC HumanoidRootParts (CanCollide=true) collided with each other in narrow doorways, physics solver launched NPCs upward. Fix: PhysicsService "NPCs" collision group registered at startup (self-non-collidable); every spawned NPC HRP assigned to the group via SetPartCollisionGroup. |
+| 2026-03-25 | **BUG-2 NPC facing wall in queue** | Root cause: advanceQueue MoveTo had empty callback — NPC arrived at new queue slot facing wrong direction. Fix: added facePosition(advModel, getCounterPos()) inside MoveTo callback. |
+| 2026-03-25 | **BUG-11 doughLock orphan safety** | Added task.delay(SESSION_TIMEOUT+5) watchdog after doughLock is set. If no activeSessions entry claims the batchId after timeout, lock is force-cleared with a warning. Closes the race where player disconnects between doughLock set and startSession. |
+| 2026-03-25 | **Cosmetic Preview in Shop** | SS/Cosmetics cloned to RS/Cosmetics (client-accessible). CosmeticService updated to use RS. ShopClient: PreviewPane (162px) added at bottom of Background; ViewportFrame + WorldModel + orbit Camera; click any cosmetic row → 3D preview with orbiting camera; Cosmetics tab resizes ItemList to 186px to make room; clearPreview() disconnects Heartbeat orbit on tab switch. |
+| 2026-03-25 | **Performance + Memory Verification** | All while-true loops confirmed intentional (shift cycle, NPC spawn, patience ticker, leaderboard). Order cards have removeCard()+Destroy(). NPC models destroyed via NPCSpawner.Remove + 15s safety. Sounds created once at init. OrderManager.Reset() clears all 7 tables. Main Menu verified (Activated, GameStateChanged, ResetOnSpawn=false). |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -406,7 +410,7 @@
 
 ### NICE TO HAVE (Polish for Alpha)
 - [x] Per-station breakdown in shift results
-- [ ] Cosmetic preview in shop
+- [x] Cosmetic preview in shop
 - [x] Upgrade tooltips in shop
 - [x] Cookie type icon/thumbnail on order cards
 - [x] Customer satisfaction emoji on delivery
