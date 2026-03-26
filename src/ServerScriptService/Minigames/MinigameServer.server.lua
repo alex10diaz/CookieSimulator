@@ -574,6 +574,20 @@ Players.PlayerAdded:Connect(function(player)
     player.CharacterRemoving:Connect(function()
         cleanupPlayerSession(player, "character reset")
     end)
+
+    -- M-4: sync current warmer/fridge/batch state for players joining mid-shift
+    task.defer(function()
+        local state = workspace:GetAttribute("GameState") or ""
+        if state == "Open" or state == "EndOfDay" then
+            local batchState  = OrderManager.GetBatchState()
+            local fridgeState = OrderManager.GetFridgeState()
+            local warmerState = OrderManager.GetWarmerState()
+            local stockByType = OrderManager.GetWarmerStockByCookieId()
+            BatchUpdated:FireClient(player, batchState)
+            FridgeUpdated:FireClient(player, fridgeState)
+            WarmersUpdated:FireClient(player, warmerState, stockByType)
+        end
+    end)
 end)
 
 

@@ -183,7 +183,7 @@
 | Rush Hour Announcement | Complete | MEDIUM | ✅ Done |
 | Dress Station Quality Fix | Not Started | HIGH | Before |
 | Tutorial Fridge→Oven Step | Not Started | HIGH | Before |
-| Warmer Sync for New Joiners | Not Started | MEDIUM | Before |
+| Warmer Sync for New Joiners | Complete | MEDIUM | ✅ Done |
 | Dress Order Lock Timeout | Not Started | HIGH | Before |
 | Remote Rate Limiting | Not Started | HIGH | Before |
 | VIP NPC Visual | Not Started | MEDIUM | Before |
@@ -271,7 +271,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-3** | Rush Hour Announcement | Current task — "🔥 RUSH HOUR!" banner on Rush Hour trigger |
+| 1 | **M-4** | Warmer Sync for Joiners | Current task — FireClient snapshot on PlayerAdded during Open phase |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -308,6 +308,7 @@
 | 2026-03-25 | **H-8 Carry Indicator UI** | CarryPill (orange, bottom-center) in HUDController. boxCarriedRemote fires from PersistentNPCSpawner on BoxCreated (with NPC name) and after delivery (nil to clear). All 6 checks verified in Studio. |
 | 2026-03-25 | **M-1 In-World NPC Patience Indicator** | BarFill injected into existing PatienceGui on NPC spawn (NPCSpawner.CreateNPC). PatienceGui resized 120×52, TimerLabel shrunk to 65%, BarBg+BarFill strip added. SetPatienceBar(model, ratio) fn added. Called every patience tick in PersistentNPCSpawner alongside SetTimerText. Color: green>60%, yellow 30–60%, red<30%. |
 | 2026-03-25 | **M-2 Order Ready Alert** | Replaced reserved warmersStockEvent stub in HUDController. _prevWarmerCount tracks warmer total. Count increase → showAlert "Cookie ready to box!" (2.5s, gold) + orderAlertSound chime. Zero-server-change — reuses existing WarmersUpdated broadcast and orderAlertSound. |
+| 2026-03-25 | **M-3 Rush Hour Announcement** | Server already fired RushHour remote with {active=true}. Added client listener in HUDController: showAlert "RUSH HOUR!" (4s, red/gold) using existing showAlert helper. No server changes needed. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -363,7 +364,7 @@
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
 - [x] **M-2** Order ready alert (sound + HUD pill)
-- [ ] **M-3** Rush Hour announcement banner
+- [x] **M-3** Rush Hour announcement banner
 - [ ] **M-4** Warmer stock sync for joining players
 - [ ] **M-5** VIP NPC visual distinction
 - [ ] **M-6** S-Rank shift grade
