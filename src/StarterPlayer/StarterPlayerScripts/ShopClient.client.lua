@@ -5,6 +5,7 @@
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService        = game:GetService("RunService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 
@@ -34,7 +35,8 @@ local equippedCosm    = { hat = nil, apron = nil }
 local playerCoins     = 0
 local activeTab       = "Upgrades"
 
-local setCosmeticRemote = RemoteManager.Get("SetCosmetic")
+local setCosmeticRemote   = RemoteManager.Get("SetCosmetic")
+local rsCosmetics         = ReplicatedStorage:WaitForChild("Cosmetics", 10)
 
 -- ── CATALOG (mirrors UnlockManager — static) ────────────────────
 local CATALOG = {
@@ -77,6 +79,116 @@ end
 
 local function updateCoinsLabel()
     coinsLabel.Text = tostring(playerCoins) .. " coins"
+end
+
+-- ── COSMETIC PREVIEW PANE ───────────────────────────────────────
+-- Appears at the bottom of the shop when Cosmetics tab is active.
+-- Shows a 3D viewport of the selected cosmetic with an orbiting camera.
+
+local previewPane = Instance.new("Frame")
+previewPane.Name             = "PreviewPane"
+previewPane.Size             = UDim2.new(1, -16, 0, 162)
+previewPane.Position         = UDim2.new(0, 8, 1, -170)
+previewPane.BackgroundColor3 = Color3.fromRGB(10, 22, 50)
+previewPane.BorderSizePixel  = 0
+previewPane.Visible          = false
+previewPane.Parent           = bg
+Instance.new("UICorner", previewPane).CornerRadius = UDim.new(0, 8)
+local pStroke = Instance.new("UIStroke", previewPane)
+pStroke.Color     = Color3.fromRGB(40, 70, 120)
+pStroke.Thickness = 1
+
+local vpFrame = Instance.new("ViewportFrame")
+vpFrame.Size             = UDim2.new(0, 130, 1, -8)
+vpFrame.Position         = UDim2.new(0, 4, 0, 4)
+vpFrame.BackgroundColor3 = Color3.fromRGB(8, 16, 40)
+vpFrame.BorderSizePixel  = 0
+vpFrame.Ambient          = Color3.fromRGB(180, 180, 210)
+vpFrame.LightDirection   = Vector3.new(-1, -2, -1)
+vpFrame.Parent           = previewPane
+Instance.new("UICorner", vpFrame).CornerRadius = UDim.new(0, 6)
+
+local vpWorld = Instance.new("WorldModel")
+vpWorld.Parent = vpFrame
+
+local vpCamera = Instance.new("Camera")
+vpFrame.CurrentCamera = vpCamera
+vpCamera.Parent = vpFrame
+
+local previewName = Instance.new("TextLabel")
+previewName.Size                   = UDim2.new(1, -142, 0, 24)
+previewName.Position               = UDim2.new(0, 138, 0, 8)
+previewName.BackgroundTransparency = 1
+previewName.Text                   = "Select a cosmetic"
+previewName.TextColor3             = Color3.fromRGB(240, 240, 255)
+previewName.Font                   = Enum.Font.GothamBold
+previewName.TextSize               = 14
+previewName.TextXAlignment         = Enum.TextXAlignment.Left
+previewName.Parent                 = previewPane
+
+local previewDesc = Instance.new("TextLabel")
+previewDesc.Size                   = UDim2.new(1, -142, 0, 60)
+previewDesc.Position               = UDim2.new(0, 138, 0, 34)
+previewDesc.BackgroundTransparency = 1
+previewDesc.Text                   = ""
+previewDesc.TextColor3             = Color3.fromRGB(110, 140, 190)
+previewDesc.Font                   = Enum.Font.Gotham
+previewDesc.TextSize               = 11
+previewDesc.TextXAlignment         = Enum.TextXAlignment.Left
+previewDesc.TextWrapped            = true
+previewDesc.Parent                 = previewPane
+
+local hintLabel = Instance.new("TextLabel")
+hintLabel.Size                   = UDim2.new(1, -142, 0, 16)
+hintLabel.Position               = UDim2.new(0, 138, 1, -22)
+hintLabel.BackgroundTransparency = 1
+hintLabel.Text                   = "Click a row to preview"
+hintLabel.TextColor3             = Color3.fromRGB(50, 80, 130)
+hintLabel.Font                   = Enum.Font.Gotham
+hintLabel.TextSize               = 10
+hintLabel.TextXAlignment         = Enum.TextXAlignment.Left
+hintLabel.Parent                 = previewPane
+
+-- Preview state
+local previewOrbitConn  = nil
+local previewModelClone = nil
+
+local function clearPreview()
+    if previewOrbitConn  then previewOrbitConn:Disconnect();  previewOrbitConn  = nil end
+    if previewModelClone then previewModelClone:Destroy();     previewModelClone = nil end
+end
+
+local function showPreview(item)
+    clearPreview()
+    if not rsCosmetics then return end
+    local model = rsCosmetics:FindFirstChild(item.id)
+    if not model then return end
+
+    local clone = model:Clone()
+    clone.Parent    = vpWorld
+    previewModelClone = clone
+
+    -- Bounding box: center + size for camera distance
+    local bboxCF, bsize = clone:GetBoundingBox()
+    local center  = bboxCF.Position
+    local maxDim  = math.max(bsize.X, bsize.Y, math.max(bsize.Z, 0.5))
+    local radius  = math.max(maxDim * 1.8, 2.5)
+    local camHeight = bsize.Y * 0.4
+
+    -- Orbit camera around the static model
+    local angle = 0
+    previewOrbitConn = RunService.Heartbeat:Connect(function(dt)
+        angle += dt * 55  -- degrees per second
+        local rad = math.rad(angle)
+        vpCamera.CFrame = CFrame.new(
+            center + Vector3.new(math.sin(rad) * radius, camHeight, math.cos(rad) * radius),
+            center
+        )
+    end)
+
+    previewName.Text = item.name
+    previewDesc.Text = item.desc
+    hintLabel.Text   = ""
 end
 
 -- ── RENDER ITEMS ────────────────────────────────────────────────
@@ -247,6 +359,16 @@ local function renderItems()
                     purchaseRemote:FireServer(item.id)
                 end)
             end
+        end
+
+        -- Click-to-preview for cosmetic items
+        if item.tab == "Cosmetics" then
+            row.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1
+                    or input.UserInputType == Enum.UserInputType.Touch then
+                    showPreview(item)
+                end
+            end)
         end
 
         yOffset += ROW_H
