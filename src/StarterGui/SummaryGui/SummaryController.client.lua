@@ -32,7 +32,7 @@ frame.Name             = "SummaryFrame"
 local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 800
 local _vpH = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.Y or 900
 local _fw  = math.clamp(math.floor(_vpW * 0.45), 400, 560)
-local _fh  = math.min(570, math.floor(_vpH * 0.90))
+local _fh  = math.min(630, math.floor(_vpH * 0.90))
 frame.Size             = UDim2.new(0, _fw, 0, _fh)
 frame.Position         = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -math.floor(_fh/2))
 frame.BackgroundColor3 = C.BG
@@ -128,15 +128,58 @@ gradeValL.BackgroundTransparency = 1; gradeValL.TextColor3 = C.GOLD
 gradeValL.Font = Enum.Font.GothamBold; gradeValL.TextScaled = true
 gradeValL.TextXAlignment = Enum.TextXAlignment.Right; gradeValL.Text = "—"
 
+-- ── Station Breakdown Strip ────────────────────────────────────────────────────
+local stationStrip = Instance.new("Frame", frame)
+stationStrip.Name = "StationStrip"
+stationStrip.Size = UDim2.new(1,-20,0,48); stationStrip.Position = UDim2.new(0,10,0,216)
+stationStrip.BackgroundTransparency = 1; stationStrip.BorderSizePixel = 0
+
+local stripLayout = Instance.new("UIListLayout", stationStrip)
+stripLayout.FillDirection = Enum.FillDirection.Horizontal
+stripLayout.SortOrder = Enum.SortOrder.LayoutOrder
+stripLayout.Padding = UDim.new(0, 5)
+
+local STATION_DEFS = {
+    { key="mix",   label="Mix",   icon="🥣", fmt="%d%%" },
+    { key="dough", label="Dough", icon="🍪", fmt="%dx"  },
+    { key="oven",  label="Oven",  icon="🔥", fmt="%d%%" },
+    { key="frost", label="Frost", icon="🧁", fmt="%d%%" },
+    { key="dress", label="Dress", icon="🎁", fmt="%dx"  },
+}
+
+local stationCards = {}
+for i, def in ipairs(STATION_DEFS) do
+    local card = Instance.new("Frame", stationStrip)
+    card.Name = "Station_"..def.key
+    card.Size = UDim2.new(0.185, 0, 1, 0)
+    card.BackgroundColor3 = C.CARD; card.BackgroundTransparency = 0; card.BorderSizePixel = 0
+    card.LayoutOrder = i
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 6)
+
+    local iconL = Instance.new("TextLabel", card)
+    iconL.Size = UDim2.new(1,0,0.48,0); iconL.Position = UDim2.new(0,0,0,0)
+    iconL.BackgroundTransparency = 1; iconL.TextColor3 = C.MUTED
+    iconL.Font = Enum.Font.GothamBold; iconL.TextScaled = true
+    iconL.Text = def.icon
+
+    local valL = Instance.new("TextLabel", card)
+    valL.Name = "Val"; valL.Size = UDim2.new(1,0,0.52,0); valL.Position = UDim2.new(0,0,0.48,0)
+    valL.BackgroundTransparency = 1; valL.TextColor3 = C.WHITE
+    valL.Font = Enum.Font.GothamBold; valL.TextScaled = true
+    valL.Text = "—"
+
+    stationCards[def.key] = { card=card, valL=valL, fmt=def.fmt }
+end
+
 -- ── Divider ───────────────────────────────────────────────────────────────────
 local div = Instance.new("Frame", frame)
-div.Size = UDim2.new(1,-20,0,1); div.Position = UDim2.new(0,10,0,216)
+div.Size = UDim2.new(1,-20,0,1); div.Position = UDim2.new(0,10,0,272)
 div.BackgroundColor3 = Color3.fromRGB(40, 70, 120); div.BorderSizePixel = 0
 
 -- ── Employee of Shift ─────────────────────────────────────────────────────────
 local empHeader = Instance.new("TextLabel", frame)
 empHeader.Name = "EmpTitle"; empHeader.Size = UDim2.new(1,-20,0,28)
-empHeader.Position = UDim2.new(0,10,0,224)
+empHeader.Position = UDim2.new(0,10,0,280)
 empHeader.BackgroundTransparency = 1; empHeader.TextColor3 = C.GOLD
 empHeader.Font = Enum.Font.GothamBold; empHeader.TextScaled = true
 empHeader.TextXAlignment = Enum.TextXAlignment.Left; empHeader.Text = "Employee of the Shift"
@@ -153,7 +196,7 @@ for idx, def in ipairs(ROLE_DEFS) do
     local row = Instance.new("Frame", frame)
     row.Name = "Emp_"..def.role
     row.Size = UDim2.new(1,-20,0,40)
-    row.Position = UDim2.new(0,10,0, 258 + (idx-1)*44)
+    row.Position = UDim2.new(0,10,0, 314 + (idx-1)*44)
     row.BackgroundColor3 = C.CARD2
     row.BackgroundTransparency = 0; row.BorderSizePixel = 0
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
@@ -180,7 +223,7 @@ end
 local countdownLabel = Instance.new("TextLabel", frame)
 countdownLabel.Name = "Countdown"
 countdownLabel.Size = UDim2.new(1, -20, 0, 22)
-countdownLabel.Position = UDim2.new(0, 10, 0, 472)
+countdownLabel.Position = UDim2.new(0, 10, 0, 528)
 countdownLabel.BackgroundTransparency = 1
 countdownLabel.TextColor3 = Color3.fromRGB(110, 140, 190)
 countdownLabel.Font = Enum.Font.Gotham
@@ -190,7 +233,7 @@ countdownLabel.Text = ""
 local continueBtn = Instance.new("TextButton", frame)
 continueBtn.Name = "ContinueBtn"
 continueBtn.Size = UDim2.new(1, -40, 0, 48)
-continueBtn.Position = UDim2.new(0, 20, 0, 498)
+continueBtn.Position = UDim2.new(0, 20, 0, 554)
 continueBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 100)
 continueBtn.BorderSizePixel = 0
 continueBtn.Font = Enum.Font.GothamBold
