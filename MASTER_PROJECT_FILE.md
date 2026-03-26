@@ -464,6 +464,12 @@
 - [x] **H-8** Carry indicator UI (box icon + destination)
 - [x] BUG-4 Box carry arms not detaching
 - [x] BUG-13 NPC collision ceiling lift fixed
+- [ ] **BUG-22** Oven batch orphan on disconnect — add oven cleanup to cleanupPlayerSession
+- [ ] **BUG-23** comboStreak resets each shift — fix profile streak persistence
+- [ ] **BUG-24** "ShowAlert" added to RemoteManager REMOTES table
+- [ ] **BUG-25** GamepassManager VIP/Speed actually wired to behavior (even with ID=0)
+- [ ] **BUG-26** Rate-limit tables use UserId not player object + PlayerRemoving cleanup
+- [ ] **BUG-27** Player receives feedback when batch cap is reached (no silent fail)
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
@@ -478,6 +484,12 @@
 - [x] **M-10** Combo break popup
 - [x] **M-11** Loading indicator during data load
 - [x] **M-12** Gamepass scaffold (Speed Pass stub)
+- [ ] **BUG-28** Drive-thru locked shift 1 — coach tip explains it unlocks after first shift
+- [ ] **BUG-29** Drive-thru order reassignable when carrier disconnects
+- [ ] **BUG-30** teleportAllTo uses indexed spread — no 6-player clip
+- [ ] **BUG-31** Mid-shift joiner receives current coach tip
+- [ ] **BUG-32** AI worker dismiss — notification + refund fired to owner
+- [ ] **BUG-33** New players start with 500 starter coins
 
 ### NICE TO HAVE (Polish for Alpha)
 - [x] Per-station breakdown in shift results
@@ -659,10 +671,15 @@ StarterGui/
 - [ ] 2 players accept same dress order → only one succeeds
 - [ ] 2 players deliver to same NPC → no duplicate payout
 - [ ] Player disconnects mid-mix → doughLock clears
+- [ ] Player disconnects mid-oven → ovenBatch cleared, not orphaned (BUG-22)
 - [ ] Player joins mid-shift → warmer stock visible immediately
+- [ ] Player joins mid-shift → coach tip fires correctly (BUG-31)
 - [ ] Player leaves holding box → box destroyed on server
 - [ ] 6-player full session → batch pool not starved
 - [ ] Rush Hour + 6 players → NPC cap (6) enforced
+- [ ] 2nd player joins solo session → AI workers dismissed with notification + coin refund (BUG-32)
+- [ ] Drive-thru: carrier disconnects after taking order → another player can deliver (BUG-29)
+- [ ] 6 players teleport to intermission → no clipping (BUG-30)
 
 ### Exploit Testing
 - [ ] Fire ResultMix with score=1000 → clamped to 100
@@ -738,25 +755,37 @@ StarterGui/
 
 ---
 
-## 📈 SECTION 14 — FINAL REPORT SNAPSHOT (Updated 2026-03-25)
+## 📈 SECTION 14 — FINAL REPORT SNAPSHOT (Updated 2026-03-25 — Post Strict Audit)
+
+> ⚠️ This table reflects the state AFTER the Session 7 strict code audit. Previous self-reported 100% was inaccurate. Do not change OVERALL to ✅ until every open bug in Section 7 is marked Resolved.
 
 | Category | Score | Notes |
 |---|---|---|
-| Core Systems | ✅ 100% | Pipeline complete. Dress quality fixed. NPC collision fixed. All stations functional. |
-| Multiplayer Safety | ✅ 95% | All critical locks present. One low-risk gap (box carry desync) deferred post-Alpha. |
-| Data Integrity | ✅ 85% | Cross-server lock + UpdateAsync present. No retry on save failure — known limitation. |
-| UI/UX | ✅ 98% | Coach tips, carry pill, order colors, satisfaction emoji, expired visual, station breakdown, mobile scaling, cosmetic 3D preview all complete. |
-| Progression/Retention | ✅ 90% | 3-tier level unlocks, daily/weekly/lifetime challenges, mastery system, shift grades all present. Daily login reward post-Alpha. |
-| Performance | ✅ 90% | Memory patterns verified clean. All while-true loops confirmed intentional. OrderManager/SessionStats reset each shift. Only gap: live Rush Hour + 6 player profiler run. |
-| Anti-Exploit | ✅ 97% | BUG-17 fully resolved and in-game verified (10-step test suite). Rate limits + score validation + packSize check all present. Remaining 3%: session farming for mastery XP is a known post-Alpha design gap. |
-| Game Feel/Polish | ✅ 95% | 15 SFX, combo popups, rush hour banner, results animation, per-station breakdown, VIP NPC glow, patience color bar all complete. Screen effects post-Alpha. |
-| **OVERALL** | **✅ 100%** | **Alpha Ready — All critical and high blockers resolved and in-game verified. BUG-17 exploit closed. 4 additional bugs found and fixed this session (BUG-18/19/20/21). Performance clean. Testers may be invited.** |
+| Core Systems | 🟡 92% | Pipeline solid. BUG-22 (oven orphan on disconnect) is an open pipeline stall risk. |
+| Multiplayer Safety | 🟡 83% | dough/frost/dress locks present. BUG-22 oven orphan + BUG-29 drive-thru carrier + BUG-30 teleport overlap are open. |
+| Data Integrity | 🟡 80% | Cross-server lock + UpdateAsync present. BUG-23 (comboStreak persists across sessions) is open. No retry on save failure — known limitation. |
+| UI/UX | ✅ 95% | Coach tips, carry pill, order colors, station breakdown, mobile scaling all complete. BUG-31 (mid-shift joiner misses tip) open. |
+| Progression/Retention | 🔴 70% | Level unlocks partially work but `unlockedRecipes` is completely unenforced (all 6 cookies always available). BUG-33 (0 starter coins). Combo streak broken (BUG-23). |
+| Performance | 🟡 85% | BUG-26 (rate-limit table memory leak using player objects as keys). Solo baseline clean. 6-player Rush Hour untested live. |
+| Anti-Exploit | 🟡 85% | BUG-17 closed. BUG-24 (ShowAlert missing from RemoteManager — ProcessReceipt crash) open. BUG-25 (gamepass stubs non-functional). Rate limits in place. |
+| Game Feel/Polish | ✅ 95% | 15 SFX, combo popups, rush hour banner, results animation, VIP NPC glow all complete. Screen effects post-Alpha. |
+| **OVERALL** | **🔴 82%** | **NOT Alpha Ready — Strict audit found 3 critical + 3 high + 6 medium bugs (BUG-22 through BUG-33). All must be fixed and verified before inviting any testers. Alpha will be cleared at 100% only after every Section 8 checkbox is checked.** |
 
-### Remaining Risks for Alpha (Monitoring Only — Not Blockers)
-1. **Box carry desync (BUG-12)** — BindableEvent/RemoteEvent timing gap. Known low-risk; CarryPill clears on delivery. Monitor during Alpha playtest.
-2. **Performance under 6-player Rush Hour** — Solo patterns verified clean (172 hb/3s). Full 6-player live profiler run is still a nice-to-have; patterns strongly suggest no spike.
-3. **No retry on DataStore save failure** — crash during shift = silent data loss. Known limitation; post-Alpha hardening.
-4. **In-game challenge counters reset on crash** — daily/weekly progress non-persistent in-memory. Known limitation; acceptable for Alpha.
+### Open Alpha Risks (must be resolved — see Section 5 for tasks)
+1. **🔴 BUG-22** — Oven batch orphaned on disconnect — pipeline stall with multiple disconnects
+2. **🔴 BUG-23** — comboStreak persists across sessions — per-shift mechanic fundamentally broken
+3. **🔴 BUG-24** — ShowAlert not in RemoteManager — ProcessReceipt crash on Boost Token
+4. **🟠 BUG-25** — GamepassManager stubs non-functional — paying players get zero benefit
+5. **🟠 BUG-26** — Rate-limit memory leak — compounds over long server lifetime
+6. **🟠 BUG-27** — No feedback on batch cap — silent fail confuses new players
+7. **🟡 BUG-28 through BUG-33** — Medium quality issues, all fixable in one session
+
+### Known Post-Alpha Limitations (acceptable for Alpha once above are fixed)
+1. **Box carry desync (BUG-12)** — BindableEvent timing gap. Low-risk; monitor during Alpha.
+2. **Performance under 6-player Rush Hour** — Solo baseline clean. Live profiler run still needed.
+3. **No retry on DataStore save failure** — crash = silent data loss. Post-Alpha hardening.
+4. **In-game challenge counters reset on crash** — non-persistent in-memory. Acceptable for Alpha.
+5. **unlockedRecipes unenforced** — all 6 cookies available from day 1. Progression design gap. Post-Alpha gating.
 
 ### What Changed Since Original 69% Assessment
 - C-1 Movement lock: prevents batch starvation ✅
@@ -772,6 +801,17 @@ StarterGui/
 - BUG-17: Drive-thru exploit fully verified closed (Session 7) ✅
 - BUG-18/19: HUDController startup crash + showAlert nil guards fixed ✅
 - BUG-20/21: Debug coin script removed + EndOfDaySummary remote restored ✅
+- Session 7 strict audit: BUG-22 through BUG-33 found — 3 critical, 3 high, 6 medium — all open
+
+### ⚠️ ALPHA CLEARANCE RULE
+> The OVERALL score in Section 14 must only be changed to ✅ 100% when ALL of the following are true:
+> 1. Every bug in Section 7 with Status = Open is marked Resolved with a verification date
+> 2. Every `[ ]` checkbox in Section 8 MUST HAVE and SHOULD HAVE blocks is checked `[x]`
+> 3. A full clean play session runs from Lobby → Intermission with `errors: []` in the console
+> 4. The BUG-22 oven orphan test passes (player disconnects mid-oven → batch not stuck)
+> 5. The BUG-23 combo reset test passes (streak = 0 at start of each new shift)
+>
+> If Codex or any external tool suggests additional fixes — cross-reference against Section 7 before adding to avoid duplicates, then add new bugs with the next sequential BUG-ID.
 
 ---
 *End of MASTER PROJECT FILE — Always update this file, never rewrite. Keyphrase: COOKIE ALPHA MASTER FILE*
