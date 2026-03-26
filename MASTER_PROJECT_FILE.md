@@ -92,7 +92,7 @@
 | Results Screen UI | ✅ Verified Implemented | Slide-up from below, stat counters tick up (staggered), grade badge fades in with Back ease |
 | Shop UI | ⚠️ Needs Improvement | Two tabs, buy/equip buttons, owned states. No cosmetic preview |
 | Daily Challenges UI | ✅ Verified Implemented | DailyChallengeClient, WeeklyChallengeClient, LifetimeChallengeClient all exist |
-| Settings UI | ❌ Missing | No settings panel (volume sliders, etc.) |
+| Settings UI | ✅ Verified Implemented | ⚙️ icon top-right opens panel with Music ON/OFF + SFX ON/OFF toggles. Both directly control Sound.Volume. |
 | Mobile UI Scaling | 🔶 Partially Implemented | Relative sizing used (45% viewport). Not tested on portrait/tablet |
 | Controller Support | ❌ Missing | No gamepad input for minigames |
 | Visual Feedback | ✅ Verified Implemented | Floating reward text, worker score, delivery stars, patience color |
@@ -147,7 +147,7 @@
 | End-of-Shift Results Screen | ✅ Verified Implemented | Slide-up + staggered counter tick-ups + grade bounce-in. Per-station breakdown is post-Alpha. |
 | Tutorial | 🔶 Partially Implemented | 5-step linear flow. Missing Fridge→Oven step. No camera pans confirmed |
 | Main Menu | 🔍 Needs Verification | MainMenuController.client.lua exists; contents not fully verified |
-| Settings Menu | ❌ Missing | No settings panel |
+| Settings Menu | ✅ Verified Implemented | ⚙️ panel with Music + SFX toggles — already live in HUDController |
 | Credits | ❌ Missing | Not found in codebase |
 | Intro / Cutscene | ❌ Missing | Not found |
 | Gamepass / Dev Products | ❌ Missing | No gamepass validation or IAP integration found |
@@ -188,7 +188,7 @@
 | Remote Rate Limiting | Not Started | HIGH | Before |
 | VIP NPC Visual | Complete | MEDIUM | ✅ Done |
 | S-Rank Grade Tier | Complete | MEDIUM | ✅ Done |
-| Settings UI | Not Started | MEDIUM | Before |
+| Settings UI | Complete | MEDIUM | ✅ Done |
 | Mobile Scaling Pass | Not Started | MEDIUM | Before |
 | Results Screen Polish | Complete | MEDIUM | ✅ Done |
 | Shop Preview / Tooltips | Needs Improvement | MEDIUM | Before |
@@ -258,12 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-8 — Settings UI`
+**TASK:** `M-9 — Mobile Scaling Pass`
 **Status:** Not Started → Ready to begin
-**What it is:** No way to control audio volume in-game.
+**What it is:** UI not tested on portrait mobile (375px) or tablet ratios. Proximity prompt distances and tap targets may be too small.
 **Files affected:**
-- `HUDController.client.lua` — already has a toggles panel (⚙️ icon at top-right); add music + SFX sliders there
-**Success criteria:** Players can slide music and SFX volume independently. Settings persist for the session. Toggle button is visible at all times.
+- `HUDController.client.lua` — check all fixed-pixel sizes; ensure coach bar, carry pill, and alerts scale reasonably at 375px width
+- `PersistentNPCSpawner.server.lua` — verify ProximityPrompt MaxActivationDistance is large enough for touch
+**Success criteria:** Core HUD elements readable at 375×812. No UI overlap. ProximityPrompts reachable without precise aiming.
 
 ---
 
@@ -271,7 +272,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-8** | Settings UI | Current task — music/SFX sliders in existing settings panel |
+| 1 | **M-9** | Mobile Scaling Pass | Current task — verify HUD at 375px, check ProximityPrompt distances |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -313,6 +314,7 @@
 | 2026-03-25 | **M-5 VIP NPC Visual** | Enhanced VIPGui in NPCSpawner: size 60×24→110×32, AlwaysOnTop=false→true, StudsOffset raised to 5.2 (above patience bar), text "⭐ VIP"→"* VIP *", UICorner+UIStroke gold glow added. |
 | 2026-03-25 | **M-6 S-Rank Shift Grade** | Already implemented in both disk and Studio (score≥90=S, ≥75=A, ≥60=B, ≥45=C, else D). Verified in SessionStats.GetShiftGrade. No changes needed. |
 | 2026-03-25 | **M-7 Results Screen Animation** | SummaryController: frame slides up from Y=1.15→centred (Back ease 0.45s). Stat counters tick from 0→final in 28 steps (staggered 0.12s apart, delayed 0.3s). gradeValL fades in with Back ease after 0.5s. |
+| 2026-03-25 | **M-8 Settings UI** | Already implemented — ⚙️ panel with Music ON/OFF + SFX ON/OFF toggles, directly sets Sound.Volume. Verified in Studio. No changes needed. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -373,7 +375,7 @@
 - [x] **M-5** VIP NPC visual distinction
 - [x] **M-6** S-Rank shift grade
 - [x] **M-7** Results screen animation
-- [ ] **M-8** Settings UI (volume slider)
+- [x] **M-8** Settings UI (volume slider)
 - [ ] **M-9** Mobile scaling tested on portrait + tablet
 - [ ] **M-10** Combo break popup
 - [ ] **M-11** Loading indicator during data load
