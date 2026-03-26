@@ -394,7 +394,7 @@
 ### NICE TO HAVE (Polish for Alpha)
 - [x] Per-station breakdown in shift results
 - [ ] Cosmetic preview in shop
-- [ ] Upgrade tooltips in shop
+- [x] Upgrade tooltips in shop
 - [ ] Cookie type icon/thumbnail on order cards
 - [x] Customer satisfaction emoji on delivery
 - [x] "Order expired" visual at NPC location
