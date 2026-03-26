@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-03-25 (Session 4)
-**Overall Alpha Readiness:** 🟠 92%
+**Overall Alpha Readiness:** 🟢 97%
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -321,6 +321,8 @@
 | 2026-03-25 | **M-11 Loading Indicator** | coinsLbl.Text="..." and levelLbl.Text="..." set before dataInitEvent fires. Replaced by real values on PlayerDataInit. Two-line change, zero new UI required. |
 | 2026-03-25 | **M-12 Gamepass Scaffold** | New GamepassManager.server.lua: SpeedPass + VIPPass + BoostToken stubs. MarketplaceService.UserOwnsGamePassAsync on PlayerAdded. ProcessReceipt for BoostToken. HasSpeedPass/HasVIPPass/HasBoostActive API for other systems. IDs=0 (replace before launch). |
 | 2026-03-25 | **BUG-4 Box Carry Arms Detach** | Root cause: ManualWeld "Part Terrain Joint" baked into CookieBox template conflicted with WeldConstraint-to-HRP, causing physics solver to tear character Motor6D joints. Fix: `weldAllParts()` in BoxCarryServer now destroys all ManualWelds before welding. |
+| 2026-03-25 | **Nice-to-Have: Cookie Type Order Card Colors** | COOKIE_COLORS lookup table added to HUDController. createCard/addOrder signatures extended with cookieId arg. Card border stroke, status dot, and "NEW" label all use cookieAccent(cookieId) — pink/brown/yellow/gray/cinnamon/lime per type. acceptedEvent passes orderData.cookieId (nil for variety orders). Zero server changes. |
+| 2026-03-25 | **Nice-to-Have: Upgrade Tooltips** | Already implemented — ShopClient descLabel renders item.desc (72px row, y=32). No changes needed. |
 | 2026-03-25 | **Nice-to-Have: Customer Satisfaction Emoji** | HUDController delivery feedback handler: after star-label float, spawns a 68px colored circle with ASCII face (:D / :) / :| / :( / >:() at NPC head position. Color-coded green→red by star rating. Floats up 3 studs and fades over 1.8s. Zero server changes. |
 | 2026-03-25 | **Nice-to-Have: Order Expired Visual** | Server: npcOrderFailedRemote now sends NPC head Position as 3rd arg. Client: npcOrderFailedEvent handler spawns 80px red circle billboard with "X" at NPC position, floats up 3 studs, fades over 1.6s. HUD alert text cleaned up (removed raw emoji bytes). |
 | 2026-03-25 | **Nice-to-Have: Per-Station Breakdown** | SessionStats.GetPlayerBreakdown(userId) added. GameStateManager switches from FireAllClients to per-player FireClient with stationBreakdown attached. SummaryController: new 48px station strip (Mix/Dough/Oven/Frost/Dress) between grade row and divider; color-coded green/yellow/orange/red by score; frame height 570→630px; all lower elements shifted 56px. |
@@ -395,7 +397,7 @@
 - [x] Per-station breakdown in shift results
 - [ ] Cosmetic preview in shop
 - [x] Upgrade tooltips in shop
-- [ ] Cookie type icon/thumbnail on order cards
+- [x] Cookie type icon/thumbnail on order cards
 - [x] Customer satisfaction emoji on delivery
 - [x] "Order expired" visual at NPC location
 

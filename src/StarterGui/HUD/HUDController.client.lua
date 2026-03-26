@@ -297,7 +297,20 @@ local function cardKey(entry)
     return entry.orderId and tostring(entry.orderId) or entry.tempKey
 end
 
-local function createCard(key, displayName, isVIP)
+-- Cookie-type accent colors for order card borders/dots
+local COOKIE_COLORS = {
+    pink_sugar           = Color3.fromRGB(255,170,190),
+    chocolate_chip       = Color3.fromRGB(160,100,50),
+    birthday_cake        = Color3.fromRGB(255,220,100),
+    cookies_and_cream    = Color3.fromRGB(160,160,175),
+    snickerdoodle        = Color3.fromRGB(210,145,70),
+    lemon_blackraspberry = Color3.fromRGB(200,225,60),
+}
+local function cookieAccent(id)
+    return COOKIE_COLORS[id] or Color3.fromRGB(80,150,220)
+end
+
+local function createCard(key, displayName, isVIP, cookieId)
     if orderCards[key] then orderCards[key]:Destroy() end
     emptyLbl.Visible = false
 
@@ -307,18 +320,18 @@ local function createCard(key, displayName, isVIP)
     card.BackgroundColor3 = C.CARD; card.BackgroundTransparency = 0.04
     card.BorderSizePixel = 0; card.ZIndex = 10
     corner(card, 8)
-    local cStroke = addStroke(card, C.GREEN, 1.5, 0.3)
+    local cStroke = addStroke(card, cookieAccent(cookieId), 1.5, 0.3)
 
     -- Status row
     local dot = Instance.new("Frame", card)
     dot.Name = "StatusDot"; dot.Size = UDim2.new(0,8,0,8); dot.Position = UDim2.new(0,8,0,10)
-    dot.BackgroundColor3 = C.GREEN; dot.BorderSizePixel = 0; dot.ZIndex = 11
+    dot.BackgroundColor3 = cookieAccent(cookieId); dot.BorderSizePixel = 0; dot.ZIndex = 11
     corner(dot, 4)
 
     local statusLbl = Instance.new("TextLabel", card)
     statusLbl.Name = "StatusLabel"
     statusLbl.Size = UDim2.new(0,82,0,16); statusLbl.Position = UDim2.new(0,20,0,6)
-    statusLbl.BackgroundTransparency = 1; statusLbl.TextColor3 = C.GREEN
+    statusLbl.BackgroundTransparency = 1; statusLbl.TextColor3 = cookieAccent(cookieId)
     statusLbl.Font = Enum.Font.GothamBold; statusLbl.TextSize = 11
     statusLbl.TextXAlignment = Enum.TextXAlignment.Left
     statusLbl.Text = "NEW"; statusLbl.ZIndex = 11
@@ -669,7 +682,7 @@ end)
 -- ══════════════════════════════════════════════════════════════════════════════
 -- ORDER TRACKING
 -- ══════════════════════════════════════════════════════════════════════════════
-local function addOrder(orderId, displayName, isVIP)
+local function addOrder(orderId, displayName, isVIP, cookieId)
     local key
     if orderId then
         key = tostring(orderId)
@@ -677,7 +690,7 @@ local function addOrder(orderId, displayName, isVIP)
         tempKeyN += 1; key = "tmp_" .. tempKeyN
     end
     table.insert(activeOrders, { orderId = orderId, display = displayName, tempKey = key })
-    createCard(key, displayName, isVIP)
+    createCard(key, displayName, isVIP, cookieId)
 end
 
 local function removeByIndex(i)
@@ -719,7 +732,7 @@ acceptedEvent.OnClientEvent:Connect(function(orderId, orderData)
             name = name .. " x" .. orderData.packSize
         end
     end
-    addOrder(orderId, name, orderData.isVIP)
+    addOrder(orderId, name, orderData.isVIP, orderData.isVariety and nil or orderData.cookieId)
     if orderData.isVIP then
         showAlert("⭐ VIP Customer!", Color3.fromRGB(50,40,10), C.GOLD, 4)
     end
