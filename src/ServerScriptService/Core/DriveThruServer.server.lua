@@ -192,7 +192,7 @@ local function addDeliveryPrompt(onDeliver)
 
     local pp = Instance.new("ProximityPrompt")
     pp.Name = "DriveThruDeliverPrompt"; pp.ActionText = "Hand Box"
-    pp.ObjectText = "Drive Thru"; pp.MaxActivationDistance = 15
+    pp.ObjectText = "Drive Thru"; pp.MaxActivationDistance = 8
     pp.HoldDuration = 0; pp.RequiresLineOfSight = false
     pp.Parent = deliveryZone
     pp.Triggered:Connect(function(player) pp:Destroy(); onDeliver(player) end)
@@ -324,14 +324,19 @@ end
 OrderManager.On("BoxCreated", function(box)
     if not currentOrder then return end
     if box.cookieId ~= currentOrder.cookieId then return end
-    -- C-4: pack size must match the ordered quantity exactly
-    if box.packSize and box.packSize ~= currentOrder.packSize then
+    if (tonumber(box.packSize) or 1) ~= (tonumber(currentOrder.packSize) or 1) then
         warn(string.format("[AntiExploit] BoxCreated packSize mismatch: got %d, need %d",
-            box.packSize, currentOrder.packSize))
+            tonumber(box.packSize) or 1, tonumber(currentOrder.packSize) or 1))
+        return
+    end
+    if currentOrder.takenBy and box.carrier ~= currentOrder.takenBy.Name then
+        warn(string.format("[AntiExploit] Ignoring drive-thru box from %s; order belongs to %s",
+            tostring(box.carrier), currentOrder.takenBy.Name))
         return
     end
 
     local order = currentOrder
+    order.boxId = box.boxId
 
     addDeliveryPrompt(function(player)
         if not currentOrder or currentOrder.car ~= order.car then return end
@@ -341,11 +346,22 @@ OrderManager.On("BoxCreated", function(box)
                 player.Name, order.takenBy.Name))
             return
         end
+        if not OrderManager.IsCarryingBox(player) then
+            warn(string.format("[AntiExploit] %s triggered drive-thru delivery without carrying a box", player.Name))
+            return
+        end
 
         local deliverCar        = order.car
         local deliverNpcOrderId = order.npcOrderId
         local deliverCoins      = tonumber(order.coins) or 0
         local deliverXp         = tonumber(order.xp) or 0
+        local deliverBoxId      = order.boxId
+
+        local ok = deliverBoxId and OrderManager.DeliverBox(player, deliverBoxId, deliverNpcOrderId)
+        if not ok then
+            warn(string.format("[DriveThruServer] DeliverBox failed for %s on drive-thru order", player.Name))
+            return
+        end
 
         currentOrder = nil
         updateTV("No Orders", "")
@@ -355,10 +371,6 @@ OrderManager.On("BoxCreated", function(box)
         moveCarToZ(deliverCar, CAR_EXIT_Z, CAR_EXIT_SEC, function()
             deliverCar:Destroy()
         end)
-
-        if deliverNpcOrderId then
-            OrderManager.CancelNPCOrder(deliverNpcOrderId)
-        end
 
         PlayerDataManager.AddCoins(player, deliverCoins)
         PlayerDataManager.AddXP(player, deliverXp)

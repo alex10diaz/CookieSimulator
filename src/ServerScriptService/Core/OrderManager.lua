@@ -347,6 +347,7 @@ function OrderManager.CreateBox(player, batchId, dressScore, warmerEntry)
         carrier         = player.Name,
         status          = "ready",
         cookieId        = warmerEntry and warmerEntry.cookieId or nil,
+        packSize        = warmerEntry and warmerEntry.quantity or 1,
         _warmerEntry    = warmerEntry,
         _postOvenScores = { mix = post.mix, dough = post.dough, oven = post.oven },
     }
@@ -409,6 +410,13 @@ function OrderManager.DeliverBox(player, boxId, npcOrderId)
                         tostring(box.cookieId), tostring(o.cookieId)))
                     return false
                 end
+            end
+            local orderPackSize = tonumber(o.packSize) or 1
+            local boxPackSize = tonumber(box.packSize) or 1
+            if boxPackSize ~= orderPackSize then
+                warn(string.format("[AntiExploit] DeliverBox rejected: packSize mismatch box=%d order=%d",
+                    boxPackSize, orderPackSize))
+                return false
             end
             order = table.remove(npcOrders, i)
             break
@@ -568,6 +576,13 @@ function OrderManager.CreateVarietyBox(player, entries, dressScore)
         carrier             = player.Name,
         status              = "ready",
         cookieId            = "variety",
+        packSize            = (function()
+            local total = 0
+            for _, entry in ipairs(entries) do
+                total += entry.quantity or 1
+            end
+            return total
+        end)(),
         isVariety           = true,
         _warmerEntries      = entries,
         _batchPostOvenScores = savedScores,
