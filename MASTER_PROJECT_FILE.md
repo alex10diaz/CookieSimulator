@@ -280,22 +280,19 @@
 
 ## 📋 SECTION 5 — NEXT TASK QUEUE
 
+> All Alpha checklist items are complete. Queue is now post-Alpha only.
+
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **Nice-to-Have** | Per-station breakdown in results | Show mix/dough/oven/frost/dress scores individually on summary screen |
-| 2 | **Nice-to-Have** | Cosmetic preview in shop | Show hat/apron on a mannequin or avatar preview before buying |
-| 3 | **Nice-to-Have** | Upgrade tooltips | Describe what each upgrade does inline in the shop |
-| 4 | **Nice-to-Have** | Cookie type icon on order cards | Thumbnail per cookie type on HUD order card |
-| 5 | **Nice-to-Have** | Customer satisfaction emoji | Show 😊/😐/😠 at delivery based on quality |
-| 6 | **Nice-to-Have** | "Order expired" visual | Red X or puff of smoke at NPC position when order times out |
-| 7 | **Alpha Testing** | Full testing pass | Run through Section 12 testing checklist |
-| 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
-| 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
-| 16 | **M-6** | S-Rank Grade | 97+ score threshold in SessionStats.GetShiftGrade |
-| 17 | **M-7** | Results Screen Animation | Slide-up tween + staggered stat counters |
-| 18 | **M-8** | Settings UI | Minimal: music/SFX sliders, exit button |
-| 19 | **M-9** | Mobile Scaling Pass | UIScale test on 375px portrait + 768px tablet |
-| 20 | **M-12** | Gamepass Scaffold | Speed Pass + Boost Token stubs |
+| 1 | **ACTIVE** | Alpha Testing Pass | Run through Section 12 testing checklist in-game. Log any bugs to Section 7. |
+| 2 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
+| 3 | **Post-Alpha** | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
+| 4 | **Post-Alpha** | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
+| 5 | **Post-Alpha** | Top Bar Bakery XP (L-14) | Show bakery XP separately from player XP |
+| 6 | **Post-Alpha** | Waypoint Arrows in Tutorial (L-15) | Guide new players to stations visually |
+| 7 | **Post-Alpha** | Daily Login Rewards (L-1) | Retention mechanic; balance after live data |
+| 8 | **Post-Alpha** | Event System (L-2) | Seasonal content; stub exists |
+| 9 | **Post-Alpha** | Controller Support (L-3) | Gamepad input for minigames |
 
 ---
 
