@@ -153,7 +153,13 @@ end
 local purchaseRemote = RemoteManager.Get("PurchaseItem")
 local resultRemote   = RemoteManager.Get("PurchaseResult")
 
+-- H-7: rate limiting — 1 purchase request per second per player
+local lastPurchaseTime = {}
+
 purchaseRemote.OnServerEvent:Connect(function(player, itemId)
+    local now = tick()
+    if (now - (lastPurchaseTime[player] or 0)) < 1 then return end
+    lastPurchaseTime[player] = now
     if type(itemId) ~= "string" then
         resultRemote:FireClient(player, { success = false, reason = "Invalid request" })
         return

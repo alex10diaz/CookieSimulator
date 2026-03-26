@@ -258,13 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `H-7 — Remote Rate Limiting`
+**TASK:** `H-8 — Carry Indicator UI`
 **Status:** Not Started → Ready to begin
-**What it is:** `PurchaseItem` and `RequestMixStart` have no per-client throttle — spamming them hammers DataStore and batch creation.
+**What it is:** Players carrying a box have no visual indicator — they don't know what they're holding or where to go.
 **Files affected:**
-- `UnlockManager.lua` — 1 req/s throttle on PurchaseItem handler
-- `MinigameServer.server.lua` — 0.5 req/s throttle on RequestMixStart handler
-**Success criteria:** Rapid-fire calls from client are silently dropped after first; no server error or extra DataStore calls.
+- `HUDController.client.lua` — add bottom-center carry pill (box icon + "Deliver to: [NPC]")
+- Listen to `BoxCarried` / `BoxDelivered` remotes already in RemoteManager
+**Success criteria:** When a player picks up a box, a bottom-center pill appears showing the customer name. Disappears on delivery.
 
 ---
 
@@ -272,9 +272,9 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **H-7** | Remote Rate Limiting | Current task — 1 req/s PurchaseItem; 0.5 req/s RequestMixStart |
-| 2 | **H-8** | Carry Indicator UI | Bottom-center: box icon + "Deliver to: NPC Name" |
-| 3 | **M-1** | In-World NPC Patience Indicator | BillboardGui above NPC head, updates live |
+| 1 | **H-8** | Carry Indicator UI | Current task — box icon + "Deliver to: NPC Name" bottom pill |
+| 2 | **M-1** | In-World NPC Patience Indicator | BillboardGui above NPC head, updates live |
+| 3 | **M-2** | Order Ready Alert | Sound + HUD pill when warmers receive a cookie |
 | 4 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
 | 5 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
 | 6 | **H-4** | Dress Order Lock Timeout | 90s timeout; unlock on disconnect or timeout |
@@ -315,6 +315,7 @@
 | 2026-03-25 | **H-3 Delivery Race Lock** | Already implemented — deliveryLocked flag in PersistentNPCSpawner, atomic check+set, 7 sites. Verified in Studio. BUG-5 closed. |
 | 2026-03-25 | **H-4 Dress Order Lock Timeout** | PlayerRemoving + CharacterRemoving cleanup already present. Added LOCK_TIMEOUT=90 constant + task.delay(90) auto-release on both variety and single-order lock paths in DressStationServer. |
 | 2026-03-25 | **H-5 Level Unlock Content** | UnlockManager: bakeryLevelReq=3 on tip_boost_1, enforced in Purchase() before DeductCoins. PlayerDataManager.AwardBakeryXP: auto-grants cookies_and_cream at level 5, lemon_blackraspberry at level 10 via AddOwnedCookie. |
+| 2026-03-25 | **H-6 Tutorial Fridge→Oven Step** | Already implemented — step 3 msg covers fridge pull + oven, gates on oven StationCompleted. Verified in code. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |

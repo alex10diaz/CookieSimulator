@@ -438,7 +438,12 @@ end
 
 -- MIX COOKIE SELECTION (from client via FireServer)
 local RequestMixStart = RemoteManager.Get("RequestMixStart")
+-- H-7: rate limiting — 1 request per 0.5s per player
+local lastMixRequestTime = {}
 RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
+    local now = tick()
+    if (now - (lastMixRequestTime[player] or 0)) < 0.5 then return end
+    lastMixRequestTime[player] = now
     local gameState = Workspace:GetAttribute("GameState")
     if gameState ~= "Open" and gameState ~= "PreOpen" then return end  -- lock during Intermission/EndOfDay
     if activeSessions[player] then return end
