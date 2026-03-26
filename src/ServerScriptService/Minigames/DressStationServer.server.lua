@@ -25,6 +25,9 @@ local activeKDS     = {}  -- player -> true  (KDS UI is open)
 local dressLocked   = {}  -- player -> { orderId, cookieId, npcName }
 local orderLockedBy = {}  -- orderId -> player; prevents two players locking same order
 
+-- H-4: max time a player can hold a dress lock before it auto-releases
+local LOCK_TIMEOUT = 90
+
 -- H-2: compute dress quality from accumulated station snapshot (removes hardcoded 85)
 local function avgSnapshot(entries)
     if not entries or #entries == 0 then return 85 end
@@ -342,6 +345,14 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
             collectedTypes = {},
             typeSlotCounts = typeSlotCounts,
         }
+        -- H-4: auto-release if player goes AFK or gets stuck
+        task.delay(LOCK_TIMEOUT, function()
+            local lock = dressLocked[player]
+            if lock and lock.orderId == orderId then
+                warn("[DressStation] Lock timeout for " .. player.Name .. " — releasing order #" .. orderId)
+                clearDressLock(player)
+            end
+        end)
         local firstId = uniqueTypes[1]
         orderLocked:FireClient(player, {
             state      = "locked",
@@ -371,6 +382,14 @@ lockOrder.OnServerEvent:Connect(function(player, orderId)
             npcName  = targetOrder.npcName,
             packSize = needed,
         }
+        -- H-4: auto-release if player goes AFK or gets stuck
+        task.delay(LOCK_TIMEOUT, function()
+            local lock = dressLocked[player]
+            if lock and lock.orderId == orderId then
+                warn("[DressStation] Lock timeout for " .. player.Name .. " — releasing order #" .. orderId)
+                clearDressLock(player)
+            end
+        end)
         orderLocked:FireClient(player, {
             state      = "locked",
             cookieId   = targetOrder.cookieId,
