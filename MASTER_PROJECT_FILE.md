@@ -502,65 +502,81 @@ StarterGui/
 
 ---
 
-## 📊 SECTION 11 — TASK 2: PROBLEMS AND RISKS SUMMARY
+## 📊 SECTION 11 — PROBLEMS AND RISKS SUMMARY (Updated 2026-03-25)
 
-### Dangerous / Could Break
-1. No movement lock → batch pool can be starved in high-player scenario
-2. Dress hardcoded score → quality system produces false data
-3. NPC ceiling lift bug (confirmed collision issue) → NPC queue gets stuck
-4. No delivery lock → two players claiming same NPC order
+> This section was the original pre-Alpha risk register. All critical/high items are resolved. Remaining items are known post-Alpha gaps.
 
-### Not Multiplayer Safe
-1. Warmer stock not synced to mid-shift joiners
-2. Dress order lock has no expiry on disconnect
-3. Box carry state can desync (BindableEvent vs RemoteEvent timing)
-4. Dough lock may orphan on rare disconnect race
+### ✅ Previously Dangerous / Could Break — ALL RESOLVED
+1. ~~No movement lock~~ → ✅ **Fixed C-1** — WalkSpeed/JumpPower/JumpHeight=0 on session start
+2. ~~Dress hardcoded score~~ → ✅ **Fixed H-2** — avgSnapshot() uses real station quality
+3. ~~NPC ceiling lift~~ → ✅ **Fixed BUG-13** — PhysicsService "NPCs" collision group prevents HRP-HRP lift
+4. ~~No delivery lock~~ → ✅ **Fixed H-3** — deliveryLocked flag, atomic check+set at 7 sites
 
-### Exploitable
-1. RequestMixStart — no rate limit; spamming causes server load
-2. PurchaseItem — no rate limit; spams UpdateAsync calls
-3. Session farming for mastery XP (walk away, wait 60s timeout, repeat)
+### ✅ Previously Not Multiplayer Safe — MOSTLY RESOLVED
+1. ~~Warmer stock not synced to mid-shift joiners~~ → ✅ **Fixed M-4** — task.defer snapshot on PlayerAdded
+2. ~~Dress order lock has no expiry on disconnect~~ → ✅ **Fixed H-4** — PlayerRemoving cleanup + 90s task.delay auto-release
+3. Box carry state can desync (BindableEvent vs RemoteEvent timing) → 🟡 **Known low-risk gap** — post-Alpha
+4. Dough lock may orphan on rare disconnect race → 🟡 **Suspected BUG-11** — low frequency; post-Alpha
 
-### Missing That Successful Roblox Games Have
-- Waypoint/hint system (Cook Burgers, Work at a Pizza Place)
-- Visible player role labels above head
-- Shared in-world order board visible to all
-- Filler tasks during downtime (passive income)
-- Social actions between players
-- Daily login streak
+### ✅ Previously Exploitable — RATE LIMITS ADDED
+1. ~~RequestMixStart — no rate limit~~ → ✅ **Fixed H-7** — 0.5s throttle, silent drop
+2. ~~PurchaseItem — no rate limit~~ → ✅ **Fixed H-7** — 1s throttle per player
+3. Session farming for mastery XP → 🟡 **Known design gap** — post-Alpha mitigation
 
-### Will Confuse New Players
-- No "what do I press?" prompt before stations
-- Fridge→Oven step not taught in tutorial
-- Cookie types not mapped to fridge slots visually
-- Dress station: not clear which cookie is being decorated
-- No indicator that a batch is waiting in fridge
+### Post-Alpha UX Gaps (not blocking Alpha)
+- Visible player role labels above head — post-Alpha
+- Shared in-world order board visible to all — post-Alpha (Section 9)
+- Filler tasks during downtime — post-Alpha
+- Social actions between players — post-Alpha (L-6)
+- Daily login streak — post-Alpha (L-1)
 
-### Will Make Players Quit Early
-- Nothing unlocked by leveling up
-- 3-minute intermission with nothing to do
-- Rush Hour starts silently (no fanfare)
-- No "mistake" feedback when session times out
-- Combo resets with no visual punishment feedback
+### ✅ Previously "Will Confuse New Players" — ADDRESSED
+- ~~No "what do I press?" prompt before stations~~ → ✅ **Fixed C-2** — Coach tip bar fires on each station completion
+- ~~Fridge→Oven step not taught in tutorial~~ → ✅ **Fixed H-6** — Tutorial step 3 covers fridge pull + oven
+- Cookie types not mapped to fridge slots visually → 🟡 **Post-Alpha** — station remap shows cookie names on doors
+- ~~Dress station: not clear which cookie is being decorated~~ → ✅ KDS shows cookie name per order
+- ~~No indicator that a batch is waiting in fridge~~ → ✅ Coach tip + FridgeDisplay BillboardGui
+
+### ✅ Previously "Will Make Players Quit Early" — ADDRESSED
+- ~~Nothing unlocked by leveling up~~ → ✅ **Fixed H-5** — tip_boost at lvl 3, C&C at lvl 5, lemon at lvl 10
+- 3-minute intermission with nothing to do → 🟡 **Post-Alpha** — spin wheel idea in Section 9
+- ~~Rush Hour starts silently~~ → ✅ **Fixed M-3** — "RUSH HOUR!" alert banner (4s, red/gold)
+- ~~No "mistake" feedback when session times out~~ → ✅ Order expired X visual at NPC position
+- ~~Combo resets with no visual punishment feedback~~ → ✅ **Fixed M-10** — "STREAK BROKEN!" red alert
 
 ---
 
 ## 🧪 SECTION 12 — TESTING PLAN
 
+> All boxes are unchecked = needs in-game verification. Run these before inviting Alpha testers. Log any failures to Section 7.
+
 ### Bug Testing
 - [ ] Complete full solo shift Lobby → Intermission without errors
 - [ ] Mix + deliver all 6 cookie types in one session
-- [ ] Let NPC patience expire; verify order removed cleanly
+- [ ] Let NPC patience expire; verify order removed cleanly + expired X visual appears
 - [ ] Let session time out (60s); verify batch unlocked
 - [ ] Complete tutorial as new player (tutorialCompleted=false)
 - [ ] Verify tutorial skips for returning player
-- [ ] Buy every shop item; verify prerequisites enforced
+- [ ] Buy every shop item; verify prerequisites enforced (level gate on tip_boost_1)
 - [ ] Equip cosmetic; rejoin; verify cosmetic persists
 - [ ] Verify coins save on rejoin
-- [ ] Trigger Rush Hour; verify faster spawn rate
-- [ ] Verify End-of-Day summary with correct stats
-- [ ] Complete all 3 daily challenges; verify rewards
+- [ ] Trigger Rush Hour; verify faster spawn rate + "RUSH HOUR!" alert shows
+- [ ] Verify End-of-Day summary shows correct per-player station breakdown strip
+- [ ] Verify shift grade (S/A/B/C/D) matches expected score formula
+- [ ] Complete all 3 daily challenges; verify rewards granted + panel updates
 - [ ] Complete a lifetime milestone; verify one-time award
+
+### New Feature Testing (Session 5 additions)
+- [ ] Deliver a 5-star order → satisfaction emoji ":D" appears above NPC, floats up, fades
+- [ ] Deliver a 1-star order → ":(" emoji appears in red
+- [ ] Let NPC order expire → red "X" billboard appears at NPC head position, floats/fades
+- [ ] Mix a pink_sugar order → HUD order card shows pink border + pink dot
+- [ ] Mix a chocolate_chip order → order card shows brown border + dot
+- [ ] Complete mix station → station breakdown strip in shift results shows Mix score
+- [ ] Complete only oven station → Oven shows score, Mix shows "—" in breakdown strip
+- [ ] Verify combo pill shows streak count; on reset from ≥2: "STREAK BROKEN!" alert fires
+- [ ] Verify "Cookie ready to box!" alert fires when a new warmer slot fills
+- [ ] Carry a box → CarryPill shows orange "Carrying for [NPC name]"; deliver → pill clears
 
 ### Multiplayer Testing
 - [ ] 2 players mix same batch simultaneously → only one succeeds
@@ -568,7 +584,7 @@ StarterGui/
 - [ ] 2 players accept same dress order → only one succeeds
 - [ ] 2 players deliver to same NPC → no duplicate payout
 - [ ] Player disconnects mid-mix → doughLock clears
-- [ ] Player joins mid-shift → warmer stock visible (after fix)
+- [ ] Player joins mid-shift → warmer stock visible immediately
 - [ ] Player leaves holding box → box destroyed on server
 - [ ] 6-player full session → batch pool not starved
 - [ ] Rush Hour + 6 players → NPC cap (6) enforced
@@ -580,7 +596,8 @@ StarterGui/
 - [ ] Fire ResultMix for cookieId not on menu → rejected
 - [ ] Fire PurchaseItem without coins → rejected
 - [ ] Fire PurchaseItem for owned item → rejected
-- [ ] Spam RequestMixStart 50×/1s → no server error, batch blocked
+- [ ] Spam RequestMixStart 50×/1s → no server error, rate-limited silently
+- [ ] Spam PurchaseItem 50×/1s → UpdateAsync not called per-spam, throttled
 - [ ] Fire DeliverBox with nonexistent NPC → safe nil handling
 
 ### Performance Testing
@@ -588,20 +605,24 @@ StarterGui/
 - [ ] Memory stable after 10+ shifts with 6 players
 - [ ] No RunService loops running after shift ends
 - [ ] < 30 RemoteEvent fires/sec at peak load
-- [ ] OrderManager batch tables cleared between shifts
+- [ ] OrderManager batch tables cleared between shifts (SessionStats.Reset verified)
 - [ ] NPC models fully destroyed (not just unparented) on leave
 - [ ] Sounds reused (not recreated per-play)
 
 ### UI Testing
 - [ ] Shop: buy item → coin display updates immediately
 - [ ] Minigame: result popup appears + disappears in 2.5s
-- [ ] Patience meter updates in real-time on order card
+- [ ] Patience meter updates in real-time on order card + in-world color bar
 - [ ] HUD combo counter updates on each delivery
-- [ ] Shift results show correct player-specific stats
+- [ ] Shift results slide-up animation plays correctly; stat counters tick from 0
+- [ ] Shift results show per-station breakdown strip (Mix/Dough/Oven/Frost/Dress)
+- [ ] Shift results grade bounces in with Back ease after counters finish
 - [ ] Daily challenge panel shows correct progress
 - [ ] Test at 1366×768, 1920×1080, 375×812 (mobile portrait)
 - [ ] No UI overlap between order cards and combo counter
 - [ ] Dress station KDS scrolls with 4+ orders
+- [ ] Coach tip bar (C-2) appears on correct triggers; auto-dismisses after 8s
+- [ ] Settings panel: Music + SFX toggles actually mute sound
 
 ### Alpha Playtest Checklist
 - [ ] 5 first-time players complete tutorial without asking how to play
@@ -609,9 +630,9 @@ StarterGui/
 - [ ] No server crash in 30 minutes of play
 - [ ] No data loss on rejoin within 5 minutes
 - [ ] All 6 cookie types baked in one session
-- [ ] Rush Hour event noticed by players
+- [ ] Rush Hour event noticed by players (banner visible)
 - [ ] Combo system understood within 3 shifts
-- [ ] End-of-shift summary read (not instantly closed)
+- [ ] End-of-shift summary read and station breakdown noted (not instantly closed)
 - [ ] At least 1 player returns voluntarily for second session
 
 ---
