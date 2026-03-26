@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-03-25 (Session 6)
-**Overall Alpha Readiness:** 🟡 93% — Almost Alpha Ready. BUG-17 patched on disk + Studio but delivery regression pass not yet run.
+**Overall Alpha Readiness:** 🟡 90% — Almost Alpha Ready. BUG-17 is an open critical exploit blocker. Patch is on disk + Studio but not in-game verified. Do NOT invite Alpha testers until delivery validation pass is complete.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -272,14 +272,15 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `DELIVERY VALIDATION VERIFICATION — BUG-17`
-**Status:** 🟡 BUG-17 critical exploit patched on disk AND pushed to Studio. Patch not yet confirmed via in-game test. Do NOT invite Alpha testers until this pass is complete.
-**Biggest Risk Right Now:** Delivery/reward validation regression — BUG-17 fix may have introduced edge cases in the normal NPC or drive-thru delivery flow.
+**TASK:** `BUG-17 — Drive-Thru Delivery Validation / Box Consumption`
+**Status:** 🟡 BUG-17 critical exploit patched on disk + Studio. Patch not yet confirmed in-game. **Alpha is blocked until this pass is complete.**
+**Are we ready for Alpha?:** Almost — NOT until BUG-17 verification and delivery regression pass are done.
+**Biggest Risk Right Now:** Drive-thru reward validation / duplicate-reward risk — player could receive coins+XP without the box being atomically consumed, or trigger the prompt multiple times before the first reward commits.
 **What is still missing for Alpha:**
-1. In-game test of BUG-17 fix (drive-thru delivery: box consumed, reward fires once, duplicate blocked)
-2. Delivery regression pass — normal NPC delivery still works after DeliverBox routing change
-3. Multiplayer exploit pass (fire DeliverBox with wrong boxId, trigger drive-thru prompt without box)
-4. Live performance check under Rush Hour + 6 players
+1. In-game Studio verification of BUG-17 fix (drive-thru: box consumed, reward fires once, duplicate blocked)
+2. Full delivery regression pass — normal NPC delivery still works correctly after DeliverBox routing change
+3. Multiplayer exploit pass — wrong carrier, wrong packSize, box reuse, AI-staged box handoff all rejected
+4. Peak-load performance verification under Rush Hour + 6 players
 
 ---
 
@@ -289,9 +290,20 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **ACTIVE — BLOCKER** | BUG-17 In-Game Verification | Play-test drive-thru delivery: box consumed, reward fires once, duplicate prompt rejected. Also verify normal NPC delivery not regressed. |
-| 2 | **ACTIVE — BLOCKER** | Delivery Regression Pass | 2 players attempt same drive-thru simultaneously → only one rewarded. Fire prompt without carrying box → rejected. Fire DeliverBox with wrong boxId → rejected. |
+| 1 | **ACTIVE — BLOCKER** | BUG-17 In-Game Verification | Run next-session test list below. Confirm box consumed, reward fires once, duplicate prompt rejected. |
+| 2 | **ACTIVE — BLOCKER** | Delivery Regression Pass | Normal NPC delivery still works. 2 players attempt same drive-thru → only one rewarded. Wrong carrier, wrong packSize, box reuse all rejected. |
 | 3 | **ACTIVE** | Section 12 Full Checklist | Run remaining multiplayer + exploit + performance tests. Log any failures to Section 7 before inviting testers. |
+
+### 🧪 Next-Session Test List (BUG-17 Delivery Validation)
+> Run all 7 before marking BUG-17 resolved. Log any failure to Section 7 before fixing.
+
+1. **Normal NPC delivery** — pick up box, walk to NPC, deliver. Confirm coins+XP granted once, box gone.
+2. **Drive-thru delivery** — carry correct box to drive-thru window. Confirm reward fires once, box consumed, prompt disappears.
+3. **Wrong carrier** — Player B attempts to deliver a box that Player A is carrying. Confirm rejected.
+4. **Wrong pack size** — fire DeliverBox remote with a mismatched packSize value. Confirm server rejects and no reward.
+5. **Box reuse** — after delivering, attempt to use the same boxId again (e.g., fire DeliverBox a second time). Confirm duplicate blocked, no second reward.
+6. **AI-staged box handoff** — AI baker creates a box on DressTable2. Player picks up and delivers. Confirm reward fires once, box destroyed, no exploit path.
+7. **Money/XP grant exactly once** — across all scenarios above, confirm coins and XP are only credited a single time per delivery and the box is removed from server state.
 | 3 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
 | 4 | **Post-Alpha** | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
 | 5 | **Post-Alpha** | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
@@ -687,16 +699,17 @@ StarterGui/
 | UI/UX | ✅ 98% | Coach tips, carry pill, order colors, satisfaction emoji, expired visual, station breakdown, mobile scaling, cosmetic 3D preview all complete. |
 | Progression/Retention | ✅ 90% | 3-tier level unlocks, daily/weekly/lifetime challenges, mastery system, shift grades all present. Daily login reward post-Alpha. |
 | Performance | ✅ 90% | Memory patterns verified clean. All while-true loops confirmed intentional. OrderManager/SessionStats reset each shift. Only gap: live Rush Hour + 6 player profiler run. |
-| Anti-Exploit | 🟡 88% | Rate limits + score validation present. BUG-17 patched on disk + Studio but drive-thru delivery exploit path not yet in-game verified. |
+| Anti-Exploit | 🔴 80% | BUG-17 open critical — drive-thru reward path patched on disk + Studio but not in-game verified. Rate limits + score validation otherwise present. |
 | Game Feel/Polish | ✅ 95% | 15 SFX, combo popups, rush hour banner, results animation, per-station breakdown, VIP NPC glow, patience color bar all complete. Screen effects post-Alpha. |
-| **OVERALL** | **🟡 93%** | **Almost Alpha Ready — BUG-17 patch in Studio but not in-game verified. Run Section 12 delivery tests before inviting testers.** |
+| **OVERALL** | **🟡 90%** | **Almost Alpha Ready — BUG-17 is an open critical exploit blocker. Not all open bugs resolved. Do NOT invite testers until delivery validation pass is complete.** |
 
 ### Remaining Risks for Alpha
-1. **BUG-17 delivery exploit (BLOCKER)** — Drive-thru `DeliverBox` patch is in Studio but not in-game verified. Must confirm box consumed, reward fires once, duplicate rejected before inviting testers.
-2. **Performance under load** — Patterns verified clean. Rush Hour + 6 players needs live profiler run to confirm no RemoteEvent spike.
-3. **Box carry desync (BUG-12)** — BindableEvent/RemoteEvent timing gap. Known low-risk; CarryPill clears on delivery. Monitor during Alpha playtest.
-4. **No retry on DataStore save failure** — crash during shift = silent data loss. Known limitation; post-Alpha hardening.
-5. **In-game challenge counters reset on crash** — daily/weekly progress non-persistent in-memory. Known limitation; acceptable for Alpha.
+1. **🔴 BUG-17 delivery exploit (BLOCKER)** — Drive-thru reward path patched on disk + Studio but not in-game verified. Duplicate-reward risk still open until 7-step test list passes. Must complete before inviting testers.
+2. **Delivery regression risk** — DeliverBox routing change could have broken normal NPC delivery. Must run full regression pass (next-session test list items 1–7).
+3. **Performance under load** — Patterns verified clean. Rush Hour + 6 players needs live profiler run to confirm no RemoteEvent spike.
+4. **Box carry desync (BUG-12)** — BindableEvent/RemoteEvent timing gap. Known low-risk; CarryPill clears on delivery. Monitor during Alpha playtest.
+5. **No retry on DataStore save failure** — crash during shift = silent data loss. Known limitation; post-Alpha hardening.
+6. **In-game challenge counters reset on crash** — daily/weekly progress non-persistent in-memory. Known limitation; acceptable for Alpha.
 
 ### What Changed Since Original 69% Assessment
 - C-1 Movement lock: prevents batch starvation ✅
