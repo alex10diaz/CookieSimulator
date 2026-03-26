@@ -269,6 +269,13 @@ function PlayerDataManager.AwardBakeryXP(player, amount)
         print("[PlayerDataManager]", player.Name, "bakery leveled up to", p.bakeryLevel)
     end
     if didLevelUp then
+        -- H-5: Auto-grant recipe unlocks at bakery level thresholds
+        if p.bakeryLevel >= 5 then
+            PlayerDataManager.AddOwnedCookie(player, "cookies_and_cream")
+        end
+        if p.bakeryLevel >= 10 then
+            PlayerDataManager.AddOwnedCookie(player, "lemon_blackraspberry")
+        end
         local ok, rm = pcall(getRemoteManager)
         if ok then rm.Get("BakeryLevelUp"):FireClient(player, p.bakeryLevel) end
     end
