@@ -651,6 +651,22 @@ StarterGui/
 - ~~No "mistake" feedback when session times out~~ → ✅ Order expired X visual at NPC position
 - ~~Combo resets with no visual punishment feedback~~ → ✅ **Fixed M-10** — "STREAK BROKEN!" red alert
 
+### 🔴 Codex Repo-Wide Audit Findings (Session 8 — 2026-03-26)
+
+> Codex performed a full repo scan (not just the master file) and found 4 new issues + 1 elevated risk. Cross-reference complete: Codex "BUG-25" = my BUG-24 (already tracked). All others are new.
+
+**Why we are STILL NOT ready for Alpha (Codex findings):**
+
+1. **BUG-34 — Data Save Lock is Permanently Sticky**: `PlayerDataManager` writes `_serverLock = SESSION_ID` but never clears it. On any abnormal server shutdown, the lock stays in DataStore. A new server with a different SESSION_ID reads it, sees a mismatch, and **permanently skips saving** for all affected players. This is not a crash edge case — it's a systematic silent data loss path on every server restart. Players grinding XP and coins all shift would lose everything. Fix: write `_serverLock = nil` in BindToClose, or add a timestamp-based expiry.
+
+2. **BUG-35 — Locked Recipes Are Accessible From Day 1**: The game claims cookies_and_cream unlocks at bakery level 5 and lemon_blackraspberry unlocks at level 10. But `MenuManager.DEFAULT_MENU` includes both, and `RequestMixStart` only validates against the active menu — not the player's `unlockedRecipes` list. Any new player can mix any of the 6 cookies from their first session, making the unlock system pure fiction. Fix: add ownership check in `RequestMixStart`.
+
+3. **BUG-36 — Two AI Worker Systems Running Simultaneously**: `StaffManager.server.lua` and `AIBakerSystem.server.lua` both exist, both run, both access `OrderManager`, and both handle "AI does work" logic with different architectures. This is not a future risk — it's an active regression hazard. If one system completes a batch that the other was working on, results are undefined. Must resolve before any alpha session with real players who will expose timing interactions.
+
+4. **BUG-37 — Tutorial Skip Grants Same Reward as Completion**: Skipping the tutorial calls `completeTutorial()` which grants a coin/XP reward. This makes skipping strictly dominant over playing through it — players lose nothing by skipping. The tutorial reward exists to incentivize learning the game, which is defeated entirely if skip is equally rewarded.
+
+5. **RISK-5 — Peak Load Never Verified**: Solo baseline is clean. But 6-player Rush Hour is a qualitatively different load profile: 6× NPC patience ticks, 6× remote fires per station, batches completing simultaneously, all players potentially delivering at once. No live multi-player test has been run. This must happen before inviting alpha testers — a crash during their first session will end the alpha before it starts.
+
 ---
 
 ## 🧪 SECTION 12 — TESTING PLAN
@@ -777,35 +793,40 @@ StarterGui/
 
 ## 📈 SECTION 14 — FINAL REPORT SNAPSHOT (Updated 2026-03-25 — Post Strict Audit)
 
-> ⚠️ This table reflects the state AFTER the Session 7 strict code audit. Previous self-reported 100% was inaccurate. Do not change OVERALL to ✅ until every open bug in Section 7 is marked Resolved.
+> ⚠️ This table reflects the state AFTER Session 7 strict audit + Session 8 Codex repo-wide audit. Do not change OVERALL to ✅ until every open bug in Section 7 is marked Resolved and every Section 8 checkbox is checked.
 
 | Category | Score | Notes |
 |---|---|---|
-| Core Systems | 🟡 92% | Pipeline solid. BUG-22 (oven orphan on disconnect) is an open pipeline stall risk. |
+| Core Systems | 🟡 90% | Pipeline solid. BUG-22 (oven orphan) + BUG-35 (locked recipe bypass in mix handler) are open pipeline risks. |
 | Multiplayer Safety | 🟡 83% | dough/frost/dress locks present. BUG-22 oven orphan + BUG-29 drive-thru carrier + BUG-30 teleport overlap are open. |
-| Data Integrity | 🟡 80% | Cross-server lock + UpdateAsync present. BUG-23 (comboStreak persists across sessions) is open. No retry on save failure — known limitation. |
+| Data Integrity | 🔴 65% | BUG-34 (save lock never expires — systematic silent data loss on server restart) is a critical design flaw downgrading this category. BUG-23 (comboStreak persists) also open. Fix BUG-34 before any real player session. |
 | UI/UX | ✅ 95% | Coach tips, carry pill, order colors, station breakdown, mobile scaling all complete. BUG-31 (mid-shift joiner misses tip) open. |
-| Progression/Retention | 🔴 70% | Level unlocks partially work but `unlockedRecipes` is completely unenforced (all 6 cookies always available). BUG-33 (0 starter coins). Combo streak broken (BUG-23). |
-| Performance | 🟡 85% | BUG-26 (rate-limit table memory leak using player objects as keys). Solo baseline clean. 6-player Rush Hour untested live. |
-| Anti-Exploit | 🟡 85% | BUG-17 closed. BUG-24 (ShowAlert missing from RemoteManager — ProcessReceipt crash) open. BUG-25 (gamepass stubs non-functional). Rate limits in place. |
+| Progression/Retention | 🔴 65% | BUG-35 confirms locked recipes are accessible from day 1 (no ownership enforcement in RequestMixStart). BUG-33 (0 starter coins). Combo streak broken (BUG-23). |
+| Performance | 🟡 80% | BUG-26 (rate-limit memory leak). Solo baseline clean. RISK-5: 6-player Rush Hour peak load unverified — must test before Alpha. |
+| Anti-Exploit | 🟡 80% | BUG-17 closed. BUG-24 (ShowAlert — ProcessReceipt crash) open. BUG-25 (gamepass stubs non-functional). BUG-35 (locked recipe bypass). Rate limits in place. |
+| Architecture | 🔴 70% | BUG-36: two competing AI worker systems both active in production. Undefined interaction under load. Must resolve before Alpha. |
 | Game Feel/Polish | ✅ 95% | 15 SFX, combo popups, rush hour banner, results animation, VIP NPC glow all complete. Screen effects post-Alpha. |
-| **OVERALL** | **🔴 82%** | **NOT Alpha Ready — Strict audit found 3 critical + 3 high + 6 medium bugs (BUG-22 through BUG-33). All must be fixed and verified before inviting any testers. Alpha will be cleared at 100% only after every Section 8 checkbox is checked.** |
+| **OVERALL** | **🔴 78%** | **NOT Alpha Ready — Session 7 found BUG-22 to BUG-33 (12 bugs). Session 8 Codex audit found BUG-34 to BUG-37 + RISK-5 (4 new bugs + 1 elevated risk). Total open: 5 critical, 4 high, 8 medium. Alpha cleared only when every Section 8 checkbox is checked and a 4–6 player live session passes clean.** |
 
 ### Open Alpha Risks (must be resolved — see Section 5 for tasks)
-1. **🔴 BUG-22** — Oven batch orphaned on disconnect — pipeline stall with multiple disconnects
-2. **🔴 BUG-23** — comboStreak persists across sessions — per-shift mechanic fundamentally broken
-3. **🔴 BUG-24** — ShowAlert not in RemoteManager — ProcessReceipt crash on Boost Token
-4. **🟠 BUG-25** — GamepassManager stubs non-functional — paying players get zero benefit
-5. **🟠 BUG-26** — Rate-limit memory leak — compounds over long server lifetime
-6. **🟠 BUG-27** — No feedback on batch cap — silent fail confuses new players
-7. **🟡 BUG-28 through BUG-33** — Medium quality issues, all fixable in one session
+1. **🔴 BUG-34** — PlayerDataManager save lock never expires — systematic silent data loss on server restart
+2. **🔴 BUG-35** — Locked recipe bypass — players can mix cookies they haven't unlocked from session 1
+3. **🔴 BUG-22** — Oven batch orphaned on disconnect — pipeline stall with multiple disconnects
+4. **🔴 BUG-23** — comboStreak persists across sessions — per-shift mechanic fundamentally broken
+5. **🔴 BUG-24** — ShowAlert not in RemoteManager — ProcessReceipt crash on Boost Token
+6. **🟠 BUG-25** — GamepassManager stubs non-functional — paying players get zero benefit
+7. **🟠 BUG-26** — Rate-limit memory leak — compounds over long server lifetime
+8. **🟠 BUG-27** — No feedback on batch cap — silent fail confuses new players
+9. **🟠 BUG-36** — Two AI worker systems running simultaneously — undefined interaction, regression risk
+10. **🟡 BUG-28 through BUG-33** — Medium quality issues, all fixable in one session
+11. **🟡 BUG-37** — Tutorial skip grants same reward as completion — defeats incentive to learn
+12. **🟠 RISK-5** — Peak load (6-player Rush Hour) never verified — must run before Alpha invite
 
 ### Known Post-Alpha Limitations (acceptable for Alpha once above are fixed)
 1. **Box carry desync (BUG-12)** — BindableEvent timing gap. Low-risk; monitor during Alpha.
-2. **Performance under 6-player Rush Hour** — Solo baseline clean. Live profiler run still needed.
-3. **No retry on DataStore save failure** — crash = silent data loss. Post-Alpha hardening.
-4. **In-game challenge counters reset on crash** — non-persistent in-memory. Acceptable for Alpha.
-5. **unlockedRecipes unenforced** — all 6 cookies available from day 1. Progression design gap. Post-Alpha gating.
+2. **No retry on DataStore save failure** — crash = silent data loss on top of BUG-34. Post-Alpha hardening after BUG-34 is resolved.
+3. **In-game challenge counters reset on crash** — non-persistent in-memory. Acceptable for Alpha.
+4. **driveThruUnlocked is in-memory** — resets to false on server restart. Acceptable if server stays up during alpha session.
 
 ### What Changed Since Original 69% Assessment
 - C-1 Movement lock: prevents batch starvation ✅
@@ -822,6 +843,8 @@ StarterGui/
 - BUG-18/19: HUDController startup crash + showAlert nil guards fixed ✅
 - BUG-20/21: Debug coin script removed + EndOfDaySummary remote restored ✅
 - Session 7 strict audit: BUG-22 through BUG-33 found — 3 critical, 3 high, 6 medium — all open
+- Session 8 Codex repo-wide audit: BUG-34 through BUG-37 + RISK-5 found — 2 critical, 1 high, 1 medium, 1 elevated risk — all open
+- Codex "BUG-25" cross-reference: confirmed = my BUG-24, no duplicate ✅
 
 ### ⚠️ ALPHA CLEARANCE RULE
 > The OVERALL score in Section 14 must only be changed to ✅ 100% when ALL of the following are true:
@@ -830,8 +853,11 @@ StarterGui/
 > 3. A full clean play session runs from Lobby → Intermission with `errors: []` in the console
 > 4. The BUG-22 oven orphan test passes (player disconnects mid-oven → batch not stuck)
 > 5. The BUG-23 combo reset test passes (streak = 0 at start of each new shift)
+> 6. The BUG-34 data save test passes (server restarts → new server saves profiles correctly, no lock conflict)
+> 7. The BUG-35 recipe bypass test passes (new player cannot mix cookies_and_cream or lemon_blackraspberry)
+> 8. RISK-5 live load test passes (4–6 players, Rush Hour, no crash, < 10ms avg server activity)
 >
-> If Codex or any external tool suggests additional fixes — cross-reference against Section 7 before adding to avoid duplicates, then add new bugs with the next sequential BUG-ID.
+> If Codex or any external tool suggests additional fixes — cross-reference against Section 7 before adding to avoid duplicates, then add new bugs with the next sequential BUG-ID. Next available ID: BUG-38.
 
 ---
 *End of MASTER PROJECT FILE — Always update this file, never rewrite. Keyphrase: COOKIE ALPHA MASTER FILE*
