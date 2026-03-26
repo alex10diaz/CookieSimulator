@@ -438,8 +438,8 @@ end
 -- ══════════════════════════════════════════════════════════════════════════════
 local coachBar = Instance.new("Frame", hud)
 coachBar.Name = "CoachBar"
-coachBar.Size = UDim2.new(0, 390, 0, 34)
-coachBar.Position = UDim2.new(0.5, -195, 1, -50)
+coachBar.Size = UDim2.new(0.88, 0, 0, 34)
+coachBar.Position = UDim2.new(0.06, 0, 1, -50)
 coachBar.BackgroundColor3 = Color3.fromRGB(175, 218, 235)
 coachBar.BackgroundTransparency = 0.1; coachBar.BorderSizePixel = 0
 coachBar.ZIndex = 20; coachBar.Visible = false
