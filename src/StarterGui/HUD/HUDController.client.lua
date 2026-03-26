@@ -898,14 +898,16 @@ comboUpdateEvent.OnClientEvent:Connect(function(streak)
     streak = streak or 0
     if streak >= 2 then
         comboLbl.Text = "x" .. streak .. " COMBO"
-        TweenService:Create(comboPill, TI(0.2), { BackgroundTransparency = 0.15 }):Play()
+        local tw1 = TweenService:Create(comboPill, TI(0.2), { BackgroundTransparency = 0.15 })
+        if tw1 then tw1:Play() end
     else
         -- M-10: show STREAK BROKEN alert when combo resets from ≥2
         if _prevComboStreak >= 2 then
             showAlert("STREAK BROKEN!", Color3.fromRGB(180, 30, 60), Color3.fromRGB(255, 100, 130), 2)
         end
         comboLbl.Text = ""
-        TweenService:Create(comboPill, TI(0.3), { BackgroundTransparency = 1 }):Play()
+        local tw2 = TweenService:Create(comboPill, TI(0.3), { BackgroundTransparency = 1 })
+        if tw2 then tw2:Play() end
     end
     _prevComboStreak = streak
 end)

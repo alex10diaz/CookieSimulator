@@ -37,21 +37,6 @@ local ANCHOR_CF = {
 
 local workers = {}; local workerCount = 0
 
--- Give debug coins to any joining player
-Players.PlayerAdded:Connect(function(player)
-    task.wait(5)
-    if player and player.Parent then
-        PDM.AddCoins(player, 500)
-        print("[AIBakerSystem] Gave 500 debug coins to " .. player.Name)
-    end
-end)
-task.spawn(function()
-    task.wait(2)
-    for _, p in ipairs(Players:GetPlayers()) do
-        PDM.AddCoins(p, 500)
-        print("[AIBakerSystem] Gave 500 debug coins to " .. p.Name)
-    end
-end)
 
 local function spawnRig(stationId, hiringPlayer)
     -- Scoped to BAKERS_FOLDER — never touches customer NPC objects
