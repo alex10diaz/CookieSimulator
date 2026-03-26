@@ -42,7 +42,7 @@
 | System | Verification Status | Notes |
 |---|---|---|
 | Order System (batch pipeline) | ✅ Verified Implemented | Mix→Dough→Fridge→Oven→[Frost]→Warmers→Dress. Well-architected, event-driven |
-| NPC System | ⚠️ Needs Improvement | Spawning/lifecycle complete. NPC faces wall bug confirmed. |
+| NPC System | ✅ Verified Implemented | Spawning/lifecycle complete. facePosition fixed: task.spawn+0.2s wait, AutoRotate disabled during CFrame snap. |
 | Station System (Mix/Dough/Oven/Frost) | ⚠️ Needs Improvement | All 4 stations functional. **Movement not locked during minigames** |
 | Box System | ⚠️ Needs Improvement | Physical box welded to HRP, transfers to NPC. Arms fall off (Motor6D bug) |
 | Delivery System | ⚠️ Needs Improvement | Payout works. No delivery lock — two players can race same NPC |
@@ -258,12 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `H-1 — NPC Facing Direction Fix`
+**TASK:** `H-2 — Dress Station Quality Scoring`
 **Status:** Not Started → Ready to begin
-**What it is:** NPCs face the wall during wait_in_queue instead of facing into the room/counter. Fix facePosition() logic in PersistentNPCSpawner.
+**What it is:** DRESS_SCORE is hardcoded to 85 — the dress minigame score has no effect on final box quality.
 **Files affected:**
-- `PersistentNPCSpawner.server.lua` — facePosition() / getCounterPos() logic
-**Success criteria:** NPCs face the counter (or inward) after being seated at their spot.
+- `MinigameServer.server.lua` — endSession dress handler passes score to CreateBox
+- `DressStationServer.server.lua` — verify score is forwarded correctly
+**Success criteria:** A player who performs well at dress gets higher quality than one who performs poorly.
 
 ---
 
@@ -271,9 +272,9 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **H-1** | NPC Facing Direction Fix | Current task — facePosition() / getCounterPos() in PersistentNPCSpawner |
-| 2 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
-| 3 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
+| 1 | **H-2** | Dress Quality Scoring | Current task — remove DRESS_SCORE=85, pass actual minigame score |
+| 2 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
+| 3 | **H-4** | Dress Order Lock Timeout | 90s timeout; unlock on disconnect or timeout |
 | 4 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
 | 5 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
 | 6 | **H-4** | Dress Order Lock Timeout | 90s timeout; unlock on disconnect or timeout |
@@ -309,6 +310,7 @@
 | 2026-03-24 | **AIBakerSystem Studio sync** | Used aliased vars (RS/SSS) so wasn't caught by first scan. Studio had `RS:WaitForChild("Modules")` for OrderManager — fixed to `SSS:WaitForChild("Core")`. Disk was already correct. |
 | 2026-03-24 | **REGRESSION/NEW BUG RULE added** | 8-step protocol section added to MASTER_PROJECT_FILE: log first, root cause required, fix narrowly, verify in Studio, mark resolved. Studio Sync Rule added. |
 | 2026-03-25 | **C-2 "What Next?" Guidance System** | PlayerTipUpdate remote added. Coach bar (bottom-center dark pill) in HUDController. 9 tip triggers: PreOpen, Open, mix/dough/oven/frost/dress completions, EndOfDay, Intermission. 8s auto-dismiss with fade tween. |
+| 2026-03-25 | **H-1 NPC Facing Direction Fix** | Root cause: task.defer fired before Humanoid AutoRotate physics settled. Fix: task.spawn+task.wait(0.2), AutoRotate=false during CFrame snap, re-enable after 0.1s. Applied to facePosition() in PersistentNPCSpawner. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
