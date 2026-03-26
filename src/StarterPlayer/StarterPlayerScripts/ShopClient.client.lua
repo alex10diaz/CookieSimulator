@@ -393,6 +393,20 @@ local function setTab(tab)
     tabCosm.TextColor3 = tab == "Cosmetics"
         and Color3.fromRGB(20, 14, 4)
         or  Color3.fromRGB(110, 140, 190)
+
+    -- Show/hide preview pane and resize ItemList to avoid overlap
+    if tab == "Cosmetics" then
+        itemList.Size    = UDim2.new(1, -16, 0, 186)
+        previewPane.Visible = true
+        previewName.Text = "Select a cosmetic"
+        previewDesc.Text = ""
+        hintLabel.Text   = "Click a row to preview"
+    else
+        itemList.Size    = UDim2.new(1, -16, 0, 358)
+        previewPane.Visible = false
+        clearPreview()
+    end
+
     renderItems()
 end
 
