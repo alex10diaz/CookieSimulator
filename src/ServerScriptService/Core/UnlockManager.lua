@@ -17,7 +17,7 @@ local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitF
 
 local CATALOG = {
     -- UPGRADES
-    { id = "tip_boost_1",       tab = "Upgrades",  itemType = "station",  source = "shop",    name = "Tip Boost I",            price = 3000, desc = "+10% NPC tips each shift",              requires = nil },
+    { id = "tip_boost_1",       tab = "Upgrades",  itemType = "station",  source = "shop",    name = "Tip Boost I",            price = 3000, desc = "+10% NPC tips each shift",              requires = nil, bakeryLevelReq = 3 },
     { id = "patience_boost_1",  tab = "Upgrades",  itemType = "station",  source = "shop",    name = "Patient Customers I",    price = 2500, desc = "+10s NPC patience",                      requires = nil },
     { id = "tip_boost_2",       tab = "Upgrades",  itemType = "station",  source = "shop",    name = "Tip Boost II",           price = 6000, desc = "+20% total NPC tips (requires Boost I)",  requires = "tip_boost_1" },
     { id = "patience_boost_2",  tab = "Upgrades",  itemType = "station",  source = "shop",    name = "Patient Customers II",   price = 5000, desc = "+20s total patience (requires Boost I)",   requires = "patience_boost_1" },
@@ -95,6 +95,15 @@ function UnlockManager.Purchase(player, itemId)
         local req = catalogById[item.requires]
         local reqName = req and req.name or item.requires
         return false, "Requires " .. reqName .. " first"
+    end
+
+    -- H-5: Bakery level requirement
+    if item.bakeryLevelReq then
+        local data = PlayerDataManager.GetData(player)
+        local lvl = data and data.bakeryLevel or 1
+        if lvl < item.bakeryLevelReq then
+            return false, "Requires Bakery Level " .. item.bakeryLevelReq
+        end
     end
 
     -- Afford check
