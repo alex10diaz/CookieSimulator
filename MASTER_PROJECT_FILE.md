@@ -258,12 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-4 — Warmer Stock Sync for Joining Players`
+**TASK:** `M-5 — VIP NPC Visual Distinction`
 **Status:** Not Started → Ready to begin
-**What it is:** A player joining mid-shift sees empty warmers and an empty fridge because WarmersUpdated/FridgeUpdated only fires on changes, not on join.
+**What it is:** VIP NPCs pay 1.75× but look identical to normal NPCs — players can't prioritise them.
 **Files affected:**
-- `MinigameServer.server.lua` OR `GameStateManager.server.lua` — on `PlayerAdded` during Open phase, fire a one-time snapshot of current warmer + fridge + batch state to the joining player
-**Success criteria:** A player who joins mid-shift immediately sees the correct warmer counts and fridge contents without waiting for the next state change.
+- `NPCSpawner.lua` — already adds a "⭐ VIP" BillboardGui label; verify it's visible and enhance if needed (crown colour, distinct outfit tint)
+**Success criteria:** When a VIP NPC spawns, players can immediately recognise it as VIP from across the room (gold label above head, or gold HRP highlight).
 
 ---
 
@@ -271,7 +271,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-4** | Warmer Sync for Joiners | Current task — FireClient snapshot on PlayerAdded during Open phase |
+| 1 | **M-5** | VIP NPC Visual | Current task — gold crown/label on VIP NPC |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -309,6 +309,7 @@
 | 2026-03-25 | **M-1 In-World NPC Patience Indicator** | BarFill injected into existing PatienceGui on NPC spawn (NPCSpawner.CreateNPC). PatienceGui resized 120×52, TimerLabel shrunk to 65%, BarBg+BarFill strip added. SetPatienceBar(model, ratio) fn added. Called every patience tick in PersistentNPCSpawner alongside SetTimerText. Color: green>60%, yellow 30–60%, red<30%. |
 | 2026-03-25 | **M-2 Order Ready Alert** | Replaced reserved warmersStockEvent stub in HUDController. _prevWarmerCount tracks warmer total. Count increase → showAlert "Cookie ready to box!" (2.5s, gold) + orderAlertSound chime. Zero-server-change — reuses existing WarmersUpdated broadcast and orderAlertSound. |
 | 2026-03-25 | **M-3 Rush Hour Announcement** | Server already fired RushHour remote with {active=true}. Added client listener in HUDController: showAlert "RUSH HOUR!" (4s, red/gold) using existing showAlert helper. No server changes needed. |
+| 2026-03-25 | **M-4 Warmer Sync for Joiners** | task.defer in PlayerAdded (MinigameServer): checks GameState=="Open"/"EndOfDay", fires BatchUpdated + FridgeUpdated + WarmersUpdated snapshot directly to joining player. BUG-7 resolved. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -328,7 +329,7 @@
 | BUG-4 | 🟠 High | Box Carry | Arms detach when carrying box (Motor6D.Enabled = false disconnects joint) | Open |
 | BUG-5 | 🟠 High | Delivery | Two players can fire DeliverBox to same NPC simultaneously (no delivery lock) | ✅ Resolved — deliveryLocked flag already present (atomic check+set, 7 sites) |
 | BUG-6 | 🟠 High | Dress Station | dressLocked[player] has no timeout — disconnected player locks order slot forever | ✅ Resolved 2026-03-25 — PlayerRemoving+CharacterRemoving clear lock; 90s task.delay auto-release for AFK |
-| BUG-7 | 🟠 High | Multiplayer | New joiner mid-shift doesn't receive current warmer stock snapshot | Open |
+| BUG-7 | 🟠 High | Multiplayer | New joiner mid-shift doesn't receive current warmer stock snapshot | ✅ Resolved 2026-03-25 |
 | BUG-8 | 🟡 Medium | Data | In-memory challenge counters reset on server crash (daily/weekly progress loss) | Known Limitation |
 | BUG-9 | 🟡 Medium | Exploits | No rate limit on RequestMixStart — can spam server-side batch creation attempts | Open |
 | BUG-10 | 🟡 Medium | Exploits | No rate limit on PurchaseItem — UpdateAsync called per spam attempt | Open |
@@ -365,7 +366,7 @@
 - [x] **M-1** In-world NPC patience indicator
 - [x] **M-2** Order ready alert (sound + HUD pill)
 - [x] **M-3** Rush Hour announcement banner
-- [ ] **M-4** Warmer stock sync for joining players
+- [x] **M-4** Warmer stock sync for joining players
 - [ ] **M-5** VIP NPC visual distinction
 - [ ] **M-6** S-Rank shift grade
 - [ ] **M-7** Results screen animation
