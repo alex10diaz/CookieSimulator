@@ -821,7 +821,7 @@ warmersStockEvent.OnClientEvent:Connect(function(warmerState)
     if count > _prevWarmerCount then
         -- Warmer just filled — show toast and play chime
         showAlert("Cookie ready to box!", Color3.fromRGB(255, 200, 60), Color3.fromRGB(255, 240, 120), 2.5)
-        orderAlertSound:Play()
+        if orderAlertSound then orderAlertSound:Play() end
     end
     _prevWarmerCount = count
 end)
