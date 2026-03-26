@@ -105,7 +105,7 @@
 | Music | ✅ Verified Implemented | Background loop at 0.1 volume |
 | Floating Text (+XP, +Money) | ✅ Verified Implemented | DeliveryFeedback + WorkerFeedback remotes, tweened float-up |
 | Quality Result Popups | ✅ Verified Implemented | emoji + label + score %, 2.5s duration via MinigameBase |
-| Combo Popups | 🔶 Partially Implemented | ComboUpdate fires, HUD updates. No "COMBO BROKEN!" popup |
+| Combo Popups | ✅ Verified Implemented | ComboUpdate: streak≥2 shows pill. On reset from ≥2→0: "STREAK BROKEN!" red showAlert (2s). |
 | Screen Effects | ❌ Missing | No ColorCorrection, no screen flash on level-up |
 | Station Progress Bars | ✅ Verified Implemented | Each minigame has its own progress visualization |
 | NPC Patience Indicator (in-world) | ✅ Verified Implemented | BarFill injected into PatienceGui on spawn; green→yellow→red; SetPatienceBar called every patience tick |
@@ -258,12 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-10 — Combo Break Popup`
+**TASK:** `M-11 — Loading Indicator`
 **Status:** Not Started → Ready to begin
-**What it is:** When a combo streak breaks there's no feedback — players don't realise they've lost their streak.
+**What it is:** When a player joins, there's a blank-state flash while PlayerDataManager loads (coins=0, level=1 briefly visible before real data arrives).
 **Files affected:**
-- `HUDController.client.lua` — listen to `ComboUpdate` for streak=0 (after it was >1); show a brief "STREAK BROKEN!" alert
-**Success criteria:** When combo resets to 0 (after ≥2), a red "STREAK BROKEN!" alert flashes for 2s. Uses existing `showAlert` helper.
+- `HUDController.client.lua` — show a "Loading..." overlay that hides once `PlayerDataInit` remote fires
+**Success criteria:** Top bar shows "Loading..." or a spinner until `PlayerDataInit` arrives. Disappears cleanly on data load.
 
 ---
 
@@ -271,7 +271,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-10** | Combo Break Popup | Current task — "STREAK BROKEN!" alert on combo reset |
+| 1 | **M-11** | Loading Indicator | Current task — "Loading..." overlay until PlayerDataInit fires |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
