@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-25 (Session 7)
-**Overall Alpha Readiness:** ✅ 100% — Alpha Ready. All critical blockers resolved and in-game verified. Alpha testers may be invited.
+**Last Updated:** 2026-03-25 (Session 7 — Strict Audit)
+**Overall Alpha Readiness:** 🔴 82% — NOT Alpha Ready. Strict audit (Session 7) found 3 critical bugs + 9 additional issues that must be fixed before inviting any testers. Do NOT invite Alpha testers until every item in Section 5 is resolved and verified.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -272,36 +272,73 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `POST-ALPHA — Invite Alpha Testers`
-**Status:** ✅ All blockers resolved. Alpha is cleared.
-**Are we ready for Alpha?:** YES — all critical bugs fixed and verified in-game. Testers may be invited.
-**What was completed to reach 100%:**
-1. ✅ BUG-17 in-game verified — all 10 delivery tests passed (wrong carrier, wrong packSize, box reuse, AI handoff all rejected)
-2. ✅ EndOfDaySummary remote restored — was accidentally commented out in RemoteManager Studio copy; fixed
-3. ✅ HUDController startup crash fixed — `orderAlertSound` used before declaration; nil guard added
-4. ✅ showAlert TweenService nil guards — all 5 TweenService:Create():Play() calls hardened
-5. ✅ comboPill TweenService nil guards — tw1/tw2 nil guards applied
-6. ✅ DEBUG_GiveCoins script removed — Studio-only script granting 10,000 coins on join; destroyed
-7. ✅ AIBakerSystem debug coins removed — disk + Studio debug block cleaned
-8. ✅ Performance verified — 172 heartbeat/3s, 0 startup errors, clean memory patterns
+**TASK:** `Pre-Alpha Hardening — Fix All Audit Findings`
+**Status:** 🔴 BLOCKED — Strict code audit (Session 7) found 3 critical bugs, 3 high bugs, and 6 medium issues that were not previously tracked. See Section 5 for ordered task list. See Section 7 for BUG-22 through BUG-33.
+**Are we ready for Alpha?:** NO — do not invite testers until every item in Section 5 is fixed AND verified in Studio with zero errors.
+**What remains before Alpha clears:**
+1. ❌ BUG-22 — Oven batch orphaned on disconnect (pipeline stall risk)
+2. ❌ BUG-23 — comboStreak persists across sessions (per-shift mechanic broken)
+3. ❌ BUG-24 — `ShowAlert` remote missing from RemoteManager (ProcessReceipt crash path)
+4. ❌ BUG-25 — GamepassManager VIP/Speed stubs never wired to any behavior
+5. ❌ BUG-26 — Rate-limit tables use player object as key — memory leak
+6. ❌ BUG-27 — No feedback when batch cap reached (silent fail, player confusion)
+7. ❌ BUG-28 — Drive-thru invisible during shift 1 with no explanation to player
+8. ❌ BUG-29 — Drive-thru order unrecoverable if taking player disconnects
+9. ❌ BUG-30 — teleportAllTo overlap — 6 players clip into same 4×4 area
+10. ❌ BUG-31 — New mid-shift joiner misses current coach tip context
+11. ❌ BUG-32 — AI worker dismissed on 2nd player join with no warning or refund
+12. ❌ BUG-33 — New players start 0 coins — shop completely inaccessible shift 1
+
+**What was correctly completed (Sessions 1–7):**
+- BUG-17 in-game verified ✅ | EndOfDaySummary remote ✅ | HUDController crashes ✅
+- DEBUG_GiveCoins removed ✅ | Performance baseline verified ✅
 
 ---
 
 ## 📋 SECTION 5 — NEXT TASK QUEUE
 
-> ✅ Alpha is cleared. All blockers resolved. Next actions are post-Alpha polish and live monitoring.
+> 🔴 Alpha is NOT cleared. Work top-to-bottom. Do not skip. Mark each resolved in Section 7 before advancing.
+> ⚠️ Note: Codex review items may be added here. Cross-reference before starting — do not duplicate work.
+
+### 🔴 CRITICAL BLOCKERS (fix first — in order)
+
+| Order | Bug ID | System | Task | Files to Touch |
+|---|---|---|---|---|
+| 1 | BUG-22 | MinigameServer | Add `station == "oven"` case to `cleanupPlayerSession` — call `OrderManager.ClearOvenBatch(batchId)` on disconnect/timeout | MinigameServer.server.lua, OrderManager.lua |
+| 2 | BUG-23 | PlayerDataManager | Reset `profile.comboStreak = 0` each shift inside `SessionStats.Reset()` or `OrderManager.Reset()` | SessionStats.lua or PlayerDataManager.lua |
+| 3 | BUG-24 | RemoteManager | Add `"ShowAlert"` to the REMOTES table in RemoteManager.lua (disk + Studio) | RemoteManager.lua |
+
+### 🟠 HIGH — Fix before inviting testers
+
+| Order | Bug ID | System | Task | Files to Touch |
+|---|---|---|---|---|
+| 4 | BUG-25 | GamepassManager | Wire `HasSpeedPass()` into GameStateManager PreOpen skip; wire `HasVIPPass()` into EconomyManager payout multiplier | GamepassManager.server.lua, GameStateManager.server.lua, EconomyManager.lua |
+| 5 | BUG-26 | MinigameServer / UnlockManager | Change `lastMixRequestTime[player]` → `[player.UserId]`; same for `lastPurchaseTime`; add `PlayerRemoving` cleanup in both | MinigameServer.server.lua, UnlockManager.lua |
+| 6 | BUG-27 | MinigameServer | Fire `PlayerTipUpdate` or `ShowAlert` to player when `TryStartBatch` returns nil: "All batch slots full — wait for dough stage to clear" | MinigameServer.server.lua |
+
+### 🟡 MEDIUM — Fix before inviting testers (quality bar)
+
+| Order | Bug ID | System | Task | Files to Touch |
+|---|---|---|---|---|
+| 7 | BUG-28 | DriveThruServer / HUDController | On shift start, fire a coach tip to players: "Complete your first shift to unlock the Drive-Thru!" | DriveThruServer.server.lua or GameStateManager.server.lua |
+| 8 | BUG-29 | DriveThruServer | On `PlayerRemoving`, if player is `currentOrder.takenBy`, set `currentOrder.takenBy = nil` so another player can deliver | DriveThruServer.server.lua |
+| 9 | BUG-30 | GameStateManager | Spread `teleportAllTo` offsets by player index instead of `math.random` — prevents 6 players clipping same spot | GameStateManager.server.lua |
+| 10 | BUG-31 | MinigameServer / GameStateManager | In M-4 joiner snapshot block, also re-fire current `tipRemote:FireClient(player, lastTip)` — track `lastTip` per-state | MinigameServer.server.lua + GameStateManager.server.lua |
+| 11 | BUG-32 | AIBakerSystem | Before `updateSoloMode()` dismisses workers on 2nd player join: fire a notification to owner + refund `HIRE_COST` per dismissed worker | AIBakerSystem.server.lua |
+| 12 | BUG-33 | PlayerDataManager | New players start with 500 coins in `newProfile()` — shop must be accessible from session 1 | PlayerDataManager.lua |
+
+### ✅ Post-Alpha Queue (do NOT touch until all above are resolved)
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **FIRST** | Invite Alpha Testers | Run Section 12 checklist during first live session. Log any failures to Section 7. |
-| 2 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
-| 4 | **Post-Alpha** | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
-| 5 | **Post-Alpha** | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
-| 6 | **Post-Alpha** | Top Bar Bakery XP (L-14) | Show bakery XP separately from player XP |
-| 7 | **Post-Alpha** | Waypoint Arrows in Tutorial (L-15) | Guide new players to stations visually |
-| 8 | **Post-Alpha** | Daily Login Rewards (L-1) | Retention mechanic; balance after live data |
-| 9 | **Post-Alpha** | Event System (L-2) | Seasonal content; stub exists |
-| 10 | **Post-Alpha** | Controller Support (L-3) | Gamepad input for minigames |
+| — | Post-Alpha | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar before buying |
+| — | Post-Alpha | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
+| — | Post-Alpha | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
+| — | Post-Alpha | Top Bar Bakery XP (L-14) | Show bakery XP separately from player XP |
+| — | Post-Alpha | Waypoint Arrows in Tutorial (L-15) | Guide new players to stations visually |
+| — | Post-Alpha | Daily Login Rewards (L-1) | Retention mechanic; balance after live data |
+| — | Post-Alpha | Event System (L-2) | Seasonal content; stub exists |
+| — | Post-Alpha | Controller Support (L-3) | Gamepad input for minigames |
 
 ---
 
