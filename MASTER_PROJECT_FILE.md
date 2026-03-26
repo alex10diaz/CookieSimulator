@@ -213,53 +213,60 @@
 
 ## 🎯 SECTION 3 — PRIORITY BOARD
 
-### 🔴 CRITICAL (Blockers — Must be done before ANY Alpha testing)
-| # | System | Why |
-|---|---|---|
-| C-1 | Station Movement Locking | Players walk away mid-minigame → batch pool starved, session hangs 60s |
-| C-2 | "What Next?" Guidance System | New players quit immediately with no waypoints or coach tips |
+> All CRITICAL and HIGH items are complete. MEDIUM items are complete. This section is now a historical record + post-Alpha backlog.
 
-### 🟠 HIGH (Must be done before Alpha)
-| # | System | Why |
+### ✅ CRITICAL — All Done
+| # | System | Status |
 |---|---|---|
-| H-1 | NPC Facing Direction Fix | NPCs face wall — first impression is broken |
-| H-2 | Dress Station Quality Scoring | Hardcoded 85 breaks entire quality system for frosted cookies |
-| H-3 | Delivery Race Lock | Two players can deliver to same NPC simultaneously |
-| H-4 | Dress Order Lock Timeout | Disconnected player locks an order slot for entire shift |
-| H-5 | Level Unlock Content | Leveling up to nothing destroys long-term retention |
-| H-6 | Tutorial Fridge→Oven Step | Tutorial ends before teaching the full pipeline |
-| H-7 | Remote Rate Limiting | PurchaseItem and RequestMixStart have no per-client throttle |
-| H-8 | Carry Indicator UI | Players don't know they're holding a box or where to deliver it |
+| C-1 | Station Movement Locking | ✅ Done 2026-03-24 |
+| C-2 | "What Next?" Guidance System | ✅ Done 2026-03-25 |
 
-### 🟡 MEDIUM (Should be done before Alpha)
-| # | System | Why |
+### ✅ HIGH — All Done
+| # | System | Status |
 |---|---|---|
-| M-1 | In-World NPC Patience Indicator | Players at stations go blind to NPC timeouts |
-| M-2 | Order Ready Alert | Players don't know when warmers fill up; stand idle |
-| M-3 | Rush Hour Visual Announcement | Players miss the Rush Hour event entirely |
-| M-4 | Warmer Stock Sync for Joining Players | Mid-shift joiners see empty warmers incorrectly |
-| M-5 | VIP NPC Visual Distinction | VIP NPCs look identical to normal NPCs |
-| M-6 | S-Rank Shift Grade | A is the current ceiling; S gives high performers a target |
-| M-7 | Results Screen Animation | Appears instantly with no celebration; feels like debug screen |
-| M-8 | Settings UI (volume slider) | No way to control audio |
-| M-9 | Mobile Scaling Pass | Not tested on portrait or tablet ratio |
-| M-10 | Combo Break Popup | No "STREAK BROKEN!" feedback |
-| M-11 | Loading Indicator (data load) | Blank-state flash while PlayerDataManager loads |
-| M-12 | Gamepass Integration Scaffold | Revenue; should at least have Speed Pass before Alpha |
+| H-1 | NPC Facing Direction Fix | ✅ Done 2026-03-25 |
+| H-2 | Dress Station Quality Scoring | ✅ Done 2026-03-25 |
+| H-3 | Delivery Race Lock | ✅ Done 2026-03-25 (was already present) |
+| H-4 | Dress Order Lock Timeout | ✅ Done 2026-03-25 |
+| H-5 | Level Unlock Content | ✅ Done 2026-03-25 |
+| H-6 | Tutorial Fridge→Oven Step | ✅ Done 2026-03-25 (was already present) |
+| H-7 | Remote Rate Limiting | ✅ Done 2026-03-25 |
+| H-8 | Carry Indicator UI | ✅ Done 2026-03-25 |
 
-### 🟢 LOW (Polish — After Alpha)
-| # | System | Why |
+### ✅ MEDIUM — All Done
+| # | System | Status |
 |---|---|---|
-| L-1 | Daily Login Rewards | Retention; not needed for first Alpha |
+| M-1 | In-World NPC Patience Indicator | ✅ Done 2026-03-25 |
+| M-2 | Order Ready Alert | ✅ Done 2026-03-25 |
+| M-3 | Rush Hour Visual Announcement | ✅ Done 2026-03-25 |
+| M-4 | Warmer Stock Sync for Joining Players | ✅ Done 2026-03-25 |
+| M-5 | VIP NPC Visual Distinction | ✅ Done 2026-03-25 |
+| M-6 | S-Rank Shift Grade | ✅ Done 2026-03-25 (was already present) |
+| M-7 | Results Screen Animation | ✅ Done 2026-03-25 |
+| M-8 | Settings UI | ✅ Done 2026-03-25 (was already present) |
+| M-9 | Mobile Scaling Pass | ✅ Done 2026-03-25 |
+| M-10 | Combo Break Popup | ✅ Done 2026-03-25 |
+| M-11 | Loading Indicator (data load) | ✅ Done 2026-03-25 |
+| M-12 | Gamepass Integration Scaffold | ✅ Done 2026-03-25 |
+
+### 🟢 POST-ALPHA BACKLOG
+| # | System | Notes |
+|---|---|---|
+| L-1 | Daily Login Rewards | Retention; balance after live data |
 | L-2 | Event System | Seasonal content; post-launch |
-| L-3 | Controller Support | Nice to have; ProximityPrompts already work by default |
-| L-4 | Screen Effects (ColorCorrection, shake) | Visual polish |
+| L-3 | Controller Support | ProximityPrompts work by default; minigame gamepad post-Alpha |
+| L-4 | Screen Effects (ColorCorrection, shake) | Profile performance first |
 | L-5 | Rebirth / Prestige | Late-game loop |
-| L-6 | Social Actions (wave, high-five) | Community feature |
-| L-7 | Rejoin Session Protection | QOL; session data restores after 60s disconnect |
-| L-8 | Custom Leaderboard UI | Native leaderstats is sufficient for Alpha |
-| L-9 | Credits Screen | Nice-to-have polish |
-| L-10 | Intro Cutscene | Post-Alpha when narrative is set |
+| L-6 | Social Actions (wave, high-five) | Needs player base first |
+| L-7 | Rejoin Session Protection | 60s watchdog covers most cases |
+| L-8 | Custom Leaderboard UI | Native leaderstats sufficient for Alpha |
+| L-9 | Credits Screen | Post-launch |
+| L-10 | Intro Cutscene | Narrative not yet defined |
+| L-11 | Shop Cosmetic Preview | Avatar preview for hats/aprons |
+| L-12 | Persistent Bakery Rating | Reputation across shifts |
+| L-13 | Level Up Celebration (client) | Confetti / sound on level-up |
+| L-14 | Top Bar Bakery XP | Show bakery XP separately from player XP |
+| L-15 | Waypoint Arrows in Tutorial | Guide new players to stations visually |
 
 ---
 
