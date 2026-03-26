@@ -104,26 +104,32 @@ function NPCSpawner.CreateNPC(config)
 
     npc.Name = config.name or "Customer"
 
-    -- VIP: gold BillboardGui label above head (avatar appearance is fixed, can't recolor parts)
+    -- M-5: VIP gold BillboardGui — larger, always-on-top, gold glow
     if config.isVIP then
         local head = npc:FindFirstChild("Head")
         if head then
             local bb           = Instance.new("BillboardGui")
             bb.Name            = "VIPGui"
-            bb.Size            = UDim2.new(0, 60, 0, 24)
-            bb.StudsOffset     = VIP_LABEL_OFFSET
-            bb.AlwaysOnTop     = false
+            bb.Size            = UDim2.new(0, 110, 0, 32)
+            bb.StudsOffset     = Vector3.new(0, 5.2, 0)  -- above patience bar
+            bb.AlwaysOnTop     = true
             bb.Parent          = head
 
             local lbl                    = Instance.new("TextLabel")
             lbl.Size                     = UDim2.new(1, 0, 1, 0)
-            lbl.BackgroundColor3         = Color3.fromRGB(255, 200, 0)
-            lbl.BackgroundTransparency   = 0.1
-            lbl.TextColor3               = Color3.fromRGB(0, 0, 0)
+            lbl.BackgroundColor3         = Color3.fromRGB(255, 185, 0)
+            lbl.BackgroundTransparency   = 0
+            lbl.TextColor3               = Color3.fromRGB(30, 20, 0)
             lbl.Font                     = Enum.Font.GothamBold
             lbl.TextScaled               = true
-            lbl.Text                     = "⭐ VIP"
+            lbl.Text                     = "★ VIP ★"
             lbl.Parent                   = bb
+            Instance.new("UICorner", lbl).CornerRadius = UDim.new(0.5, 0)
+
+            local stroke             = Instance.new("UIStroke", lbl)
+            stroke.Color             = Color3.fromRGB(255, 240, 100)
+            stroke.Thickness         = 1.5
+            stroke.Transparency      = 0.1
         end
     end
 
