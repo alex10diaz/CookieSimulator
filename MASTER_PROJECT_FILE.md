@@ -362,14 +362,14 @@
 
 ### MUST HAVE (Blockers)
 - [x] **C-1** Station movement locking during minigames
-- [ ] **C-2** "What Next?" guidance (waypoints or coach tip bar)
-- [ ] **H-1** NPC facing counter correctly
-- [ ] **H-2** Dress station quality scoring (remove hardcode)
-- [ ] **H-3** Delivery race lock (first delivery wins)
-- [ ] **H-4** Dress order lock timeout on disconnect
-- [ ] **H-5** Level unlock content (3 tiers minimum)
-- [ ] **H-6** Tutorial fridge→oven step added
-- [ ] **H-7** Remote rate limiting on PurchaseItem + RequestMixStart
+- [x] **C-2** "What Next?" guidance (waypoints or coach tip bar)
+- [x] **H-1** NPC facing counter correctly
+- [x] **H-2** Dress station quality scoring (remove hardcode)
+- [x] **H-3** Delivery race lock (first delivery wins)
+- [x] **H-4** Dress order lock timeout on disconnect
+- [x] **H-5** Level unlock content (3 tiers minimum)
+- [x] **H-6** Tutorial fridge→oven step added
+- [x] **H-7** Remote rate limiting on PurchaseItem + RequestMixStart
 - [x] **H-8** Carry indicator UI (box icon + destination)
 - [x] BUG-4 Box carry arms not detaching
 - [x] BUG-13 NPC collision ceiling lift fixed
