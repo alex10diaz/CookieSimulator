@@ -1179,6 +1179,43 @@ workerFeedbackEvent.OnClientEvent:Connect(function(targetPlayer, stationName, sc
 end)
 
 -- ══════════════════════════════════════════════════════════════════════════════
+-- H-8: CARRY INDICATOR — shows NPC name when player is holding a box
+-- ══════════════════════════════════════════════════════════════════════════════
+local carryPill = Instance.new("Frame", hud)
+carryPill.Name               = "CarryPill"
+carryPill.Size               = UDim2.new(0, 340, 0, 40)
+carryPill.Position           = UDim2.new(0.5, -170, 1, -118)
+carryPill.BackgroundColor3   = Color3.fromRGB(255, 130, 60)
+carryPill.BackgroundTransparency = 0.1
+carryPill.BorderSizePixel    = 0
+carryPill.ZIndex             = 24
+carryPill.Visible            = false
+corner(carryPill, 20)
+addStroke(carryPill, C.WHITE, 1.5, 0.5)
+
+local carryLbl = Instance.new("TextLabel", carryPill)
+carryLbl.Size               = UDim2.new(1, -16, 1, 0)
+carryLbl.Position           = UDim2.new(0, 8, 0, 0)
+carryLbl.BackgroundTransparency = 1
+carryLbl.TextColor3         = C.WHITE
+carryLbl.Font               = Enum.Font.GothamBold
+carryLbl.TextScaled         = true
+carryLbl.TextXAlignment     = Enum.TextXAlignment.Center
+carryLbl.Text               = ""
+carryLbl.ZIndex             = 25
+
+RemoteManager.Get("BoxCarried").OnClientEvent:Connect(function(npcName)
+    if npcName then
+        carryLbl.Text = "\xF0\x9F\x93\xA6  Deliver to: " .. npcName
+        carryPill.Visible = true
+        TweenService:Create(carryPill, TIB(0.3), { Size = UDim2.new(0, 360, 0, 44) }):Play()
+    else
+        TweenService:Create(carryPill, TI(0.2), { Size = UDim2.new(0, 320, 0, 36) }):Play()
+        task.delay(0.25, function() carryPill.Visible = false end)
+    end
+end)
+
+-- ══════════════════════════════════════════════════════════════════════════════
 -- C-2: COACH BAR — bottom-center hint strip
 -- ══════════════════════════════════════════════════════════════════════════════
 local coachBar = Instance.new("Frame", hud)
