@@ -55,6 +55,7 @@ local ORDER_DISPLAY = TABLET_PART and TABLET_PART:FindFirstChild("OrderDisplay")
 local DISPLAY_FRAME = ORDER_DISPLAY and ORDER_DISPLAY:FindFirstChildOfClass("Frame")
 
 -- Remotes
+local boxCarriedRemote         = RemoteManager.Get("BoxCarried")          -- H-8: carry indicator
 local deliveryResult           = RemoteManager.Get("DeliveryResult")
 local hudUpdate                = RemoteManager.Get("HUDUpdate")
 local startOrderCutsceneRemote = RemoteManager.Get("StartOrderCutscene")

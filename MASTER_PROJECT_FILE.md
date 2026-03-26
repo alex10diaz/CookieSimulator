@@ -316,6 +316,7 @@
 | 2026-03-25 | **H-4 Dress Order Lock Timeout** | PlayerRemoving + CharacterRemoving cleanup already present. Added LOCK_TIMEOUT=90 constant + task.delay(90) auto-release on both variety and single-order lock paths in DressStationServer. |
 | 2026-03-25 | **H-5 Level Unlock Content** | UnlockManager: bakeryLevelReq=3 on tip_boost_1, enforced in Purchase() before DeductCoins. PlayerDataManager.AwardBakeryXP: auto-grants cookies_and_cream at level 5, lemon_blackraspberry at level 10 via AddOwnedCookie. |
 | 2026-03-25 | **H-6 Tutorial Fridge→Oven Step** | Already implemented — step 3 msg covers fridge pull + oven, gates on oven StationCompleted. Verified in code. |
+| 2026-03-25 | **H-7 Remote Rate Limiting** | lastPurchaseTime table + 1s throttle in UnlockManager.PurchaseItem handler. lastMixRequestTime table + 0.5s throttle in MinigameServer.RequestMixStart handler. Silent drop (no error sent). |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
