@@ -123,7 +123,7 @@
 | Achievements (Lifetime Challenges) | ✅ Verified Implemented | 30+ lifetime milestones (orders, cookies sold, bakery level, mastery) |
 | Daily Challenges | ✅ Verified Implemented | 3 per day, date-keyed, coin rewards |
 | Weekly Challenges | ✅ Verified Implemented | 3 per week, tiered Easy/Med/Hard |
-| Shift Grades | ⚠️ Needs Improvement | A–D implemented. **S-rank missing** |
+| Shift Grades | ✅ Verified Implemented | S/A/B/C/D — S≥90, A≥75, B≥60, C≥45, D otherwise. Verified in Studio. |
 | Rush Hour Mode | ✅ Verified Implemented | Fires at 70% of Open elapsed, faster NPC spawn (60s→20s) |
 | VIP Customers | ⚠️ Needs Improvement | 10% spawn chance, 1.75× payout. **No visual distinction on NPC** |
 | Events | ❌ Missing | EventManager.server.lua exists as stub. No event logic |
@@ -187,7 +187,7 @@
 | Dress Order Lock Timeout | Not Started | HIGH | Before |
 | Remote Rate Limiting | Not Started | HIGH | Before |
 | VIP NPC Visual | Complete | MEDIUM | ✅ Done |
-| S-Rank Grade Tier | Not Started | MEDIUM | Before |
+| S-Rank Grade Tier | Complete | MEDIUM | ✅ Done |
 | Settings UI | Not Started | MEDIUM | Before |
 | Mobile Scaling Pass | Not Started | MEDIUM | Before |
 | Results Screen Polish | Needs Improvement | MEDIUM | Before |
@@ -258,12 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-6 — S-Rank Shift Grade`
+**TASK:** `M-7 — Results Screen Animation`
 **Status:** Not Started → Ready to begin
-**What it is:** A is the current ceiling for shift grades — high performers have no target above A.
+**What it is:** The end-of-shift summary appears instantly with no celebration — feels like a debug readout.
 **Files affected:**
-- `SessionStats.lua` — find `GetShiftGrade()`, add S threshold (≥97 score)
-**Success criteria:** A shift with ≥97 average quality score returns grade "S". Displayed on end-of-shift summary.
+- `SummaryController.client.lua` — add slide-up tween on panel open + staggered counter animations for each stat row
+**Success criteria:** Summary panel slides up from bottom on appear. Stat counters tick up over ~1.5s. Grade letter scales in with a bounce tween.
 
 ---
 
@@ -271,7 +271,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-6** | S-Rank Grade | Current task — 97+ score threshold in SessionStats.GetShiftGrade |
+| 1 | **M-7** | Results Screen Animation | Current task — slide-up tween + stat counter animations |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -311,6 +311,7 @@
 | 2026-03-25 | **M-3 Rush Hour Announcement** | Server already fired RushHour remote with {active=true}. Added client listener in HUDController: showAlert "RUSH HOUR!" (4s, red/gold) using existing showAlert helper. No server changes needed. |
 | 2026-03-25 | **M-4 Warmer Sync for Joiners** | task.defer in PlayerAdded (MinigameServer): checks GameState=="Open"/"EndOfDay", fires BatchUpdated + FridgeUpdated + WarmersUpdated snapshot directly to joining player. BUG-7 resolved. |
 | 2026-03-25 | **M-5 VIP NPC Visual** | Enhanced VIPGui in NPCSpawner: size 60×24→110×32, AlwaysOnTop=false→true, StudsOffset raised to 5.2 (above patience bar), text "⭐ VIP"→"* VIP *", UICorner+UIStroke gold glow added. |
+| 2026-03-25 | **M-6 S-Rank Shift Grade** | Already implemented in both disk and Studio (score≥90=S, ≥75=A, ≥60=B, ≥45=C, else D). Verified in SessionStats.GetShiftGrade. No changes needed. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -369,7 +370,7 @@
 - [x] **M-3** Rush Hour announcement banner
 - [x] **M-4** Warmer stock sync for joining players
 - [x] **M-5** VIP NPC visual distinction
-- [ ] **M-6** S-Rank shift grade
+- [x] **M-6** S-Rank shift grade
 - [ ] **M-7** Results screen animation
 - [ ] **M-8** Settings UI (volume slider)
 - [ ] **M-9** Mobile scaling tested on portrait + tablet
