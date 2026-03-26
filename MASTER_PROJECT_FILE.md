@@ -258,13 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `H-2 — Dress Station Quality Scoring`
+**TASK:** `H-3 — Delivery Race Lock`
 **Status:** Not Started → Ready to begin
-**What it is:** DRESS_SCORE is hardcoded to 85 — the dress minigame score has no effect on final box quality.
+**What it is:** Two players can fire DeliverBox to the same NPC simultaneously — no lock prevents duplicate payout.
 **Files affected:**
-- `MinigameServer.server.lua` — endSession dress handler passes score to CreateBox
-- `DressStationServer.server.lua` — verify score is forwarded correctly
-**Success criteria:** A player who performs well at dress gets higher quality than one who performs poorly.
+- `PersistentNPCSpawner.server.lua` — DeliverBox handler, add per-order delivery lock
+**Success criteria:** Second player to fire DeliverBox for a claimed NPC gets rejected cleanly.
 
 ---
 
@@ -311,6 +310,7 @@
 | 2026-03-24 | **REGRESSION/NEW BUG RULE added** | 8-step protocol section added to MASTER_PROJECT_FILE: log first, root cause required, fix narrowly, verify in Studio, mark resolved. Studio Sync Rule added. |
 | 2026-03-25 | **C-2 "What Next?" Guidance System** | PlayerTipUpdate remote added. Coach bar (bottom-center dark pill) in HUDController. 9 tip triggers: PreOpen, Open, mix/dough/oven/frost/dress completions, EndOfDay, Intermission. 8s auto-dismiss with fade tween. |
 | 2026-03-25 | **H-1 NPC Facing Direction Fix** | Root cause: task.defer fired before Humanoid AutoRotate physics settled. Fix: task.spawn+task.wait(0.2), AutoRotate=false during CFrame snap, re-enable after 0.1s. Applied to facePosition() in PersistentNPCSpawner. |
+| 2026-03-25 | **H-2 Dress Station Quality Scoring** | Root cause: DRESS_SCORE=85 hardcoded in both CreateBox and CreateVarietyBox calls on the no-topping path. Fix: removed constant, added avgSnapshot() helper, no-topping path now uses entry.snapshot (accumulated station quality). Topping-minigame path already used real score — untouched. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -326,7 +326,7 @@
 |---|---|---|---|---|
 | BUG-1 | 🔴 Critical | Minigames | No movement lock — players walk away mid-session | ✅ Resolved 2026-03-24 |
 | BUG-2 | 🔴 Critical | NPC System | NPCs face wall during wait_in_queue despite facePosition() call | Open |
-| BUG-3 | 🟠 High | Quality Scoring | DRESS_SCORE = 85 hardcoded — dress quality always 85 regardless of performance | Open |
+| BUG-3 | 🟠 High | Quality Scoring | DRESS_SCORE = 85 hardcoded — dress quality always 85 regardless of performance | ✅ Resolved 2026-03-25 |
 | BUG-4 | 🟠 High | Box Carry | Arms detach when carrying box (Motor6D.Enabled = false disconnects joint) | Open |
 | BUG-5 | 🟠 High | Delivery | Two players can fire DeliverBox to same NPC simultaneously (no delivery lock) | Open |
 | BUG-6 | 🟠 High | Dress Station | dressLocked[player] has no timeout — disconnected player locks order slot forever | Open |

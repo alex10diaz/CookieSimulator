@@ -25,7 +25,13 @@ local activeKDS     = {}  -- player -> true  (KDS UI is open)
 local dressLocked   = {}  -- player -> { orderId, cookieId, npcName }
 local orderLockedBy = {}  -- orderId -> player; prevents two players locking same order
 
-local DRESS_SCORE = 85
+-- H-2: compute dress quality from accumulated station snapshot (removes hardcoded 85)
+local function avgSnapshot(entries)
+    if not entries or #entries == 0 then return 85 end
+    local total = 0
+    for _, e in ipairs(entries) do total = total + (e.snapshot or 85) end
+    return math.floor(total / #entries)
+end
 
 -- CFrame players are teleported to before the topping minigame starts (Bug 4 fix)
 local DRESS_STATION_CF = CFrame.new(-20.09, 5, -33.38) * CFrame.Angles(0, math.rad(90), 0) -- face -X toward dress table
@@ -433,7 +439,7 @@ local function hookWarmerPrompt(prompt, model)
                 return
             end
             -- No toppings — create box immediately
-            local box = OrderManager.CreateVarietyBox(player, lock.collected, DRESS_SCORE)
+            local box = OrderManager.CreateVarietyBox(player, lock.collected, avgSnapshot(lock.collected))
             lock.finalized = box ~= nil
             clearDressLock(player)
             if box then
@@ -476,7 +482,7 @@ local function hookWarmerPrompt(prompt, model)
                 return
             end
             -- No toppings — create box immediately
-            local box = OrderManager.CreateBox(player, entry.batchId, DRESS_SCORE, entry)
+            local box = OrderManager.CreateBox(player, entry.batchId, entry.snapshot or 85, entry)
             lock.finalized = box ~= nil
             clearDressLock(player)
             if box then
