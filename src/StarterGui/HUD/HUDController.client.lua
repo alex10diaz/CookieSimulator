@@ -964,6 +964,10 @@ boxCreatedEvent.OnClientEvent:Connect(function(box)
     end)
 end)
 
+-- M-11: Show loading state until PlayerDataInit arrives
+coinsLbl.Text  = "..."
+levelLbl.Text  = "..."
+
 -- Initialize HUD with actual player data on join
 dataInitEvent.OnClientEvent:Connect(function(data)
     if not data then return end

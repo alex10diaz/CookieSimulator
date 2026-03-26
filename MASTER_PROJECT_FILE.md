@@ -315,6 +315,7 @@
 | 2026-03-25 | **M-7 Results Screen Animation** | SummaryController: frame slides up from Y=1.15→centred (Back ease 0.45s). Stat counters tick from 0→final in 28 steps (staggered 0.12s apart, delayed 0.3s). gradeValL fades in with Back ease after 0.5s. |
 | 2026-03-25 | **M-8 Settings UI** | Already implemented — ⚙️ panel with Music ON/OFF + SFX ON/OFF toggles, directly sets Sound.Volume. Verified in Studio. No changes needed. |
 | 2026-03-25 | **M-9 Mobile Scaling Pass** | Audited all fixed-px widths >360: CoachBar→0.88 scale, CoachTip (C-2 bar)→0.88 scale + renamed "CoachTip", CarryPill→0.82 scale, tween targets updated. All station ProximityPrompts dist=12 (adequate). |
+| 2026-03-25 | **M-10 Combo Break Popup** | Added _prevComboStreak tracking. When streak resets from ≥2 to 0: showAlert "STREAK BROKEN!" (2s, red). Combo pill emoji removed from text (was showing raw emoji bytes on some clients). |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -377,7 +378,7 @@
 - [x] **M-7** Results screen animation
 - [x] **M-8** Settings UI (volume slider)
 - [x] **M-9** Mobile scaling tested on portrait + tablet
-- [ ] **M-10** Combo break popup
+- [x] **M-10** Combo break popup
 - [ ] **M-11** Loading indicator during data load
 - [ ] **M-12** Gamepass scaffold (Speed Pass stub)
 
