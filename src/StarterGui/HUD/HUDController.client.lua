@@ -1203,8 +1203,8 @@ end)
 -- ══════════════════════════════════════════════════════════════════════════════
 local carryPill = Instance.new("Frame", hud)
 carryPill.Name               = "CarryPill"
-carryPill.Size               = UDim2.new(0, 340, 0, 40)
-carryPill.Position           = UDim2.new(0.5, -170, 1, -118)
+carryPill.Size               = UDim2.new(0.82, 0, 0, 40)
+carryPill.Position           = UDim2.new(0.09, 0, 1, -118)
 carryPill.BackgroundColor3   = Color3.fromRGB(255, 130, 60)
 carryPill.BackgroundTransparency = 0.1
 carryPill.BorderSizePixel    = 0
@@ -1228,9 +1228,9 @@ RemoteManager.Get("BoxCarried").OnClientEvent:Connect(function(npcName)
     if npcName then
         carryLbl.Text = "\xF0\x9F\x93\xA6  Deliver to: " .. npcName
         carryPill.Visible = true
-        TweenService:Create(carryPill, TIB(0.3), { Size = UDim2.new(0, 360, 0, 44) }):Play()
+        TweenService:Create(carryPill, TIB(0.3), { Size = UDim2.new(0.86, 0, 0, 44) }):Play()
     else
-        TweenService:Create(carryPill, TI(0.2), { Size = UDim2.new(0, 320, 0, 36) }):Play()
+        TweenService:Create(carryPill, TI(0.2), { Size = UDim2.new(0.78, 0, 0, 36) }):Play()
         task.delay(0.25, function() carryPill.Visible = false end)
     end
 end)
@@ -1239,9 +1239,9 @@ end)
 -- C-2: COACH BAR — bottom-center hint strip
 -- ══════════════════════════════════════════════════════════════════════════════
 local coachBar = Instance.new("Frame", hud)
-coachBar.Name               = "CoachBar"
-coachBar.Size               = UDim2.new(0, 520, 0, 42)
-coachBar.Position           = UDim2.new(0.5, -260, 1, -70)
+coachBar.Name               = "CoachTip"
+coachBar.Size               = UDim2.new(0.88, 0, 0, 42)
+coachBar.Position           = UDim2.new(0.06, 0, 1, -70)
 coachBar.BackgroundColor3   = Color3.fromRGB(20, 20, 40)
 coachBar.BackgroundTransparency = 0.15
 coachBar.BorderSizePixel    = 0
