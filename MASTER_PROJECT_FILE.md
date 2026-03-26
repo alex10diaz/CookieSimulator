@@ -352,25 +352,25 @@
 | ID | Severity | System | Description | Status |
 |---|---|---|---|---|
 | BUG-1 | 🔴 Critical | Minigames | No movement lock — players walk away mid-session | ✅ Resolved 2026-03-24 |
-| BUG-2 | 🔴 Critical | NPC System | NPCs face wall during wait_in_queue despite facePosition() call | Open |
+| BUG-2 | 🔴 Critical | NPC System | NPCs face wall during wait_in_queue despite facePosition() call | ✅ Resolved 2026-03-25 — Root cause: advanceQueue called MoveTo with empty callback `function() end`. NPC arrived at new queue slot but never re-faced counter. Fix: added `facePosition(advModel, getCounterPos())` inside the MoveTo callback in advanceQueue. |
 | BUG-3 | 🟠 High | Quality Scoring | DRESS_SCORE = 85 hardcoded — dress quality always 85 regardless of performance | ✅ Resolved 2026-03-25 |
 | BUG-4 | 🟠 High | Box Carry | Arms detach when carrying box (Motor6D.Enabled = false disconnects joint) | ✅ Resolved 2026-03-25 — ManualWeld ("Part Terrain Joint") in CookieBox template conflicted with WeldConstraint-to-HRP. Fixed: destroy all ManualWelds in weldAllParts() before creating character weld. |
 | BUG-5 | 🟠 High | Delivery | Two players can fire DeliverBox to same NPC simultaneously (no delivery lock) | ✅ Resolved — deliveryLocked flag already present (atomic check+set, 7 sites) |
 | BUG-6 | 🟠 High | Dress Station | dressLocked[player] has no timeout — disconnected player locks order slot forever | ✅ Resolved 2026-03-25 — PlayerRemoving+CharacterRemoving clear lock; 90s task.delay auto-release for AFK |
 | BUG-7 | 🟠 High | Multiplayer | New joiner mid-shift doesn't receive current warmer stock snapshot | ✅ Resolved 2026-03-25 |
 | BUG-8 | 🟡 Medium | Data | In-memory challenge counters reset on server crash (daily/weekly progress loss) | Known Limitation |
-| BUG-9 | 🟡 Medium | Exploits | No rate limit on RequestMixStart — can spam server-side batch creation attempts | Open |
-| BUG-10 | 🟡 Medium | Exploits | No rate limit on PurchaseItem — UpdateAsync called per spam attempt | Open |
-| BUG-11 | 🟡 Medium | Dough | doughLock may not clear in rare race on disconnect during session start | Suspected |
-| BUG-12 | 🟡 Medium | Box Carry | Box transfer BindableEvent fires but client NPCCarryPoseUpdate may desync | Open |
+| BUG-9 | 🟡 Medium | Exploits | No rate limit on RequestMixStart — can spam server-side batch creation attempts | ✅ Resolved 2026-03-25 — H-7: 0.5s per-player throttle in MinigameServer.RequestMixStart handler (silent drop) |
+| BUG-10 | 🟡 Medium | Exploits | No rate limit on PurchaseItem — UpdateAsync called per spam attempt | ✅ Resolved 2026-03-25 — H-7: 1s per-player throttle in UnlockManager.PurchaseItem handler (silent drop) |
+| BUG-11 | 🟡 Medium | Dough | doughLock may not clear in rare race on disconnect during session start | ✅ Resolved 2026-03-25 — Added safety watchdog: task.delay(SESSION_TIMEOUT+5) after doughLock set; force-clears lock if no active session claims the batchId after timeout. |
+| BUG-12 | 🟡 Medium | Box Carry | Box transfer BindableEvent fires but client NPCCarryPoseUpdate may desync | Known Low-Risk — Roblox BindableEvent/RemoteEvent timing gap. CarryPill clears correctly on delivery. Monitor during Alpha playtest. |
 | BUG-13 | 🟡 Medium | NPC | NPCs colliding while walking can lift to ceiling and block entry queue | ✅ Resolved 2026-03-25 — HRP-HRP collisions caused ceiling lift. Fixed: PhysicsService "NPCs" collision group registered at startup (self-collision disabled); each spawned NPC HRP assigned to the group. |
 | BUG-14 | 🔴 Critical | GameStateManager | "Could not start minigame" — Studio had stale GameStateManager requiring deleted RS/Modules/OrderManager → WaitForChild hang → runCycle never started | ✅ Resolved 2026-03-24 |
 | BUG-15 | 🔴 Critical | GameStateManager | Phase name stuck at "Loading" — same root as BUG-14; GameStateChanged never fired "Open" because runCycle was frozen | ✅ Resolved 2026-03-24 |
 | BUG-16 | 🔴 Critical | Challenge UI | Daily/Weekly UI panels hidden — DailyChallengeClient only shows when gameState=="Open"; state never reached Open due to BUG-14 | ✅ Resolved 2026-03-24 |
-| RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Risk |
-| RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | Design Gap |
-| RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | Design Gap |
-| RISK-4 | 🟡 Medium | Retention | No daily login reward = no daily pull-back mechanic | Design Gap |
+| RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Limitation — post-Alpha. DataStore retry loop is a post-Alpha hardening task. |
+| RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | ✅ Addressed 2026-03-25 — H-5: tip_boost_1 gated at bakery level 3; C&C auto-granted at level 5; lemon_blackraspberry auto-granted at level 10. Sufficient incentive for Alpha. |
+| RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | ✅ Addressed 2026-03-25 — C-2: Coach tip bar fires on every station completion and phase change (9 triggers). Waypoint arrows are post-Alpha (L-15). |
+| RISK-4 | 🟡 Medium | Retention | No daily login reward = no daily pull-back mechanic | Post-Alpha — L-1. Daily challenges provide adequate short-term retention for Alpha. |
 
 ---
 
