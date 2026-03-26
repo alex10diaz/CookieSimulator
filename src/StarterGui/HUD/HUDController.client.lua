@@ -853,9 +853,32 @@ end)
 driveThruArrivedEvent.OnClientEvent:Connect(function()
     showAlert("🚗 Drive Thru!", Color3.fromRGB(155, 200, 230), C.BLUE, 5)
 end)
-npcOrderFailedEvent.OnClientEvent:Connect(function(npcName)
-    local txt = (npcName and npcName ~= "") and ("❌ "..npcName.." left!") or "❌ Order Failed!"
-    showAlert(txt, Color3.fromRGB(235, 180, 180), C.RED, 4)
+npcOrderFailedEvent.OnClientEvent:Connect(function(npcName, _orderId, position)
+    local txt = (npcName and npcName ~= "") and (npcName .. " left!") or "Order Failed!"
+    showAlert("X " .. txt, Color3.fromRGB(235, 180, 180), C.RED, 4)
+    -- In-world floating X at NPC position
+    if position then
+        local xa = Instance.new("Part")
+        xa.Anchored=true; xa.CanCollide=false; xa.Transparency=1
+        xa.Size=Vector3.new(1,1,1)
+        xa.CFrame=CFrame.new(position + Vector3.new(0,1,0))
+        xa.Parent=workspace
+        local xbb=Instance.new("BillboardGui",xa)
+        xbb.Size=UDim2.new(0,80,0,80); xbb.AlwaysOnTop=true; xbb.ResetOnSpawn=false
+        local xlbl=Instance.new("TextLabel",xbb)
+        xlbl.Size=UDim2.fromScale(1,1)
+        xlbl.BackgroundColor3=Color3.fromRGB(200,40,40)
+        xlbl.BackgroundTransparency=0.1; xlbl.BorderSizePixel=0
+        xlbl.Text="X"; xlbl.TextColor3=Color3.fromRGB(255,255,255)
+        xlbl.Font=Enum.Font.GothamBold; xlbl.TextScaled=true
+        Instance.new("UICorner",xlbl).CornerRadius=UDim.new(0.5,0)
+        TweenService:Create(xa,TweenInfo.new(1.6,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
+            {CFrame=CFrame.new(position+Vector3.new(0,4,0))}):Play()
+        local xt=TweenService:Create(xlbl,TweenInfo.new(1.6,Enum.EasingStyle.Quad,Enum.EasingDirection.In),
+            {BackgroundTransparency=1,TextTransparency=1})
+        xt:Play()
+        xt.Completed:Connect(function() if xa.Parent then xa:Destroy() end end)
+    end
 end)
 local _prevComboStreak = 0
 comboUpdateEvent.OnClientEvent:Connect(function(streak)
