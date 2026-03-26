@@ -115,7 +115,7 @@
 ### PROGRESSION
 | System | Verification Status | Notes |
 |---|---|---|
-| Level Unlocks | 🔶 Partially Implemented | Level tracked. **No content gated behind any level** |
+| Level Unlocks | ✅ Verified Implemented | Bakery lvl 3 gates tip_boost_1 purchase. Bakery lvl 5 auto-grants C&C. Bakery lvl 10 auto-grants lemon_blackraspberry. |
 | New Recipes | ❌ Missing | All 6 cookies available from day 1. unlockedRecipes=4 not enforced |
 | New Stations | ❌ Missing | unlockedStations in profile but nothing gates stations |
 | Upgrades | ✅ Verified Implemented | tip_boost×2, patience_boost×2. Only 4 upgrades total |
@@ -258,13 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `H-5 — Level Unlock Content`
+**TASK:** `H-6 — Tutorial Fridge→Oven Step`
 **Status:** Not Started → Ready to begin
-**What it is:** Leveling up does nothing — no content is gated. Players have zero incentive to grind.
+**What it is:** Tutorial ends at mix station without teaching the fridge pull or oven load. New players don't know what to do after dough.
 **Files affected:**
-- `UnlockManager.lua` — add level-gated unlock checks
-- `GameStateManager` or `BakeryManager` — fire level-up events
-**Success criteria:** Level 3 unlocks tip boost upgrade, level 5 unlocks snickerdoodle, level 10 unlocks C&C.
+- `TutorialController.server.lua` — add step(s) after dough for fridge pull + oven load
+- `TutorialUI.client.lua` — add corresponding UI text/prompt for new steps
+**Success criteria:** A new player completing the tutorial knows how to pull from fridge and load the oven.
 
 ---
 
