@@ -285,6 +285,34 @@ summaryEvent.OnClientEvent:Connect(function(data)
         gradeValL.TextColor3 = GRADE_COLORS[g] or C.WHITE
     end
 
+    -- Station breakdown strip
+    local bd = data.stationBreakdown
+    if bd then
+        local function scoreColor(pct)
+            if not pct then return C.MUTED end
+            if pct >= 80 then return Color3.fromRGB(80, 220, 80)
+            elseif pct >= 60 then return Color3.fromRGB(255, 200, 60)
+            elseif pct >= 40 then return Color3.fromRGB(255, 130, 40)
+            else return Color3.fromRGB(230, 60, 60) end
+        end
+        for _, def in ipairs(STATION_DEFS) do
+            local sc = stationCards[def.key]
+            if sc then
+                local v = bd[def.key]
+                if v then
+                    sc.valL.Text = string.format(def.fmt, v)
+                    sc.valL.TextColor3 = (def.key == "dough" or def.key == "dress")
+                        and C.WHITE or scoreColor(v)
+                    sc.card.BackgroundColor3 = C.CARD
+                else
+                    sc.valL.Text = "—"
+                    sc.valL.TextColor3 = C.MUTED
+                    sc.card.BackgroundColor3 = Color3.fromRGB(18, 32, 65)
+                end
+            end
+        end
+    end
+
     local emp = data.employees
     if emp then
         local fmts = { Mixer="%d%%", Baller="%d batches", Baker="%d%%", Glazer="%d%%", Decorator="%d boxes" }
