@@ -77,6 +77,21 @@ local npcQueue    = {}  -- ordered list: npcIds currently in the POS queue
 local pendingBoxes = {} -- "npc_<id>" -> { boxId, carrier, npcId }
 local nextNpcId   = 1
 
+-- BUG-13: Register "NPCs" collision group so NPC HumanoidRootParts do not
+-- collide with each other (prevents ceiling-lift when NPCs converge in doorways).
+do
+    local ok = pcall(function()
+        PhysicsService:RegisterCollisionGroup("NPCs")
+        PhysicsService:CollisionGroupSetCollidable("NPCs", "NPCs", false)
+    end)
+    if not ok then
+        -- Group may already exist (server restart); ensure non-collidable
+        pcall(function()
+            PhysicsService:CollisionGroupSetCollidable("NPCs", "NPCs", false)
+        end)
+    end
+end
+
 local function pendingKeyForNpc(npcId)
     return "npc_" .. tostring(npcId)
 end
@@ -806,6 +821,14 @@ local function spawnNPC()
         spawnCFrame = getSpawnCFrame(),
     })
     if not model then return end
+
+    -- BUG-13: Put NPC HRP in "NPCs" group — prevents HRP-HRP collisions between NPCs
+    local npcHrp = model:FindFirstChild("HumanoidRootPart")
+    if npcHrp then
+        pcall(function()
+            PhysicsService:SetPartCollisionGroup(npcHrp, "NPCs")
+        end)
+    end
 
     local data = {
         id              = npcId,
