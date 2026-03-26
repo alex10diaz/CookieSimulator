@@ -843,6 +843,13 @@ showAlert = function(text, bgColor, accentColor, duration)
     end)
 end
 
+-- M-3: Rush Hour announcement banner
+RemoteManager.Get("RushHour").OnClientEvent:Connect(function(data)
+    if data and data.active then
+        showAlert("RUSH HOUR!", Color3.fromRGB(220, 60, 30), Color3.fromRGB(255, 200, 60), 4)
+    end
+end)
+
 driveThruArrivedEvent.OnClientEvent:Connect(function()
     showAlert("🚗 Drive Thru!", Color3.fromRGB(155, 200, 230), C.BLUE, 5)
 end)

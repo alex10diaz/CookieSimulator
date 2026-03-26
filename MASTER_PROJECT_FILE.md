@@ -180,7 +180,7 @@
 | Carry Indicator UI | Complete | HIGH | ✅ Done |
 | In-World NPC Patience | Complete | MEDIUM | ✅ Done |
 | Order Ready Alert | Complete | MEDIUM | ✅ Done |
-| Rush Hour Announcement | Not Started | MEDIUM | Before |
+| Rush Hour Announcement | Complete | MEDIUM | ✅ Done |
 | Dress Station Quality Fix | Not Started | HIGH | Before |
 | Tutorial Fridge→Oven Step | Not Started | HIGH | Before |
 | Warmer Sync for New Joiners | Not Started | MEDIUM | Before |
@@ -258,13 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-3 — Rush Hour Visual Announcement`
+**TASK:** `M-4 — Warmer Stock Sync for Joining Players`
 **Status:** Not Started → Ready to begin
-**What it is:** Rush Hour starts silently — players don't notice the faster NPC spawn rate.
+**What it is:** A player joining mid-shift sees empty warmers and an empty fridge because WarmersUpdated/FridgeUpdated only fires on changes, not on join.
 **Files affected:**
-- `GameStateManager.server.lua` OR `PersistentNPCSpawner.server.lua` — fire a `RushHourStarted` remote when Rush Hour triggers
-- `HUDController.client.lua` — show a "🔥 RUSH HOUR!" banner that slides in and holds for ~4s
-**Success criteria:** At Rush Hour trigger, a bold banner slides down from top-center and auto-dismisses after 4s. Uses `showAlert` or a dedicated banner frame.
+- `MinigameServer.server.lua` OR `GameStateManager.server.lua` — on `PlayerAdded` during Open phase, fire a one-time snapshot of current warmer + fridge + batch state to the joining player
+**Success criteria:** A player who joins mid-shift immediately sees the correct warmer counts and fridge contents without waiting for the next state change.
 
 ---
 
@@ -308,6 +307,7 @@
 | 2026-03-25 | **H-7 Remote Rate Limiting** | lastPurchaseTime table + 1s throttle in UnlockManager.PurchaseItem handler. lastMixRequestTime table + 0.5s throttle in MinigameServer.RequestMixStart handler. Silent drop (no error sent). |
 | 2026-03-25 | **H-8 Carry Indicator UI** | CarryPill (orange, bottom-center) in HUDController. boxCarriedRemote fires from PersistentNPCSpawner on BoxCreated (with NPC name) and after delivery (nil to clear). All 6 checks verified in Studio. |
 | 2026-03-25 | **M-1 In-World NPC Patience Indicator** | BarFill injected into existing PatienceGui on NPC spawn (NPCSpawner.CreateNPC). PatienceGui resized 120×52, TimerLabel shrunk to 65%, BarBg+BarFill strip added. SetPatienceBar(model, ratio) fn added. Called every patience tick in PersistentNPCSpawner alongside SetTimerText. Color: green>60%, yellow 30–60%, red<30%. |
+| 2026-03-25 | **M-2 Order Ready Alert** | Replaced reserved warmersStockEvent stub in HUDController. _prevWarmerCount tracks warmer total. Count increase → showAlert "Cookie ready to box!" (2.5s, gold) + orderAlertSound chime. Zero-server-change — reuses existing WarmersUpdated broadcast and orderAlertSound. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -362,7 +362,7 @@
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
-- [ ] **M-2** Order ready alert (sound + HUD pill)
+- [x] **M-2** Order ready alert (sound + HUD pill)
 - [ ] **M-3** Rush Hour announcement banner
 - [ ] **M-4** Warmer stock sync for joining players
 - [ ] **M-5** VIP NPC visual distinction
