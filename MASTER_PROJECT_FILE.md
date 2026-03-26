@@ -258,13 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `H-6 — Tutorial Fridge→Oven Step`
+**TASK:** `H-7 — Remote Rate Limiting`
 **Status:** Not Started → Ready to begin
-**What it is:** Tutorial ends at mix station without teaching the fridge pull or oven load. New players don't know what to do after dough.
+**What it is:** `PurchaseItem` and `RequestMixStart` have no per-client throttle — spamming them hammers DataStore and batch creation.
 **Files affected:**
-- `TutorialController.server.lua` — add step(s) after dough for fridge pull + oven load
-- `TutorialUI.client.lua` — add corresponding UI text/prompt for new steps
-**Success criteria:** A new player completing the tutorial knows how to pull from fridge and load the oven.
+- `UnlockManager.lua` — 1 req/s throttle on PurchaseItem handler
+- `MinigameServer.server.lua` — 0.5 req/s throttle on RequestMixStart handler
+**Success criteria:** Rapid-fire calls from client are silently dropped after first; no server error or extra DataStore calls.
 
 ---
 
@@ -272,9 +272,9 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **H-5** | Level Unlock Content | Current task — level 3=tip upgrade, level 5=snickerdoodle, level 10=C&C |
-| 2 | **H-6** | Tutorial Fridge→Oven Step | Add step 4.5 teaching pull-from-fridge |
-| 3 | **H-7** | Remote Rate Limiting | 1 req/s on PurchaseItem; 1/2s on RequestMixStart |
+| 1 | **H-7** | Remote Rate Limiting | Current task — 1 req/s PurchaseItem; 0.5 req/s RequestMixStart |
+| 2 | **H-8** | Carry Indicator UI | Bottom-center: box icon + "Deliver to: NPC Name" |
+| 3 | **M-1** | In-World NPC Patience Indicator | BillboardGui above NPC head, updates live |
 | 4 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
 | 5 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
 | 6 | **H-4** | Dress Order Lock Timeout | 90s timeout; unlock on disconnect or timeout |
@@ -314,6 +314,7 @@
 | 2026-03-25 | **H-2 Dress Station Quality Scoring** | Root cause: DRESS_SCORE=85 hardcoded in both CreateBox and CreateVarietyBox calls on the no-topping path. Fix: removed constant, added avgSnapshot() helper, no-topping path now uses entry.snapshot (accumulated station quality). Topping-minigame path already used real score — untouched. |
 | 2026-03-25 | **H-3 Delivery Race Lock** | Already implemented — deliveryLocked flag in PersistentNPCSpawner, atomic check+set, 7 sites. Verified in Studio. BUG-5 closed. |
 | 2026-03-25 | **H-4 Dress Order Lock Timeout** | PlayerRemoving + CharacterRemoving cleanup already present. Added LOCK_TIMEOUT=90 constant + task.delay(90) auto-release on both variety and single-order lock paths in DressStationServer. |
+| 2026-03-25 | **H-5 Level Unlock Content** | UnlockManager: bakeryLevelReq=3 on tip_boost_1, enforced in Purchase() before DeductCoins. PlayerDataManager.AwardBakeryXP: auto-grants cookies_and_cream at level 5, lemon_blackraspberry at level 10 via AddOwnedCookie. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
