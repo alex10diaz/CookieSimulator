@@ -106,11 +106,11 @@
 | Floating Text (+XP, +Money) | ✅ Verified Implemented | DeliveryFeedback + WorkerFeedback remotes, tweened float-up |
 | Quality Result Popups | ✅ Verified Implemented | emoji + label + score %, 2.5s duration via MinigameBase |
 | Combo Popups | ✅ Verified Implemented | ComboUpdate: streak≥2 shows pill. On reset from ≥2→0: "STREAK BROKEN!" red showAlert (2s). |
-| Screen Effects | ❌ Missing | No ColorCorrection, no screen flash on level-up |
+| Screen Effects | ❌ Post-Alpha | No ColorCorrection, no screen flash on level-up — post-Alpha polish. |
 | Station Progress Bars | ✅ Verified Implemented | Each minigame has its own progress visualization |
 | NPC Patience Indicator (in-world) | ✅ Verified Implemented | BarFill injected into PatienceGui on spawn; green→yellow→red; SetPatienceBar called every patience tick |
 | Order Ready Alerts | ✅ Verified Implemented | WarmersUpdated count diff → "Cookie ready to box!" showAlert toast (2.5s) + orderAlertSound chime |
-| Level Up Celebration | 🔶 Partially Implemented | MasteryLevelUp remote fires. Client-side celebration not confirmed |
+| Level Up Celebration | 🔶 Post-Alpha | MasteryLevelUp remote fires. Full client-side celebration (confetti, sound) is post-Alpha polish. |
 
 ### PROGRESSION
 | System | Verification Status | Notes |
@@ -125,9 +125,9 @@
 | Weekly Challenges | ✅ Verified Implemented | 3 per week, tiered Easy/Med/Hard |
 | Shift Grades | ✅ Verified Implemented | S/A/B/C/D — S≥90, A≥75, B≥60, C≥45, D otherwise. Verified in Studio. |
 | Rush Hour Mode | ✅ Verified Implemented | Fires at 70% of Open elapsed, faster NPC spawn (60s→20s) |
-| VIP Customers | ⚠️ Needs Improvement | 10% spawn chance, 1.75× payout. **No visual distinction on NPC** |
-| Events | ❌ Missing | EventManager.server.lua exists as stub. No event logic |
-| Daily Login Rewards | ❌ Missing | Not implemented |
+| VIP Customers | ✅ Verified Implemented | 10% spawn chance, 1.75× payout. Gold "* VIP *" badge above NPC head (AlwaysOnTop, UIStroke glow) — M-5 ✅ |
+| Events | ❌ Post-Alpha | EventManager.server.lua stub exists. No event logic — post-Alpha. |
+| Daily Login Rewards | ❌ Post-Alpha | Not implemented — post-Alpha retention feature. |
 
 ### PERFORMANCE
 | System | Verification Status | Notes |
@@ -144,15 +144,15 @@
 ### POLISH
 | System | Verification Status | Notes |
 |---|---|---|
-| End-of-Shift Results Screen | ✅ Verified Implemented | Slide-up + staggered counter tick-ups + grade bounce-in. Per-station breakdown is post-Alpha. |
-| Tutorial | 🔶 Partially Implemented | 5-step linear flow. Missing Fridge→Oven step. No camera pans confirmed |
-| Main Menu | 🔍 Needs Verification | MainMenuController.client.lua exists; contents not fully verified |
+| End-of-Shift Results Screen | ✅ Verified Implemented | Slide-up + staggered counters + grade bounce + per-station breakdown strip (Mix/Dough/Oven/Frost/Dress, color-coded). |
+| Tutorial | ✅ Verified Implemented | 5-step linear flow covers full pipeline incl. fridge→oven (H-6 verified). No waypoint arrows — post-Alpha. |
+| Main Menu | 🔍 Needs Verification | MainMenuController.client.lua exists; test in-game to confirm flow. |
 | Settings Menu | ✅ Verified Implemented | ⚙️ panel with Music + SFX toggles — already live in HUDController |
-| Credits | ❌ Missing | Not found in codebase |
-| Intro / Cutscene | ❌ Missing | Not found |
+| Credits | ❌ Post-Alpha | Not found — post-Alpha. |
+| Intro / Cutscene | ❌ Post-Alpha | Not found — post-Alpha. |
 | Gamepass / Dev Products | ✅ Verified Implemented | GamepassManager.server.lua: SpeedPass + VIPPass + BoostToken stubs. MarketplaceService wired. IDs = 0 (replace before launch). |
-| Shop UI Polish | ⚠️ Needs Improvement | Functional but no cosmetic preview, no tooltip descriptions |
-| Animation Polish | ⚠️ Needs Improvement | Box carry arm animation causes Motor6D detach bug |
+| Shop UI Polish | 🔶 Post-Alpha | Two tabs, buy/equip, desc tooltips all working. Cosmetic avatar preview — post-Alpha. |
+| Animation Polish | ✅ Verified Implemented | BUG-4 resolved — ManualWeld conflict fixed. Box carry no longer detaches arms. |
 
 ---
 
@@ -161,46 +161,53 @@
 | System | Status | Priority | Alpha? |
 |---|---|---|---|
 | Order/Batch Pipeline | Complete | — | ✅ Done |
-| NPC Lifecycle | Needs Improvement | HIGH | Before |
-| NPC Facing Direction | In Progress (broken) | HIGH | Before |
-| Station Movement Locking | Not Started | **CRITICAL** | Before |
-| Box Carry (physical) | Needs Improvement | HIGH | Before |
-| Delivery Race Lock | Not Started | HIGH | Before |
+| NPC Lifecycle | Complete | — | ✅ Done |
+| NPC Facing Direction | Complete | — | ✅ Done |
+| Station Movement Locking | Complete | — | ✅ Done |
+| Box Carry (physical) | Complete | — | ✅ Done |
+| Delivery Race Lock | Complete | — | ✅ Done |
 | Shift Lifecycle | Complete | — | ✅ Done |
 | Money/Payout | Complete | — | ✅ Done |
 | XP/Level Tracking | Complete | — | ✅ Done |
-| Level Unlock Content | Not Started | HIGH | Before |
-| Quality Scoring | Needs Improvement | HIGH | Before |
+| Level Unlock Content | Complete | — | ✅ Done |
+| Quality Scoring | Complete | — | ✅ Done |
 | Combo System | Complete | — | ✅ Done |
-| Customer Patience | Needs Improvement | MEDIUM | Before |
+| Customer Patience | Complete | — | ✅ Done |
 | DataStore/Saving | Complete | — | ✅ Done |
 | Station Mastery | Complete | — | ✅ Done |
 | Daily/Weekly/Lifetime Challenges | Complete | — | ✅ Done |
-| "What Next?" Guidance | Not Started | **CRITICAL** | Before |
-| Carry Indicator UI | Complete | HIGH | ✅ Done |
-| In-World NPC Patience | Complete | MEDIUM | ✅ Done |
-| Order Ready Alert | Complete | MEDIUM | ✅ Done |
-| Rush Hour Announcement | Complete | MEDIUM | ✅ Done |
-| Dress Station Quality Fix | Not Started | HIGH | Before |
-| Tutorial Fridge→Oven Step | Not Started | HIGH | Before |
-| Warmer Sync for New Joiners | Complete | MEDIUM | ✅ Done |
-| Dress Order Lock Timeout | Not Started | HIGH | Before |
-| Remote Rate Limiting | Not Started | HIGH | Before |
-| VIP NPC Visual | Complete | MEDIUM | ✅ Done |
-| S-Rank Grade Tier | Complete | MEDIUM | ✅ Done |
-| Settings UI | Complete | MEDIUM | ✅ Done |
-| Mobile Scaling Pass | Complete | MEDIUM | ✅ Done |
-| Results Screen Polish | Complete | MEDIUM | ✅ Done |
-| Shop Preview / Tooltips | Needs Improvement | MEDIUM | Before |
-| Gamepass Integration | Complete | MEDIUM | ✅ Done |
-| Daily Login Rewards | Not Started | LOW | After |
-| Event System | Not Started | LOW | After |
-| Controller Support | Not Started | LOW | After |
-| Screen Effects | Not Started | LOW | After |
-| Rebirth / Prestige | Not Started | LOW | After |
-| Social Actions | Not Started | LOW | After |
-| Rejoin Protection | Not Started | LOW | After |
-| Custom Leaderboard UI | Not Started | LOW | After |
+| "What Next?" Guidance | Complete | — | ✅ Done |
+| Carry Indicator UI | Complete | — | ✅ Done |
+| In-World NPC Patience | Complete | — | ✅ Done |
+| Order Ready Alert | Complete | — | ✅ Done |
+| Rush Hour Announcement | Complete | — | ✅ Done |
+| Dress Station Quality Fix | Complete | — | ✅ Done |
+| Tutorial Fridge→Oven Step | Complete | — | ✅ Done |
+| Warmer Sync for New Joiners | Complete | — | ✅ Done |
+| Dress Order Lock Timeout | Complete | — | ✅ Done |
+| Remote Rate Limiting | Complete | — | ✅ Done |
+| VIP NPC Visual | Complete | — | ✅ Done |
+| S-Rank Grade Tier | Complete | — | ✅ Done |
+| Settings UI | Complete | — | ✅ Done |
+| Mobile Scaling Pass | Complete | — | ✅ Done |
+| Results Screen Polish | Complete | — | ✅ Done |
+| Shop Tooltips | Complete | — | ✅ Done |
+| Gamepass Integration | Complete | — | ✅ Done |
+| NPC Collision (ceiling lift) | Complete | — | ✅ Done |
+| Cookie Type Order Card Colors | Complete | — | ✅ Done |
+| Customer Satisfaction Emoji | Complete | — | ✅ Done |
+| Order Expired Visual | Complete | — | ✅ Done |
+| Per-Station Results Breakdown | Complete | — | ✅ Done |
+| Shop Cosmetic Preview | Not Started | LOW | After Alpha |
+| Bakery Rating (persistent) | Not Started | LOW | After Alpha |
+| Daily Login Rewards | Not Started | LOW | After Alpha |
+| Event System | Not Started | LOW | After Alpha |
+| Controller Support | Not Started | LOW | After Alpha |
+| Screen Effects | Not Started | LOW | After Alpha |
+| Rebirth / Prestige | Not Started | LOW | After Alpha |
+| Social Actions | Not Started | LOW | After Alpha |
+| Rejoin Protection | Not Started | LOW | After Alpha |
+| Custom Leaderboard UI | Not Started | LOW | After Alpha |
 
 ---
 
