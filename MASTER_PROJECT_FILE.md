@@ -258,12 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-11 — Loading Indicator`
+**TASK:** `M-12 — Gamepass Integration Scaffold`
 **Status:** Not Started → Ready to begin
-**What it is:** When a player joins, there's a blank-state flash while PlayerDataManager loads (coins=0, level=1 briefly visible before real data arrives).
+**What it is:** No gamepass or developer product integration — missing a key revenue layer before Alpha.
 **Files affected:**
-- `HUDController.client.lua` — show a "Loading..." overlay that hides once `PlayerDataInit` remote fires
-**Success criteria:** Top bar shows "Loading..." or a spinner until `PlayerDataInit` arrives. Disappears cleanly on data load.
+- New: `src/ServerScriptService/Core/GamepassManager.server.lua` — stub that checks MarketplaceService for Speed Pass and VIP Pass; grants benefits on purchase
+- `ShopClient.client.lua` — add Gamepass tab or prompt button
+**Success criteria:** Speed Pass (skip PreOpen) and VIP Pass (1.5× coins) stubs exist. Purchasing one fires the correct server-side grant. Can be wired to real Gamepass IDs before launch.
 
 ---
 
@@ -271,7 +272,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-11** | Loading Indicator | Current task — "Loading..." overlay until PlayerDataInit fires |
+| 1 | **M-12** | Gamepass Scaffold | Current task — Speed Pass + VIP Pass stubs with MarketplaceService |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -316,6 +317,7 @@
 | 2026-03-25 | **M-8 Settings UI** | Already implemented — ⚙️ panel with Music ON/OFF + SFX ON/OFF toggles, directly sets Sound.Volume. Verified in Studio. No changes needed. |
 | 2026-03-25 | **M-9 Mobile Scaling Pass** | Audited all fixed-px widths >360: CoachBar→0.88 scale, CoachTip (C-2 bar)→0.88 scale + renamed "CoachTip", CarryPill→0.82 scale, tween targets updated. All station ProximityPrompts dist=12 (adequate). |
 | 2026-03-25 | **M-10 Combo Break Popup** | Added _prevComboStreak tracking. When streak resets from ≥2 to 0: showAlert "STREAK BROKEN!" (2s, red). Combo pill emoji removed from text (was showing raw emoji bytes on some clients). |
+| 2026-03-25 | **M-11 Loading Indicator** | coinsLbl.Text="..." and levelLbl.Text="..." set before dataInitEvent fires. Replaced by real values on PlayerDataInit. Two-line change, zero new UI required. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -379,7 +381,7 @@
 - [x] **M-8** Settings UI (volume slider)
 - [x] **M-9** Mobile scaling tested on portrait + tablet
 - [x] **M-10** Combo break popup
-- [ ] **M-11** Loading indicator during data load
+- [x] **M-11** Loading indicator during data load
 - [ ] **M-12** Gamepass scaffold (Speed Pass stub)
 
 ### NICE TO HAVE (Polish for Alpha)
