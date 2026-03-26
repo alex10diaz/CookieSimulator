@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-03-25 (Session 6)
-**Overall Alpha Readiness:** 🟢 99%
+**Overall Alpha Readiness:** 🟡 90%
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -273,8 +273,8 @@
 ## 🔨 SECTION 4 — CURRENT TASK
 
 **TASK:** `ALPHA TESTING PASS`
-**Status:** 🟢 All MUST HAVE, SHOULD HAVE, and ALL Nice-to-Have items complete (including cosmetic preview). 99% readiness. All open bugs resolved. Memory/performance patterns verified. Main Menu verified.
-**Next focus:** Work through Section 12 testing checklist in-game. Only remaining gap: live profiler run under Rush Hour + 6 players load. Log any bugs found to Section 7 and fix before inviting Alpha testers.
+**Status:** 🟡 Critical exploit patched on disk: drive-thru delivery was bypassing normal box consumption/validation. Alpha still needs an in-game verification pass before release.
+**Next focus:** Verify BUG-17 in Studio, then continue the Section 12 exploit + multiplayer checklist before inviting Alpha testers.
 
 ---
 
@@ -284,17 +284,19 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **ACTIVE** | Alpha Testing Pass | Run through Section 12 testing checklist in-game. Log any bugs to Section 7. |
-| 2 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
-| 3 | **Post-Alpha** | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
-| 4 | **Post-Alpha** | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
-| 5 | **Post-Alpha** | Top Bar Bakery XP (L-14) | Show bakery XP separately from player XP |
-| 6 | **Post-Alpha** | Waypoint Arrows in Tutorial (L-15) | Guide new players to stations visually |
-| 7 | **Post-Alpha** | Daily Login Rewards (L-1) | Retention mechanic; balance after live data |
-| 8 | **Post-Alpha** | Event System (L-2) | Seasonal content; stub exists |
-| 9 | **Post-Alpha** | Controller Support (L-3) | Gamepad input for minigames |
+| 1 | **ACTIVE** | Alpha Testing Pass | Verify BUG-17 in Studio, then continue Section 12 exploit + multiplayer checklist and log any remaining blockers. |
+| 2 | **HIGH** | Delivery Validation Regression Pass | Re-test normal NPC delivery, drive-thru delivery, AI-staged boxes, and wrong-pack/wrong-carrier scenarios. |
+| 3 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
+| 4 | **Post-Alpha** | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
+| 5 | **Post-Alpha** | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
+| 6 | **Post-Alpha** | Top Bar Bakery XP (L-14) | Show bakery XP separately from player XP |
+| 7 | **Post-Alpha** | Waypoint Arrows in Tutorial (L-15) | Guide new players to stations visually |
+| 8 | **Post-Alpha** | Daily Login Rewards (L-1) | Retention mechanic; balance after live data |
+| 9 | **Post-Alpha** | Event System (L-2) | Seasonal content; stub exists |
+| 10 | **Post-Alpha** | Controller Support (L-3) | Gamepad input for minigames |
 
 ---
+
 
 ## ✅ SECTION 6 — COMPLETED TASKS LOG
 
@@ -331,6 +333,7 @@
 | 2026-03-25 | **M-10 Combo Break Popup** | Added _prevComboStreak tracking. When streak resets from ≥2 to 0: showAlert "STREAK BROKEN!" (2s, red). Combo pill emoji removed from text (was showing raw emoji bytes on some clients). |
 | 2026-03-25 | **M-11 Loading Indicator** | coinsLbl.Text="..." and levelLbl.Text="..." set before dataInitEvent fires. Replaced by real values on PlayerDataInit. Two-line change, zero new UI required. |
 | 2026-03-25 | **M-12 Gamepass Scaffold** | New GamepassManager.server.lua: SpeedPass + VIPPass + BoostToken stubs. MarketplaceService.UserOwnsGamePassAsync on PlayerAdded. ProcessReceipt for BoostToken. HasSpeedPass/HasVIPPass/HasBoostActive API for other systems. IDs=0 (replace before launch). |
+| 2026-03-25 | **BUG-17 Drive-Thru Box Consumption Exploit** | Root cause: DriveThruServer rewarded delivery through a custom path and never consumed the carried box via OrderManager. Fix: boxes now store `packSize`, `OrderManager.DeliverBox()` validates `packSize`, and drive-thru hand-in now requires the correct carried box and consumes it atomically. Needs Studio verification. |
 | 2026-03-25 | **BUG-4 Box Carry Arms Detach** | Root cause: ManualWeld "Part Terrain Joint" baked into CookieBox template conflicted with WeldConstraint-to-HRP, causing physics solver to tear character Motor6D joints. Fix: `weldAllParts()` in BoxCarryServer now destroys all ManualWelds before welding. |
 | 2026-03-25 | **Nice-to-Have: Cookie Type Order Card Colors** | COOKIE_COLORS lookup table added to HUDController. createCard/addOrder signatures extended with cookieId arg. Card border stroke, status dot, and "NEW" label all use cookieAccent(cookieId) — pink/brown/yellow/gray/cinnamon/lime per type. acceptedEvent passes orderData.cookieId (nil for variety orders). Zero server changes. |
 | 2026-03-25 | **Nice-to-Have: Upgrade Tooltips** | Already implemented — ShopClient descLabel renders item.desc (72px row, y=32). No changes needed. |
@@ -371,6 +374,7 @@
 | BUG-14 | 🔴 Critical | GameStateManager | "Could not start minigame" — Studio had stale GameStateManager requiring deleted RS/Modules/OrderManager → WaitForChild hang → runCycle never started | ✅ Resolved 2026-03-24 |
 | BUG-15 | 🔴 Critical | GameStateManager | Phase name stuck at "Loading" — same root as BUG-14; GameStateChanged never fired "Open" because runCycle was frozen | ✅ Resolved 2026-03-24 |
 | BUG-16 | 🔴 Critical | Challenge UI | Daily/Weekly UI panels hidden — DailyChallengeClient only shows when gameState=="Open"; state never reached Open due to BUG-14 | ✅ Resolved 2026-03-24 |
+| BUG-17 | 🔴 Critical | Drive-Thru / Exploits | Drive-thru reward path bypassed `OrderManager.DeliverBox`, so rewards could be granted without atomically consuming/validating the carried box; pack-size validation was also missing from server-side box delivery. | Patched on disk 2026-03-25 — needs Studio verification |
 | RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Limitation — post-Alpha. DataStore retry loop is a post-Alpha hardening task. |
 | RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | ✅ Addressed 2026-03-25 — H-5: tip_boost_1 gated at bakery level 3; C&C auto-granted at level 5; lemon_blackraspberry auto-granted at level 10. Sufficient incentive for Alpha. |
 | RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | ✅ Addressed 2026-03-25 — C-2: Coach tip bar fires on every station completion and phase change (9 triggers). Waypoint arrows are post-Alpha (L-15). |
@@ -701,3 +705,4 @@ StarterGui/
 
 ---
 *End of MASTER PROJECT FILE — Always update this file, never rewrite. Keyphrase: COOKIE ALPHA MASTER FILE*
+
