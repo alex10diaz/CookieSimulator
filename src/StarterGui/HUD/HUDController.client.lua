@@ -844,15 +844,15 @@ showAlert = function(text, bgColor, accentColor, duration)
     al.BackgroundTransparency = 1; al.TextColor3 = accentColor
     al.Font = Enum.Font.GothamBold; al.TextScaled = true
     al.Text = text; al.TextTransparency = 1; al.ZIndex = 41
-    TweenService:Create(alert, TI(0.2), { BackgroundTransparency = 0.1 }):Play()
-    TweenService:Create(as,    TI(0.2), { Transparency = 0.3 }):Play()
-    TweenService:Create(al,    TI(0.2), { TextTransparency = 0 }):Play()
+    local twA1 = TweenService:Create(alert, TI(0.2), { BackgroundTransparency = 0.1 }); if twA1 then twA1:Play() end
+    local twS1 = TweenService:Create(as,    TI(0.2), { Transparency = 0.3 });           if twS1 then twS1:Play() end
+    local twL1 = TweenService:Create(al,    TI(0.2), { TextTransparency = 0 });         if twL1 then twL1:Play() end
     task.delay(duration or 3, function()
         if not alert.Parent then return end
-        TweenService:Create(alert, TI(0.3), { BackgroundTransparency = 1 }):Play()
-        TweenService:Create(as,    TI(0.3), { Transparency = 1 }):Play()
-        local t = TweenService:Create(al, TI(0.3), { TextTransparency = 1 })
-        t:Play(); t.Completed:Connect(function() if alert.Parent then alert:Destroy() end end)
+        local twA2 = TweenService:Create(alert, TI(0.3), { BackgroundTransparency = 1 }); if twA2 then twA2:Play() end
+        local twS2 = TweenService:Create(as,    TI(0.3), { Transparency = 1 });           if twS2 then twS2:Play() end
+        local twL2 = TweenService:Create(al,    TI(0.3), { TextTransparency = 1 })
+        if twL2 then twL2:Play(); twL2.Completed:Connect(function() if alert.Parent then alert:Destroy() end end) end
     end)
 end
 
