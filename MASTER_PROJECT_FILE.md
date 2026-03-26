@@ -258,12 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-7 — Results Screen Animation`
+**TASK:** `M-8 — Settings UI`
 **Status:** Not Started → Ready to begin
-**What it is:** The end-of-shift summary appears instantly with no celebration — feels like a debug readout.
+**What it is:** No way to control audio volume in-game.
 **Files affected:**
-- `SummaryController.client.lua` — add slide-up tween on panel open + staggered counter animations for each stat row
-**Success criteria:** Summary panel slides up from bottom on appear. Stat counters tick up over ~1.5s. Grade letter scales in with a bounce tween.
+- `HUDController.client.lua` — already has a toggles panel (⚙️ icon at top-right); add music + SFX sliders there
+**Success criteria:** Players can slide music and SFX volume independently. Settings persist for the session. Toggle button is visible at all times.
 
 ---
 
@@ -271,7 +271,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-7** | Results Screen Animation | Current task — slide-up tween + stat counter animations |
+| 1 | **M-8** | Settings UI | Current task — music/SFX sliders in existing settings panel |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -312,6 +312,7 @@
 | 2026-03-25 | **M-4 Warmer Sync for Joiners** | task.defer in PlayerAdded (MinigameServer): checks GameState=="Open"/"EndOfDay", fires BatchUpdated + FridgeUpdated + WarmersUpdated snapshot directly to joining player. BUG-7 resolved. |
 | 2026-03-25 | **M-5 VIP NPC Visual** | Enhanced VIPGui in NPCSpawner: size 60×24→110×32, AlwaysOnTop=false→true, StudsOffset raised to 5.2 (above patience bar), text "⭐ VIP"→"* VIP *", UICorner+UIStroke gold glow added. |
 | 2026-03-25 | **M-6 S-Rank Shift Grade** | Already implemented in both disk and Studio (score≥90=S, ≥75=A, ≥60=B, ≥45=C, else D). Verified in SessionStats.GetShiftGrade. No changes needed. |
+| 2026-03-25 | **M-7 Results Screen Animation** | SummaryController: frame slides up from Y=1.15→centred (Back ease 0.45s). Stat counters tick from 0→final in 28 steps (staggered 0.12s apart, delayed 0.3s). gradeValL fades in with Back ease after 0.5s. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -371,7 +372,7 @@
 - [x] **M-4** Warmer stock sync for joining players
 - [x] **M-5** VIP NPC visual distinction
 - [x] **M-6** S-Rank shift grade
-- [ ] **M-7** Results screen animation
+- [x] **M-7** Results screen animation
 - [ ] **M-8** Settings UI (volume slider)
 - [ ] **M-9** Mobile scaling tested on portrait + tablet
 - [ ] **M-10** Combo break popup
