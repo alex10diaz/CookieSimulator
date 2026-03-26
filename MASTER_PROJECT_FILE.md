@@ -285,12 +285,13 @@
 
 ## 📋 SECTION 5 — NEXT TASK QUEUE
 
-> All Alpha checklist items are complete. Queue is now post-Alpha only.
+> ⚠️ BUG-17 critical exploit found and patched. Alpha is NOT yet cleared. Complete tasks 1–3 before inviting testers.
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **ACTIVE** | Alpha Testing Pass | Verify BUG-17 in Studio, then continue Section 12 exploit + multiplayer checklist and log any remaining blockers. |
-| 2 | **HIGH** | Delivery Validation Regression Pass | Re-test normal NPC delivery, drive-thru delivery, AI-staged boxes, and wrong-pack/wrong-carrier scenarios. |
+| 1 | **ACTIVE — BLOCKER** | BUG-17 In-Game Verification | Play-test drive-thru delivery: box consumed, reward fires once, duplicate prompt rejected. Also verify normal NPC delivery not regressed. |
+| 2 | **ACTIVE — BLOCKER** | Delivery Regression Pass | 2 players attempt same drive-thru simultaneously → only one rewarded. Fire prompt without carrying box → rejected. Fire DeliverBox with wrong boxId → rejected. |
+| 3 | **ACTIVE** | Section 12 Full Checklist | Run remaining multiplayer + exploit + performance tests. Log any failures to Section 7 before inviting testers. |
 | 3 | **Post-Alpha** | Shop Cosmetic Preview (L-11) | Show hat/apron on avatar/mannequin before buying |
 | 4 | **Post-Alpha** | Persistent Bakery Rating (L-12) | Reputation tracked across shifts |
 | 5 | **Post-Alpha** | Level Up Celebration (L-13) | Confetti + sound burst on level-up |
