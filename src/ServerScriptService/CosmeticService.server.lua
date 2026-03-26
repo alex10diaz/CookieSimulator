@@ -2,13 +2,15 @@
 -- Applies equipped hat + apron cosmetics to player characters on spawn.
 -- Listens to CosmeticEquipped BindableEvent for live re-apply mid-session.
 
-local Players         = game:GetService("Players")
-local ServerStorage   = game:GetService("ServerStorage")
+local Players             = game:GetService("Players")
+local ServerStorage       = game:GetService("ServerStorage")
+local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local PDM = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
-local cosmeticsFolder   = ServerStorage:WaitForChild("Cosmetics")
+-- Cosmetics live in RS so clients can preview them; fall back to SS if RS not ready
+local cosmeticsFolder   = ReplicatedStorage:WaitForChild("Cosmetics")
 local cosmeticEquipped  = ServerStorage:WaitForChild("Events"):WaitForChild("CosmeticEquipped")
 
 -- ── HELPERS ────────────────────────────────────────────────────────────────────

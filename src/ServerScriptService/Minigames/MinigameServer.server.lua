@@ -365,6 +365,21 @@ local function handleSimpleStart(player, stationName, stationModel)
         end
         doughLock[batch.batchId] = true
         batchId = batch.batchId
+        -- BUG-11: safety watchdog — if player disconnects between doughLock set and
+        -- startSession(), activeSessions never registers and cleanupPlayerSession
+        -- can't clear it. Force-clear after SESSION_TIMEOUT+5s if no session owns it.
+        local _safetyBatchId = batch.batchId
+        task.delay(SESSION_TIMEOUT + 5, function()
+            if not doughLock[_safetyBatchId] then return end
+            local claimed = false
+            for _, s in pairs(activeSessions) do
+                if s.batchId == _safetyBatchId then claimed = true; break end
+            end
+            if not claimed then
+                warn("[MinigameServer] BUG-11 safety: clearing orphaned doughLock for batch " .. _safetyBatchId)
+                doughLock[_safetyBatchId] = nil
+            end
+        end)
     elseif stationName == "frost" then
         local entry = OrderManager.TakeFromWarmers(true) -- wantsForFrost=true
         if not entry then
