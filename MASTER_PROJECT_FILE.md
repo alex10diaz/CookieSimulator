@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-25 (Session 7 — Strict Audit)
-**Overall Alpha Readiness:** 🔴 82% — NOT Alpha Ready. Strict audit (Session 7) found 3 critical bugs + 9 additional issues that must be fixed before inviting any testers. Do NOT invite Alpha testers until every item in Section 5 is resolved and verified.
+**Last Updated:** 2026-03-26 (Session 8 — Codex Repo-Wide Audit Merge)
+**Overall Alpha Readiness:** 🔴 78% — NOT Alpha Ready. Session 7 strict audit found 3 critical + 9 additional bugs (BUG-22 through BUG-33). Session 8 Codex repo-wide audit found 2 additional critical bugs + 2 high/medium (BUG-34 through BUG-37) plus RISK-5. Total open: 5 critical, 4 high, 8 medium. Do NOT invite Alpha testers until every item in Section 5 is resolved and verified. Cross-reference note: Codex "BUG-25" (ShowAlert missing from RemoteManager) = already tracked as BUG-24 in this file — not duplicated.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
