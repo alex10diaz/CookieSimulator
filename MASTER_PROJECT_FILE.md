@@ -272,60 +272,70 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Pre-Alpha Hardening — Fix All Audit Findings`
-**Status:** 🔴 BLOCKED — Strict code audit (Session 7) found 3 critical bugs, 3 high bugs, and 6 medium issues that were not previously tracked. See Section 5 for ordered task list. See Section 7 for BUG-22 through BUG-33.
+**TASK:** `Pre-Alpha Hardening — Fix All Audit Findings (Sessions 7 + 8 — Codex Merge)`
+**Status:** 🔴 BLOCKED — Session 7 strict audit found BUG-22 through BUG-33. Session 8 Codex repo-wide audit added BUG-34 through BUG-37 + RISK-5. Total: 5 critical, 4 high, 8 medium open. See Section 5 for ordered task list.
 **Are we ready for Alpha?:** NO — do not invite testers until every item in Section 5 is fixed AND verified in Studio with zero errors.
+**Codex cross-reference:** Codex "BUG-25" (ShowAlert not in RemoteManager) = already tracked as BUG-24. No duplicate added. All other Codex findings are new: BUG-34, BUG-35, BUG-36, BUG-37, RISK-5.
 **What remains before Alpha clears:**
-1. ❌ BUG-22 — Oven batch orphaned on disconnect (pipeline stall risk)
-2. ❌ BUG-23 — comboStreak persists across sessions (per-shift mechanic broken)
-3. ❌ BUG-24 — `ShowAlert` remote missing from RemoteManager (ProcessReceipt crash path)
-4. ❌ BUG-25 — GamepassManager VIP/Speed stubs never wired to any behavior
-5. ❌ BUG-26 — Rate-limit tables use player object as key — memory leak
-6. ❌ BUG-27 — No feedback when batch cap reached (silent fail, player confusion)
-7. ❌ BUG-28 — Drive-thru invisible during shift 1 with no explanation to player
-8. ❌ BUG-29 — Drive-thru order unrecoverable if taking player disconnects
-9. ❌ BUG-30 — teleportAllTo overlap — 6 players clip into same 4×4 area
-10. ❌ BUG-31 — New mid-shift joiner misses current coach tip context
-11. ❌ BUG-32 — AI worker dismissed on 2nd player join with no warning or refund
-12. ❌ BUG-33 — New players start 0 coins — shop completely inaccessible shift 1
+1. ❌ BUG-34 — PlayerDataManager `_serverLock` never expires — later server sees stale lock and skips saving entirely (data loss)
+2. ❌ BUG-35 — MenuManager DEFAULT_MENU has all 6 cookies but new players only own 4; RequestMixStart validates menu not ownership — locked recipes accessible from day 1
+3. ❌ BUG-22 — Oven batch orphaned on disconnect (pipeline stall risk)
+4. ❌ BUG-23 — comboStreak persists across sessions (per-shift mechanic broken)
+5. ❌ BUG-24 — `ShowAlert` remote missing from RemoteManager (ProcessReceipt crash path)
+6. ❌ BUG-25 — GamepassManager VIP/Speed stubs never wired to any behavior
+7. ❌ BUG-26 — Rate-limit tables use player object as key — memory leak
+8. ❌ BUG-27 — No feedback when batch cap reached (silent fail, player confusion)
+9. ❌ BUG-36 — Both StaffManager + AIBakerSystem active in production — duplicate AI worker systems, overlapping responsibility, regression risk
+10. ❌ BUG-28 — Drive-thru invisible during shift 1 with no explanation to player
+11. ❌ BUG-29 — Drive-thru order unrecoverable if taking player disconnects
+12. ❌ BUG-30 — teleportAllTo overlap — 6 players clip into same 4×4 area
+13. ❌ BUG-31 — New mid-shift joiner misses current coach tip context
+14. ❌ BUG-32 — AI worker dismissed on 2nd player join with no warning or refund
+15. ❌ BUG-33 — New players start 0 coins — shop completely inaccessible shift 1
+16. ❌ BUG-37 — TutorialController skip path still grants completion reward — too permissive
 
 **What was correctly completed (Sessions 1–7):**
 - BUG-17 in-game verified ✅ | EndOfDaySummary remote ✅ | HUDController crashes ✅
 - DEBUG_GiveCoins removed ✅ | Performance baseline verified ✅
+- Codex "BUG-25" cross-reference confirmed = BUG-24 already tracked ✅
 
 ---
 
 ## 📋 SECTION 5 — NEXT TASK QUEUE
 
 > 🔴 Alpha is NOT cleared. Work top-to-bottom. Do not skip. Mark each resolved in Section 7 before advancing.
-> ⚠️ Note: Codex review items may be added here. Cross-reference before starting — do not duplicate work.
+> ⚠️ Codex audit (Session 8) added BUG-34/35/36/37. Cross-reference complete. No duplicates (Codex "BUG-25" = my BUG-24).
 
 ### 🔴 CRITICAL BLOCKERS (fix first — in order)
 
 | Order | Bug ID | System | Task | Files to Touch |
 |---|---|---|---|---|
-| 1 | BUG-22 | MinigameServer | Add `station == "oven"` case to `cleanupPlayerSession` — call `OrderManager.ClearOvenBatch(batchId)` on disconnect/timeout | MinigameServer.server.lua, OrderManager.lua |
-| 2 | BUG-23 | PlayerDataManager | Reset `profile.comboStreak = 0` each shift inside `SessionStats.Reset()` or `OrderManager.Reset()` | SessionStats.lua or PlayerDataManager.lua |
-| 3 | BUG-24 | RemoteManager | Add `"ShowAlert"` to the REMOTES table in RemoteManager.lua (disk + Studio) | RemoteManager.lua |
+| 1 | BUG-34 | PlayerDataManager | Fix `_serverLock` — lock must be cleared/expired so a new server can take ownership instead of skipping save. Options: write `_serverLock = nil` on BindToClose, or add `lockExpiry` timestamp and ignore stale locks older than 60s | PlayerDataManager.lua |
+| 2 | BUG-35 | MenuManager / MinigameServer | `RequestMixStart` must validate `cookieId` against player's `unlockedRecipes` (from profile), not just `GetActiveMenu()`. Add ownership check; also ensure `DEFAULT_MENU` only includes cookies that all players start with, or gate the menu per-player | MenuManager.lua, MinigameServer.server.lua |
+| 3 | BUG-22 | MinigameServer | Add `station == "oven"` case to `cleanupPlayerSession` — call `OrderManager.ClearOvenBatch(batchId)` on disconnect/timeout | MinigameServer.server.lua, OrderManager.lua |
+| 4 | BUG-23 | PlayerDataManager | Reset `profile.comboStreak = 0` each shift inside `SessionStats.Reset()` or `OrderManager.Reset()` | SessionStats.lua or PlayerDataManager.lua |
+| 5 | BUG-24 | RemoteManager | Add `"ShowAlert"` to the REMOTES table in RemoteManager.lua (disk + Studio) | RemoteManager.lua |
 
 ### 🟠 HIGH — Fix before inviting testers
 
 | Order | Bug ID | System | Task | Files to Touch |
 |---|---|---|---|---|
-| 4 | BUG-25 | GamepassManager | Wire `HasSpeedPass()` into GameStateManager PreOpen skip; wire `HasVIPPass()` into EconomyManager payout multiplier | GamepassManager.server.lua, GameStateManager.server.lua, EconomyManager.lua |
-| 5 | BUG-26 | MinigameServer / UnlockManager | Change `lastMixRequestTime[player]` → `[player.UserId]`; same for `lastPurchaseTime`; add `PlayerRemoving` cleanup in both | MinigameServer.server.lua, UnlockManager.lua |
-| 6 | BUG-27 | MinigameServer | Fire `PlayerTipUpdate` or `ShowAlert` to player when `TryStartBatch` returns nil: "All batch slots full — wait for dough stage to clear" | MinigameServer.server.lua |
+| 6 | BUG-25 | GamepassManager | Wire `HasSpeedPass()` into GameStateManager PreOpen skip; wire `HasVIPPass()` into EconomyManager payout multiplier | GamepassManager.server.lua, GameStateManager.server.lua, EconomyManager.lua |
+| 7 | BUG-26 | MinigameServer / UnlockManager | Change `lastMixRequestTime[player]` → `[player.UserId]`; same for `lastPurchaseTime`; add `PlayerRemoving` cleanup in both | MinigameServer.server.lua, UnlockManager.lua |
+| 8 | BUG-27 | MinigameServer | Fire `PlayerTipUpdate` or `ShowAlert` to player when `TryStartBatch` returns nil: "All batch slots full — wait for dough stage to clear" | MinigameServer.server.lua |
+| 9 | BUG-36 | AIBakerSystem / StaffManager | Both `StaffManager.server.lua` and `AIBakerSystem.server.lua` are active production scripts with overlapping AI worker responsibilities. Decide which is canonical; disable or remove the other. Document the decision. | StaffManager.server.lua, AIBakerSystem.server.lua |
 
 ### 🟡 MEDIUM — Fix before inviting testers (quality bar)
 
 | Order | Bug ID | System | Task | Files to Touch |
 |---|---|---|---|---|
-| 7 | BUG-28 | DriveThruServer / HUDController | On shift start, fire a coach tip to players: "Complete your first shift to unlock the Drive-Thru!" | DriveThruServer.server.lua or GameStateManager.server.lua |
-| 8 | BUG-29 | DriveThruServer | On `PlayerRemoving`, if player is `currentOrder.takenBy`, set `currentOrder.takenBy = nil` so another player can deliver | DriveThruServer.server.lua |
-| 9 | BUG-30 | GameStateManager | Spread `teleportAllTo` offsets by player index instead of `math.random` — prevents 6 players clipping same spot | GameStateManager.server.lua |
-| 10 | BUG-31 | MinigameServer / GameStateManager | In M-4 joiner snapshot block, also re-fire current `tipRemote:FireClient(player, lastTip)` — track `lastTip` per-state | MinigameServer.server.lua + GameStateManager.server.lua |
-| 11 | BUG-32 | AIBakerSystem | Before `updateSoloMode()` dismisses workers on 2nd player join: fire a notification to owner + refund `HIRE_COST` per dismissed worker | AIBakerSystem.server.lua |
-| 12 | BUG-33 | PlayerDataManager | New players start with 500 coins in `newProfile()` — shop must be accessible from session 1 | PlayerDataManager.lua |
+| 10 | BUG-28 | DriveThruServer / HUDController | On shift start, fire a coach tip to players: "Complete your first shift to unlock the Drive-Thru!" | DriveThruServer.server.lua or GameStateManager.server.lua |
+| 11 | BUG-29 | DriveThruServer | On `PlayerRemoving`, if player is `currentOrder.takenBy`, set `currentOrder.takenBy = nil` so another player can deliver | DriveThruServer.server.lua |
+| 12 | BUG-30 | GameStateManager | Spread `teleportAllTo` offsets by player index instead of `math.random` — prevents 6 players clipping same spot | GameStateManager.server.lua |
+| 13 | BUG-31 | MinigameServer / GameStateManager | In M-4 joiner snapshot block, also re-fire current `tipRemote:FireClient(player, lastTip)` — track `lastTip` per-state | MinigameServer.server.lua + GameStateManager.server.lua |
+| 14 | BUG-32 | AIBakerSystem | Before `updateSoloMode()` dismisses workers on 2nd player join: fire a notification to owner + refund `HIRE_COST` per dismissed worker | AIBakerSystem.server.lua |
+| 15 | BUG-33 | PlayerDataManager | New players start with 500 coins in `newProfile()` — shop must be accessible from session 1 | PlayerDataManager.lua |
+| 16 | BUG-37 | TutorialController | `completeTutorial()` is called on both natural completion AND the skip path — skip should not grant rewards. Gate reward grant on `naturalCompletion = true` flag only | TutorialController.server.lua |
 
 ### ✅ Post-Alpha Queue (do NOT touch until all above are resolved)
 
