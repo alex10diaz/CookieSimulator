@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-03-25 (Session 6)
-**Overall Alpha Readiness:** 🟢 99%
+**Overall Alpha Readiness:** 🟡 93% — Almost Alpha Ready. BUG-17 patched on disk + Studio but delivery regression pass not yet run.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -272,9 +272,14 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `ALPHA TESTING PASS`
-**Status:** 🟡 Critical exploit patched on disk: drive-thru delivery was bypassing normal box consumption/validation. Alpha still needs an in-game verification pass before release.
-**Next focus:** Verify BUG-17 in Studio, then continue the Section 12 exploit + multiplayer checklist before inviting Alpha testers.
+**TASK:** `DELIVERY VALIDATION VERIFICATION — BUG-17`
+**Status:** 🟡 BUG-17 critical exploit patched on disk AND pushed to Studio. Patch not yet confirmed via in-game test. Do NOT invite Alpha testers until this pass is complete.
+**Biggest Risk Right Now:** Delivery/reward validation regression — BUG-17 fix may have introduced edge cases in the normal NPC or drive-thru delivery flow.
+**What is still missing for Alpha:**
+1. In-game test of BUG-17 fix (drive-thru delivery: box consumed, reward fires once, duplicate blocked)
+2. Delivery regression pass — normal NPC delivery still works after DeliverBox routing change
+3. Multiplayer exploit pass (fire DeliverBox with wrong boxId, trigger drive-thru prompt without box)
+4. Live performance check under Rush Hour + 6 players
 
 ---
 
