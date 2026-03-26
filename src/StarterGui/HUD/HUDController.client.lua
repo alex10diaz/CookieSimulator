@@ -1172,6 +1172,34 @@ deliveryFeedbackEvent.OnClientEvent:Connect(function(position, stars, carrierNam
         { TextTransparency = 1 })
     t:Play()
     t.Completed:Connect(function() if anchor.Parent then anchor:Destroy() end end)
+
+    -- Satisfaction emoji reaction bubble (floats up from NPC head)
+    local FACES = {[5]=":D",[4]=":)",[3]=":|",[2]=":(",[1]=">:("}
+    local FACE_COLORS = {
+        [5]=Color3.fromRGB(80,220,80),[4]=Color3.fromRGB(140,210,80),
+        [3]=Color3.fromRGB(255,200,60),[2]=Color3.fromRGB(255,130,40),
+        [1]=Color3.fromRGB(220,60,60),
+    }
+    local emojiAnchor = Instance.new("Part")
+    emojiAnchor.Anchored=true; emojiAnchor.CanCollide=false; emojiAnchor.Transparency=1
+    emojiAnchor.Size=Vector3.new(1,1,1)
+    emojiAnchor.CFrame=CFrame.new(position + Vector3.new(0,0.5,0))
+    emojiAnchor.Parent=workspace
+    local ebb=Instance.new("BillboardGui",emojiAnchor)
+    ebb.Size=UDim2.new(0,68,0,68); ebb.AlwaysOnTop=true; ebb.ResetOnSpawn=false
+    local elbl=Instance.new("TextLabel",ebb)
+    elbl.Size=UDim2.fromScale(1,1)
+    elbl.BackgroundColor3=FACE_COLORS[s] or Color3.fromRGB(80,220,80)
+    elbl.BackgroundTransparency=0.1; elbl.BorderSizePixel=0
+    elbl.Text=FACES[s] or ":)"; elbl.TextColor3=Color3.fromRGB(20,20,20)
+    elbl.Font=Enum.Font.GothamBold; elbl.TextScaled=true
+    Instance.new("UICorner",elbl).CornerRadius=UDim.new(0.5,0)
+    TweenService:Create(emojiAnchor,TweenInfo.new(1.8,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
+        {CFrame=CFrame.new(position+Vector3.new(0,3.5,0))}):Play()
+    local et=TweenService:Create(elbl,TweenInfo.new(1.8,Enum.EasingStyle.Quad,Enum.EasingDirection.In),
+        {BackgroundTransparency=1,TextTransparency=1})
+    et:Play()
+    et.Completed:Connect(function() if emojiAnchor.Parent then emojiAnchor:Destroy() end end)
 end)
 
 -- ── Station Worker Feedback ───────────────────────────────────────────────────
