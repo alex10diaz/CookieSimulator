@@ -263,12 +263,58 @@ summaryEvent.OnClientEvent:Connect(function(data)
         end
     end
 
-    -- Animate in
+    -- M-7: Animate in — slide up from below + staggered stat counters + grade bounce
+    local centreY  = UDim2.new(0.5, -math.floor(_fh/2), 0.5, -math.floor(_fh/2))
+    local offscreenY = UDim2.new(frame.Position.X.Scale, frame.Position.X.Offset, 1.15, 0)
     gui.Enabled = true
-    frame.BackgroundTransparency = 1; outerStroke.Transparency = 1
-    TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        { BackgroundTransparency = 0 }):Play()
-    TweenService:Create(outerStroke, TweenInfo.new(0.3), { Transparency = 0.3 }):Play()
+    frame.BackgroundTransparency = 1
+    frame.Position = offscreenY
+    outerStroke.Transparency = 1
+
+    -- Slide up + fade in simultaneously
+    TweenService:Create(frame,
+        TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        { Position = frame.Position:Lerp(
+            UDim2.new(0.5, -math.floor(_fw/2), 0.5, -math.floor(_fh/2)), 1),
+          BackgroundTransparency = 0 }):Play()
+    TweenService:Create(outerStroke, TweenInfo.new(0.4), { Transparency = 0.3 }):Play()
+
+    -- Staggered stat counter tick-ups
+    local rawVals = {
+        orders = data.orders or 0,
+        coins  = data.coins  or 0,
+        combo  = data.combo  or 0,
+    }
+    local TICKS   = 28
+    local TICK_DT = 0.045
+    for i, def in ipairs(STAT_DEFS) do
+        local key = def.key
+        local target = rawVals[key]
+        if target and statLabels[key] then
+            local lbl = statLabels[key]
+            local delay = 0.3 + (i - 1) * 0.12
+            task.delay(delay, function()
+                local prefix = key == "combo" and "x" or ""
+                for tick = 1, TICKS do
+                    local v = math.floor(target * (tick / TICKS))
+                    lbl.Text = prefix .. tostring(v)
+                    task.wait(TICK_DT)
+                end
+                -- Ensure final value is exact
+                lbl.Text = prefix .. tostring(target)
+            end)
+        end
+    end
+
+    -- Grade badge bounce-in
+    if gradeValL then
+        gradeValL.TextTransparency = 1
+        task.delay(0.5, function()
+            TweenService:Create(gradeValL,
+                TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { TextTransparency = 0 }):Play()
+        end)
+    end
 
     -- 15-second auto-dismiss
     if dismissThread then task.cancel(dismissThread) dismissThread = nil end
