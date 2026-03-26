@@ -85,7 +85,7 @@
 | System | Verification Status | Notes |
 |---|---|---|
 | Orders UI | ⚠️ Needs Improvement | HUD order cards with patience meter exist. No cookie type icon/thumbnail |
-| Tray / Inventory UI | ❌ Missing | No UI showing what player is carrying. Physical box is only indicator |
+| Tray / Inventory UI | ✅ Verified Implemented | CarryPill shows NPC name when holding box; fires on BoxCreated, clears on delivery |
 | Top Bar | ⚠️ Needs Improvement | Coins + level/XP + timer exist. Bakery XP not shown separately |
 | Station/Minigame UI | ✅ Verified Implemented | Per-station UI, result popup (emoji+%), MinigameBase.ShowResult |
 | Tutorial UI | 🔶 Partially Implemented | 5-step panel + skip button. No waypoint arrows to stations |
@@ -177,7 +177,7 @@
 | Station Mastery | Complete | — | ✅ Done |
 | Daily/Weekly/Lifetime Challenges | Complete | — | ✅ Done |
 | "What Next?" Guidance | Not Started | **CRITICAL** | Before |
-| Carry Indicator UI | Not Started | HIGH | Before |
+| Carry Indicator UI | Complete | HIGH | ✅ Done |
 | In-World NPC Patience | Not Started | MEDIUM | Before |
 | Order Ready Alert | Not Started | MEDIUM | Before |
 | Rush Hour Announcement | Not Started | MEDIUM | Before |
@@ -258,13 +258,13 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `H-8 — Carry Indicator UI`
+**TASK:** `M-1 — In-World NPC Patience Indicator`
 **Status:** Not Started → Ready to begin
-**What it is:** Players carrying a box have no visual indicator — they don't know what they're holding or where to go.
+**What it is:** Players at stations can't see NPC patience draining. Need a BillboardGui bar above each NPC's head.
 **Files affected:**
-- `HUDController.client.lua` — add bottom-center carry pill (box icon + "Deliver to: [NPC]")
-- Listen to `BoxCarried` / `BoxDelivered` remotes already in RemoteManager
-**Success criteria:** When a player picks up a box, a bottom-center pill appears showing the customer name. Disappears on delivery.
+- `PersistentNPCSpawner.server.lua` — attach BillboardGui to NPC model; fire NPCPatienceUpdate remote each tick
+- `HUDController.client.lua` OR a dedicated client script — listen to NPCPatienceUpdate, update the in-world bar
+**Success criteria:** A patience bar floats above each waiting NPC's head. Bar color shifts green→yellow→red as patience drains. Disappears when NPC leaves.
 
 ---
 
@@ -272,18 +272,8 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **H-8** | Carry Indicator UI | Current task — box icon + "Deliver to: NPC Name" bottom pill |
-| 2 | **M-1** | In-World NPC Patience Indicator | BillboardGui above NPC head, updates live |
-| 3 | **M-2** | Order Ready Alert | Sound + HUD pill when warmers receive a cookie |
-| 4 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
-| 5 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
-| 6 | **H-4** | Dress Order Lock Timeout | 90s timeout; unlock on disconnect or timeout |
-| 7 | **H-5** | Level Unlock Content | 3 things: level 3=tip upgrade, level 5=snickerdoodle, level 10=C&C |
-| 8 | **H-6** | Tutorial Fridge→Oven Step | Add step 4.5 teaching pull-from-fridge |
-| 9 | **H-7** | Remote Rate Limiting | 1 req/s on PurchaseItem; 1/2s on RequestMixStart |
-| 10 | **H-8** | Carry Indicator UI | Bottom-center: box icon + "Deliver to: NPC Name" |
-| 11 | **M-1** | In-World Patience Bar | BillboardGui above NPC head, updates live |
-| 12 | **M-2** | Order Ready Alert | Sound + HUD pill when warmers receive a cookie |
+| 1 | **M-1** | In-World NPC Patience Indicator | Current task — BillboardGui above NPC head, updates live |
+| 2 | **M-2** | Order Ready Alert | Sound + HUD pill when warmers receive a cookie |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -317,6 +307,7 @@
 | 2026-03-25 | **H-5 Level Unlock Content** | UnlockManager: bakeryLevelReq=3 on tip_boost_1, enforced in Purchase() before DeductCoins. PlayerDataManager.AwardBakeryXP: auto-grants cookies_and_cream at level 5, lemon_blackraspberry at level 10 via AddOwnedCookie. |
 | 2026-03-25 | **H-6 Tutorial Fridge→Oven Step** | Already implemented — step 3 msg covers fridge pull + oven, gates on oven StationCompleted. Verified in code. |
 | 2026-03-25 | **H-7 Remote Rate Limiting** | lastPurchaseTime table + 1s throttle in UnlockManager.PurchaseItem handler. lastMixRequestTime table + 0.5s throttle in MinigameServer.RequestMixStart handler. Silent drop (no error sent). |
+| 2026-03-25 | **H-8 Carry Indicator UI** | CarryPill (orange, bottom-center) in HUDController. boxCarriedRemote fires from PersistentNPCSpawner on BoxCreated (with NPC name) and after delivery (nil to clear). All 6 checks verified in Studio. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -365,7 +356,7 @@
 - [ ] **H-5** Level unlock content (3 tiers minimum)
 - [ ] **H-6** Tutorial fridge→oven step added
 - [ ] **H-7** Remote rate limiting on PurchaseItem + RequestMixStart
-- [ ] **H-8** Carry indicator UI (box icon + destination)
+- [x] **H-8** Carry indicator UI (box icon + destination)
 - [ ] BUG-4 Box carry arms not detaching
 - [ ] BUG-13 NPC collision ceiling lift fixed
 
