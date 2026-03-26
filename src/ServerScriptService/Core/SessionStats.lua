@@ -129,6 +129,23 @@ function SessionStats.GetShiftGrade(s)
     return { grade = grade, score = score }
 end
 
+-- Returns the current player's per-station quality averages for the shift results breakdown.
+-- Returns nil if the player hasn't used any station yet.
+function SessionStats.GetPlayerBreakdown(userId)
+    local d = stationData[userId]
+    if not d then return nil end
+    local mixAvg   = d.mix[2]   > 0 and math.floor(d.mix[1]   / d.mix[2]   + 0.5) or nil
+    local ovenAvg  = d.oven[2]  > 0 and math.floor(d.oven[1]  / d.oven[2]  + 0.5) or nil
+    local frostAvg = d.frost[2] > 0 and math.floor(d.frost[1] / d.frost[2] + 0.5) or nil
+    return {
+        mix   = mixAvg,
+        dough = d.dough > 0 and d.dough or nil,
+        oven  = ovenAvg,
+        frost = frostAvg,
+        dress = d.boxes > 0 and d.boxes  or nil,
+    }
+end
+
 function SessionStats.GetSummary()
     local avgStars = data.orders > 0
         and math.floor((data.totalStars / data.orders) * 10 + 0.5) / 10
