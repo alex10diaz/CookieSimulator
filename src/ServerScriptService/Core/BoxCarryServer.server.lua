@@ -26,6 +26,14 @@ transferEvent.Name         = "BoxTransferToNPC"
 transferEvent.Parent       = ServerScriptService
 
 local function weldAllParts(model, attachPart, offset)
+    -- BUG-4: Destroy any pre-baked ManualWelds (e.g. "Part Terrain Joint") that
+    -- conflict with the WeldConstraint-to-character approach.  When both a
+    -- ManualWeld-to-Terrain and a WeldConstraint-to-HRP exist simultaneously the
+    -- physics solver fights itself and can tear the character's Motor6D joints.
+    for _, w in ipairs(model:GetDescendants()) do
+        if w:IsA("ManualWeld") then w:Destroy() end
+    end
+
     local primary = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
     if not primary then return end
     for _, p in ipairs(model:GetDescendants()) do
