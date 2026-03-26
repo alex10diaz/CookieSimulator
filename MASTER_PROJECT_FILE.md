@@ -186,7 +186,7 @@
 | Warmer Sync for New Joiners | Complete | MEDIUM | ✅ Done |
 | Dress Order Lock Timeout | Not Started | HIGH | Before |
 | Remote Rate Limiting | Not Started | HIGH | Before |
-| VIP NPC Visual | Not Started | MEDIUM | Before |
+| VIP NPC Visual | Complete | MEDIUM | ✅ Done |
 | S-Rank Grade Tier | Not Started | MEDIUM | Before |
 | Settings UI | Not Started | MEDIUM | Before |
 | Mobile Scaling Pass | Not Started | MEDIUM | Before |
@@ -258,12 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `M-5 — VIP NPC Visual Distinction`
+**TASK:** `M-6 — S-Rank Shift Grade`
 **Status:** Not Started → Ready to begin
-**What it is:** VIP NPCs pay 1.75× but look identical to normal NPCs — players can't prioritise them.
+**What it is:** A is the current ceiling for shift grades — high performers have no target above A.
 **Files affected:**
-- `NPCSpawner.lua` — already adds a "⭐ VIP" BillboardGui label; verify it's visible and enhance if needed (crown colour, distinct outfit tint)
-**Success criteria:** When a VIP NPC spawns, players can immediately recognise it as VIP from across the room (gold label above head, or gold HRP highlight).
+- `SessionStats.lua` — find `GetShiftGrade()`, add S threshold (≥97 score)
+**Success criteria:** A shift with ≥97 average quality score returns grade "S". Displayed on end-of-shift summary.
 
 ---
 
@@ -271,7 +271,7 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **M-5** | VIP NPC Visual | Current task — gold crown/label on VIP NPC |
+| 1 | **M-6** | S-Rank Grade | Current task — 97+ score threshold in SessionStats.GetShiftGrade |
 | 13 | **M-3** | Rush Hour Announcement | "🔥 RUSH HOUR!" banner slides in at trigger |
 | 14 | **M-4** | Warmer Sync for Joiners | FireClient snapshot on PlayerAdded during Open phase |
 | 15 | **M-5** | VIP NPC Visual | Golden crown or gold outline on VIP NPC model |
@@ -310,6 +310,7 @@
 | 2026-03-25 | **M-2 Order Ready Alert** | Replaced reserved warmersStockEvent stub in HUDController. _prevWarmerCount tracks warmer total. Count increase → showAlert "Cookie ready to box!" (2.5s, gold) + orderAlertSound chime. Zero-server-change — reuses existing WarmersUpdated broadcast and orderAlertSound. |
 | 2026-03-25 | **M-3 Rush Hour Announcement** | Server already fired RushHour remote with {active=true}. Added client listener in HUDController: showAlert "RUSH HOUR!" (4s, red/gold) using existing showAlert helper. No server changes needed. |
 | 2026-03-25 | **M-4 Warmer Sync for Joiners** | task.defer in PlayerAdded (MinigameServer): checks GameState=="Open"/"EndOfDay", fires BatchUpdated + FridgeUpdated + WarmersUpdated snapshot directly to joining player. BUG-7 resolved. |
+| 2026-03-25 | **M-5 VIP NPC Visual** | Enhanced VIPGui in NPCSpawner: size 60×24→110×32, AlwaysOnTop=false→true, StudsOffset raised to 5.2 (above patience bar), text "⭐ VIP"→"* VIP *", UICorner+UIStroke gold glow added. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
@@ -367,7 +368,7 @@
 - [x] **M-2** Order ready alert (sound + HUD pill)
 - [x] **M-3** Rush Hour announcement banner
 - [x] **M-4** Warmer stock sync for joining players
-- [ ] **M-5** VIP NPC visual distinction
+- [x] **M-5** VIP NPC visual distinction
 - [ ] **M-6** S-Rank shift grade
 - [ ] **M-7** Results screen animation
 - [ ] **M-8** Settings UI (volume slider)
