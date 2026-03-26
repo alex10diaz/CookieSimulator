@@ -258,13 +258,12 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `C-2 — "What Next?" Guidance System`
+**TASK:** `H-1 — NPC Facing Direction Fix`
 **Status:** Not Started → Ready to begin
-**What it is:** Add a coach tip bar or world-space waypoint arrows pointing players to the correct next station. Without this, new players quit immediately after tutorial.
+**What it is:** NPCs face the wall during wait_in_queue instead of facing into the room/counter. Fix facePosition() logic in PersistentNPCSpawner.
 **Files affected:**
-- New or existing client HUD script — display a bottom-center tip strip showing current action needed
-- TutorialController.server.lua (possibly) — feed step hints to HUD remote
-**Success criteria:** A first-time player can complete a full cookie cycle without asking where to go next.
+- `PersistentNPCSpawner.server.lua` — facePosition() / getCounterPos() logic
+**Success criteria:** NPCs face the counter (or inward) after being seated at their spot.
 
 ---
 
@@ -272,9 +271,9 @@
 
 | Order | Task ID | System | Notes |
 |---|---|---|---|
-| 1 | **C-1** | Station Movement Locking | Current task |
-| 2 | **C-2** | "What Next?" Guidance | Coach tip bar or world-space waypoint arrows |
-| 3 | **H-1** | NPC Facing Direction Fix | Debug getCounterPos(), add task.wait after teleport |
+| 1 | **H-1** | NPC Facing Direction Fix | Current task — facePosition() / getCounterPos() in PersistentNPCSpawner |
+| 2 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
+| 3 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
 | 4 | **H-2** | Dress Quality Scoring | Remove DRESS_SCORE=85, pass actual minigame score |
 | 5 | **H-3** | Delivery Race Lock | First delivery wins; second gets "order already claimed" |
 | 6 | **H-4** | Dress Order Lock Timeout | 90s timeout; unlock on disconnect or timeout |
@@ -309,6 +308,7 @@
 | 2026-03-24 | **OrderManager CookieData require fix** | OrderManager used `script.Parent:WaitForChild("CookieData")` — CookieData is in RS/Modules not SSS/Core. Fixed to `ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData")` on disk + Studio. |
 | 2026-03-24 | **AIBakerSystem Studio sync** | Used aliased vars (RS/SSS) so wasn't caught by first scan. Studio had `RS:WaitForChild("Modules")` for OrderManager — fixed to `SSS:WaitForChild("Core")`. Disk was already correct. |
 | 2026-03-24 | **REGRESSION/NEW BUG RULE added** | 8-step protocol section added to MASTER_PROJECT_FILE: log first, root cause required, fix narrowly, verify in Studio, mark resolved. Studio Sync Rule added. |
+| 2026-03-25 | **C-2 "What Next?" Guidance System** | PlayerTipUpdate remote added. Coach bar (bottom-center dark pill) in HUDController. 9 tip triggers: PreOpen, Open, mix/dough/oven/frost/dress completions, EndOfDay, Intermission. 8s auto-dismiss with fade tween. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
