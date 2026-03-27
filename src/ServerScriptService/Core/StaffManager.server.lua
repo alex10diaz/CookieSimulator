@@ -60,84 +60,35 @@ end
 local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 	local rig
 
-	-- M-10: use clean NPCTemplate R6 rig instead of cloning the hiring player's character
-	local template = ServerStorage:FindFirstChild("NPCTemplate")
-	if template then
-		local ok, err2 = pcall(function()
-			local clone = template:Clone()
-			clone.Name = workerName
-
-			-- Strip customer-NPC-specific elements that don't belong on an AI worker
-			for _, name in ipairs({"PatienceGui", "OrderPrompt", "VIPGui"}) do
-				local inst = clone:FindFirstChild(name, true)
-				if inst then inst:Destroy() end
-			end
-			-- Remove face decal so workers don't look like customers
-			local head = clone:FindFirstChild("Head")
-			if head then
-				local face = head:FindFirstChildOfClass("Decal")
-				if face then face:Destroy() end
-			end
-
-			-- Hide health/name bar
-			local hum = clone:FindFirstChildOfClass("Humanoid")
-			if hum then
-				hum.DisplayDistanceType   = Enum.HumanoidDisplayDistanceType.None
-				hum.HealthDisplayDistance = 0
-			end
-
-			-- Parts are all at 0,0,0 in ServerStorage; Motor6D joints only
-			-- assemble when in workspace. Parent first, wait a frame, then move.
-			local hrp = clone:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				clone.PrimaryPart = hrp
-			end
-
-			-- Parent to workspace so physics assembles the rig
-			clone.Parent = workspace
-			task.wait()  -- one physics step to resolve Motor6D joints
-
-			-- Now move the assembled model into position
-			if clone.PrimaryPart then
-				clone:SetPrimaryPartCFrame(spawnCF)
-			end
-
-			-- Anchor all parts to hold position
-			for _, part in ipairs(clone:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.Anchored   = true
-					part.CanCollide = false
-				end
-			end
-
-			rig = clone
-		end)
-		if not ok then
-			warn("[StaffManager] NPCTemplate clone failed, using block rig:", err2)
+	-- Use CreateHumanoidModelFromDescription for a proper default R6 character
+	local Players = game:GetService("Players")
+	local desc = Instance.new("HumanoidDescription")
+	local ok, result = pcall(function()
+		return Players:CreateHumanoidModelFromDescription(desc, Enum.HumanoidRigType.R6)
+	end)
+	if ok and result then
+		result.Name = workerName
+		-- Hide health/name bar
+		local hum = result:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.DisplayDistanceType   = Enum.HumanoidDisplayDistanceType.None
+			hum.HealthDisplayDistance = 0
 		end
-	end
-
-	-- Fallback: simple block rig
-	if not rig then
-		rig = Instance.new("Model")
-		rig.Name = workerName
-		local hrp = Instance.new("Part")
-		hrp.Name = "HumanoidRootPart"; hrp.Size = Vector3.new(2,2,1)
-		hrp.Anchored = true; hrp.CanCollide = false
-		hrp.BrickColor = BrickColor.new("Pastel brown")
-		hrp.TopSurface = Enum.SurfaceType.Smooth; hrp.BottomSurface = Enum.SurfaceType.Smooth
-		hrp.CFrame = spawnCF; hrp.Parent = rig
-		local head = Instance.new("Part")
-		head.Name = "Head"; head.Size = Vector3.new(2,1,1)
-		head.Anchored = true; head.CanCollide = false
-		head.BrickColor = BrickColor.new("Pastel yellow")
-		head.TopSurface = Enum.SurfaceType.Smooth; head.BottomSurface = Enum.SurfaceType.Smooth
-		head.CFrame = spawnCF * CFrame.new(0,1.5,0); head.Parent = rig
-		local hum = Instance.new("Humanoid")
-		hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-		hum.Parent = rig
-		rig.PrimaryPart = hrp
-		rig.Parent = workspace
+		-- Position at spawn
+		local hrp = result:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			result.PrimaryPart = hrp
+			result:SetPrimaryPartCFrame(spawnCF)
+		end
+		-- Anchor + disable collision
+		for _, part in ipairs(result:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Anchored   = true
+				part.CanCollide = false
+			end
+		end
+		result.Parent = workspace
+		rig = result
 	end
 
 	applyBakerUniform(rig)
