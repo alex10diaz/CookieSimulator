@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-26 (Session 8 — Codex Repo-Wide Audit Merge)
-**Overall Alpha Readiness:** 🔴 78% — NOT Alpha Ready. Session 7 strict audit found 3 critical + 9 additional bugs (BUG-22 through BUG-33). Session 8 Codex repo-wide audit found 2 additional critical bugs + 2 high/medium (BUG-34 through BUG-37) plus RISK-5. Total open: 5 critical, 4 high, 8 medium. Do NOT invite Alpha testers until every item in Section 5 is resolved and verified. Cross-reference note: Codex "BUG-25" (ShowAlert missing from RemoteManager) = already tracked as BUG-24 in this file — not duplicated.
+**Last Updated:** 2026-03-26 (Session 9 — Bulk Bug Fix Sprint: BUG-22/23/24/26/27/28/29/30/31/33/34/35/37 resolved)
+**Overall Alpha Readiness:** 🔴 88% — NOT Alpha Ready. 3 blockers remain: BUG-25 (gamepass stubs unwired), BUG-32 (AI worker dismiss no refund), BUG-36 (duplicate AI systems). Fix these 3 + pass RISK-5 live load test to clear Alpha. Cross-reference note: Codex "BUG-25" (ShowAlert missing from RemoteManager) = already tracked as BUG-24 in this file — not duplicated.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -273,26 +273,29 @@
 ## 🔨 SECTION 4 — CURRENT TASK
 
 **TASK:** `Pre-Alpha Hardening — Fix All Audit Findings (Sessions 7 + 8 — Codex Merge)`
-**Status:** 🔴 BLOCKED — Session 7 strict audit found BUG-22 through BUG-33. Session 8 Codex repo-wide audit added BUG-34 through BUG-37 + RISK-5. Total: 5 critical, 4 high, 8 medium open. See Section 5 for ordered task list.
-**Are we ready for Alpha?:** NO — do not invite testers until every item in Section 5 is fixed AND verified in Studio with zero errors.
+**Status:** 🟡 IN PROGRESS — Session 9 bulk fix sprint resolved 13 of 16 bugs. 3 remain open. See Section 5 for remaining task list.
+**Are we ready for Alpha?:** NO — fix BUG-25, BUG-32, BUG-36 + run RISK-5 live load test first.
 **Codex cross-reference:** Codex "BUG-25" (ShowAlert not in RemoteManager) = already tracked as BUG-24. No duplicate added. All other Codex findings are new: BUG-34, BUG-35, BUG-36, BUG-37, RISK-5.
 **What remains before Alpha clears:**
-1. ❌ BUG-34 — PlayerDataManager `_serverLock` never expires — later server sees stale lock and skips saving entirely (data loss)
-2. ❌ BUG-35 — MenuManager DEFAULT_MENU has all 6 cookies but new players only own 4; RequestMixStart validates menu not ownership — locked recipes accessible from day 1
-3. ❌ BUG-22 — Oven batch orphaned on disconnect (pipeline stall risk)
-4. ❌ BUG-23 — comboStreak persists across sessions (per-shift mechanic broken)
-5. ❌ BUG-24 — `ShowAlert` remote missing from RemoteManager (ProcessReceipt crash path)
-6. ❌ BUG-25 — GamepassManager VIP/Speed stubs never wired to any behavior
-7. ❌ BUG-26 — Rate-limit tables use player object as key — memory leak
-8. ❌ BUG-27 — No feedback when batch cap reached (silent fail, player confusion)
-9. ❌ BUG-36 — Both StaffManager + AIBakerSystem active in production — duplicate AI worker systems, overlapping responsibility, regression risk
-10. ❌ BUG-28 — Drive-thru invisible during shift 1 with no explanation to player
-11. ❌ BUG-29 — Drive-thru order unrecoverable if taking player disconnects
-12. ❌ BUG-30 — teleportAllTo overlap — 6 players clip into same 4×4 area
-13. ❌ BUG-31 — New mid-shift joiner misses current coach tip context
-14. ❌ BUG-32 — AI worker dismissed on 2nd player join with no warning or refund
-15. ❌ BUG-33 — New players start 0 coins — shop completely inaccessible shift 1
-16. ❌ BUG-37 — TutorialController skip path still grants completion reward — too permissive
+1. ❌ BUG-25 — GamepassManager VIP/Speed stubs never wired to any behavior
+2. ❌ BUG-32 — AI worker dismissed on 2nd player join with no warning or refund
+3. ❌ BUG-36 — Both StaffManager + AIBakerSystem active in production — duplicate AI worker systems, overlapping responsibility, regression risk
+4. ❌ RISK-5 — 4–6 player Rush Hour live load test required before Alpha invite
+
+**Resolved this session (Session 9):**
+- ✅ BUG-22 — Oven batch orphan on disconnect fixed (ClearOvenBatch in cleanupPlayerSession + watchdog)
+- ✅ BUG-23 — comboStreak resets each shift (ResetAllCombos called in runCycle)
+- ✅ BUG-24 — ShowAlert added to RemoteManager REMOTES table
+- ✅ BUG-26 — Rate-limit tables use UserId + PlayerRemoving cleanup in MinigameServer + UnlockManager
+- ✅ BUG-27 — fireTip fires when batch cap reached explaining why mix failed
+- ✅ BUG-28 — Drive-thru locked tip fires 3s after Open phase starts
+- ✅ BUG-29 — DriveThruServer clears takenBy on PlayerRemoving so order is reclaimable
+- ✅ BUG-30 — teleportAllTo uses indexed radial spread — no 6-player clip
+- ✅ BUG-31 — Mid-shift joiners receive LastCoachTip via workspace attribute
+- ✅ BUG-33 — New players start with 500 coins
+- ✅ BUG-34 — _serverLock uses lockExpiry timestamp (120s); stale locks ignored
+- ✅ BUG-35 — RequestMixStart validates cookieId against player's unlockedRecipes
+- ✅ BUG-37 — Tutorial skip path passes natural=false; reward only on natural=true
 
 **What was correctly completed (Sessions 1–7):**
 - BUG-17 in-game verified ✅ | EndOfDaySummary remote ✅ | HUDController crashes ✅
@@ -310,11 +313,11 @@
 
 | Order | Bug ID | System | Task | Files to Touch |
 |---|---|---|---|---|
-| 1 | BUG-34 | PlayerDataManager | Fix `_serverLock` — lock must be cleared/expired so a new server can take ownership instead of skipping save. Options: write `_serverLock = nil` on BindToClose, or add `lockExpiry` timestamp and ignore stale locks older than 60s | PlayerDataManager.lua |
-| 2 | BUG-35 | MenuManager / MinigameServer | `RequestMixStart` must validate `cookieId` against player's `unlockedRecipes` (from profile), not just `GetActiveMenu()`. Add ownership check; also ensure `DEFAULT_MENU` only includes cookies that all players start with, or gate the menu per-player | MenuManager.lua, MinigameServer.server.lua |
-| 3 | BUG-22 | MinigameServer | Add `station == "oven"` case to `cleanupPlayerSession` — call `OrderManager.ClearOvenBatch(batchId)` on disconnect/timeout | MinigameServer.server.lua, OrderManager.lua |
-| 4 | BUG-23 | PlayerDataManager | Reset `profile.comboStreak = 0` each shift inside `SessionStats.Reset()` or `OrderManager.Reset()` | SessionStats.lua or PlayerDataManager.lua |
-| 5 | BUG-24 | RemoteManager | Add `"ShowAlert"` to the REMOTES table in RemoteManager.lua (disk + Studio) | RemoteManager.lua |
+| ~~1~~ | ~~BUG-34~~ | ~~PlayerDataManager~~ | ✅ Resolved 2026-03-26 — lockExpiry timestamp added; stale locks (>120s) ignored | — |
+| ~~2~~ | ~~BUG-35~~ | ~~MinigameServer~~ | ✅ Resolved 2026-03-26 — unlockedRecipes ownership check in RequestMixStart | — |
+| ~~3~~ | ~~BUG-22~~ | ~~MinigameServer~~ | ✅ Resolved 2026-03-26 — ClearOvenBatch in cleanupPlayerSession + watchdog | — |
+| ~~4~~ | ~~BUG-23~~ | ~~PlayerDataManager~~ | ✅ Resolved 2026-03-26 — ResetAllCombos() called each shift in runCycle | — |
+| ~~5~~ | ~~BUG-24~~ | ~~RemoteManager~~ | ✅ Resolved 2026-03-26 — ShowAlert added to REMOTES table | — |
 
 ### 🟠 HIGH — Fix before inviting testers
 
