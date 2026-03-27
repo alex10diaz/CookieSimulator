@@ -197,6 +197,9 @@ rpStroke.Color     = Color3.fromRGB(55, 55, 80)
 rpStroke.Thickness = 1
 
 -- ─── Logic ───────────────────────────────────────────────────────────────────
+-- BUG-38: once step=0 is received (returning player OR completion), never re-show panel
+local isTutorialComplete = false
+
 tutorialStepRemote.OnClientEvent:Connect(function(data)
 	if not data then return end
 
@@ -207,6 +210,7 @@ tutorialStepRemote.OnClientEvent:Connect(function(data)
 		-- Tutorial dismissed (complete, skip, or returning player)
 		panel.Visible = false
 		playerGui:SetAttribute("TutorialForceCookie", nil)
+		isTutorialComplete = true  -- BUG-38: permanent guard
 		return
 	end
 
@@ -221,6 +225,9 @@ tutorialStepRemote.OnClientEvent:Connect(function(data)
 		end
 		return
 	end
+
+	-- BUG-38: returning / completed players never see the tutorial panel again
+	if isTutorialComplete then return end
 
 	-- Steps 1–N: show bottom panel with dynamic counter
 	stepLbl.Text  = "Tutorial  —  Step " .. data.step .. " / " .. (data.total or 5)
