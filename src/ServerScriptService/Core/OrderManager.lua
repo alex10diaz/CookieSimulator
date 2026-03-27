@@ -673,6 +673,16 @@ function OrderManager.ClearPostOvenScore(batchId)
     postOvenScores[batchId] = nil
 end
 
+-- BUG-22: clear an oven batch when a player disconnects mid-oven session.
+-- Without this, ovenBatches[batchId] stays populated until shift reset,
+-- stalling the pipeline (no other player can re-bake the same batch).
+function OrderManager.ClearOvenBatch(batchId)
+    if ovenBatches[batchId] then
+        ovenBatches[batchId] = nil
+        print(string.format("[OrderManager] Oven batch #%d cleared (player disconnect)", batchId))
+    end
+end
+
 -- ============================================================
 -- SHIFT RESET
 -- Called at the start of each shift cycle (before PreOpen).

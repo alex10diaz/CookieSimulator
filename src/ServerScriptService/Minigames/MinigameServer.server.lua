@@ -12,6 +12,7 @@ local RemoteManager          = require(ReplicatedStorage:WaitForChild("Modules")
 local OrderManager           = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 local CookieData             = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local MenuManager            = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
+local PlayerDataManager      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 local StationMasteryManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("StationMasteryManager"))
 local SessionStats           = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 
@@ -146,6 +147,11 @@ local function startSession(player, sessionData)
             if capturedStation == "dough" then
                 doughLock[capturedBatchId] = nil
             end
+            -- BUG-22: clear oven batch on watchdog timeout so pipeline is not stalled
+            if capturedStation == "oven" then
+                OrderManager.ClearOvenBatch(capturedBatchId)
+                ovenSession[player] = nil
+            end
             if (capturedStation == "frost" or capturedStation == "dress") and s.warmerEntry then
                 OrderManager.ReturnToWarmers(s.warmerEntry)
             elseif (capturedStation == "frost" or capturedStation == "dress") and capturedBatchId then
@@ -166,6 +172,10 @@ local function cleanupPlayerSession(player, reason)
     if session then
         if session.station == "dough" and session.batchId then
             doughLock[session.batchId] = nil
+        end
+        -- BUG-22: clear oven batch on disconnect so pipeline slot is freed
+        if session.station == "oven" and session.batchId then
+            OrderManager.ClearOvenBatch(session.batchId)
         end
         if (session.station == "frost" or session.station == "dress") and session.warmerEntry then
             OrderManager.ReturnToWarmers(session.warmerEntry)

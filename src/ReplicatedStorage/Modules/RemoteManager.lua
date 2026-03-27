@@ -135,6 +135,7 @@ local REMOTES = {
     "WorkerFeedback",          -- Server->All: player, stationName, score, hrpPos
     -- C-2: Coach tip bar
     "PlayerTipUpdate",         -- Server->Client: coach tip string shown in bottom-center bar
+    "ShowAlert",               -- Server->Client: toast notification (used by GamepassManager ProcessReceipt)
 }
 
 -- Server creates all remotes; client waits for server-created ones.

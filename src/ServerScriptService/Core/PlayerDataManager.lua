@@ -17,7 +17,7 @@ local function getRemoteManager()
 end
 
 local DEFAULT_PROFILE = {
-    coins             = 0,
+    coins             = 500,  -- BUG-33: starter coins so shop is accessible shift 1
     xp                = 0,
     level             = 1,
     comboStreak       = 0,
@@ -118,17 +118,19 @@ local function saveProfile(userId)
     if toSave.stats and toSave.stats.fastestOrderTime == math.huge then
         toSave.stats.fastestOrderTime = 0
     end
-    -- C-2: UpdateAsync with session lock — if another server has the lock, skip save
-    -- to prevent a stale server overwriting fresher data from the new server
+    -- BUG-34: UpdateAsync with session lock + expiry. Lock expires after 120s so a new
+    -- server can take ownership instead of skipping saves forever after an abnormal shutdown.
     local ok, err = pcall(function()
         playerStore:UpdateAsync(key, function(current)
             if current and current._serverLock
-                and current._serverLock ~= SESSION_ID then
+                and current._serverLock ~= SESSION_ID
+                and (not current._lockExpiry or os.time() < current._lockExpiry) then
                 warn("[PlayerDataManager] Save skipped for", userId,
                     "— locked by another server")
                 return nil  -- nil = no change written
             end
             toSave._serverLock = SESSION_ID
+            toSave._lockExpiry = os.time() + 120  -- lock expires in 2 minutes
             return toSave
         end)
     end)
@@ -280,6 +282,14 @@ function PlayerDataManager.AwardBakeryXP(player, amount)
         if ok then rm.Get("BakeryLevelUp"):FireClient(player, p.bakeryLevel) end
     end
     return p.bakeryXP, p.bakeryLevel, didLevelUp
+end
+
+-- BUG-23: Reset comboStreak for all loaded players at shift start.
+-- comboStreak is per-shift; it must not carry over between shifts.
+function PlayerDataManager.ResetAllCombos()
+    for _, profile in pairs(profiles) do
+        profile.comboStreak = 0
+    end
 end
 
 -- ── LIFECYCLE ──────────────────────────────────────────────────
