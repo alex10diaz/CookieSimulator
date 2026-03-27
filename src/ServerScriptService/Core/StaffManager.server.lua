@@ -67,6 +67,18 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 			local clone = template:Clone()
 			clone.Name = workerName
 
+			-- Strip customer-NPC-specific elements that don't belong on an AI worker
+			for _, name in ipairs({"PatienceGui", "OrderPrompt", "VIPGui"}) do
+				local inst = clone:FindFirstChild(name, true)
+				if inst then inst:Destroy() end
+			end
+			-- Remove face decal so workers don't look like customers
+			local head = clone:FindFirstChild("Head")
+			if head then
+				local face = head:FindFirstChildOfClass("Decal")
+				if face then face:Destroy() end
+			end
+
 			-- Hide health/name bar
 			local hum = clone:FindFirstChildOfClass("Humanoid")
 			if hum then
