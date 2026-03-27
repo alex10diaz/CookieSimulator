@@ -409,6 +409,21 @@
 | 2026-03-25 | **BUG-11 doughLock orphan safety** | Added task.delay(SESSION_TIMEOUT+5) watchdog after doughLock is set. If no activeSessions entry claims the batchId after timeout, lock is force-cleared with a warning. Closes the race where player disconnects between doughLock set and startSession. |
 | 2026-03-25 | **Cosmetic Preview in Shop** | SS/Cosmetics cloned to RS/Cosmetics (client-accessible). CosmeticService updated to use RS. ShopClient: PreviewPane (162px) added at bottom of Background; ViewportFrame + WorldModel + orbit Camera; click any cosmetic row → 3D preview with orbiting camera; Cosmetics tab resizes ItemList to 186px to make room; clearPreview() disconnects Heartbeat orbit on tab switch. |
 | 2026-03-25 | **Performance + Memory Verification** | All while-true loops confirmed intentional (shift cycle, NPC spawn, patience ticker, leaderboard). Order cards have removeCard()+Destroy(). NPC models destroyed via NPCSpawner.Remove + 15s safety. Sounds created once at init. OrderManager.Reset() clears all 7 tables. Main Menu verified (Activated, GameStateChanged, ResetOnSpawn=false). |
+| 2026-03-26 | **BUG-34 PlayerDataManager lock expiry** | lockExpiry = os.time()+120 written alongside _serverLock; stale/expired locks silently skipped and ownership taken over. Eliminates permanent silent data loss on server restart. |
+| 2026-03-26 | **BUG-33 Starter coins** | DEFAULT_PROFILE coins = 500. New players can buy cheapest cosmetic (400) within first session. |
+| 2026-03-26 | **BUG-23 + BUG-26 (UnlockManager) UserId rate-limit keys** | UnlockManager.lastPurchaseTime[player.UserId], PlayerRemoving cleanup added. No more dead player-object keys accumulating over server lifetime. |
+| 2026-03-26 | **BUG-24 ShowAlert remote** | "ShowAlert" added to RemoteManager REMOTES table (disk + Studio GameEvents). ProcessReceipt no longer crashes on BoostToken. |
+| 2026-03-26 | **BUG-35 Recipe ownership check** | RequestMixStart validates cookieId against profile.unlockedRecipes before TryStartBatch. Prevents day-1 access to C&C and lemon cookies. |
+| 2026-03-26 | **BUG-22 Oven batch orphan on disconnect** | ClearOvenBatch(batchId) added to OrderManager. Called in cleanupPlayerSession (oven case) and in SESSION_TIMEOUT watchdog. Pipeline no longer starves from disconnects during oven minigame. |
+| 2026-03-26 | **BUG-27 Batch cap feedback** | fireTip fires "All mix slots are full — wait for dough to move to the next stage!" when TryStartBatch returns nil. |
+| 2026-03-26 | **BUG-37 Tutorial skip no reward** | completeTutorial(player, natural): skip path passes false, natural completion passes true. AddCoins gated on natural==true. |
+| 2026-03-26 | **BUG-29 Drive-thru carrier disconnect** | Players.PlayerRemoving in DriveThruServer: if player == currentOrder.takenBy, set takenBy = nil so another player can deliver. |
+| 2026-03-26 | **BUG-28 Drive-thru locked tip** | task.delay(3) in runCycle Open block fires tip "Complete this shift to unlock the Drive-Thru!" when !driveThruUnlocked. |
+| 2026-03-26 | **BUG-30 Teleport indexed spread** | teleportAllTo uses angle=(i-1)/count*2π, radius=2.5. 6 players now spread in a circle instead of stacking. |
+| 2026-03-26 | **BUG-31 Mid-shift joiner coach tip** | fireTipAll() stores LastCoachTip as workspace attribute. M-4 joiner block reads it and fires to joining player via tipRemote:FireClient. |
+| 2026-03-26 | **BUG-23 Combo reset per shift** | PlayerDataManager.ResetAllCombos() zeroes comboStreak in all live profiles. Called in GameStateManager.runCycle() after SessionStats.Reset(). |
+| 2026-03-26 | **BUG-26 MinigameServer UserId keys** | lastMixRequestTime[player.UserId] throughout; PlayerRemoving cleanup clears the entry. No dead references. |
+| 2026-03-26 | **Studio sync verified — zero errors on boot** | All 3 previously broken files (GameStateManager, MinigameServer, TutorialController) pushed clean to Studio. Play mode boot shows 0 script errors. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
