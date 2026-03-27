@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-27 (Session 11 — Full new-player playtest revealed 8 new bugs BUG-39 through BUG-46. All being fixed this session.)
-**Overall Alpha Readiness:** 🟡 94% — BUG-39/40/41/42/43/44/45/46 open from live playtest. Fixing this session. RISK-5 still pending.
+**Last Updated:** 2026-03-27 (Session 11 — Full new-player playtest revealed 8 new bugs BUG-39 through BUG-46. Logged and queued for Session 12.)
+**Overall Alpha Readiness:** 🟡 94% — BUG-39/40/41/42/43/44/45/46 open from live playtest. Fix in Session 12. RISK-5 still pending after that.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -419,6 +419,7 @@
 | 2026-03-26 | **BUG-32 AI worker dismiss no refund** | Resolved by BUG-36 fix — AIBakerSystem.updateSoloMode() never fires when script is disabled. No dismissal-without-refund possible. |
 | 2026-03-26 | **BUG-25 GamepassManager stubs wired** | (1) GamepassManager converted from Script→ModuleScript in Studio so require() works. (2) SpeedPass: GSM runCycle checks HasSpeedPass() for all players; if any owns it, PreOpen is broadcast as 0s and skipped. (3) VIPPass: PersistentNPCSpawner delivery path multiplies payout.coins×1.5 if HasVIPPass(player). (4) VIPPass: DriveThruServer delivery path multiplies deliverCoins×1.5 if HasVIPPass(player). Paying players now receive correct benefits even with ID=0 placeholder. |
 | 2026-03-26 | **Zero-error boot confirmed (Session 10)** | All 3 BUG-25/32/36 fixes applied. Play mode boot shows 0 script errors. All [Ready] prints present. |
+| 2026-03-27 | **Session 11 — New-player playtest + AI baker fix** | Full playtest as new player (DataStore wiped). AI baker rig fixed: switched to CreateHumanoidModelFromDescription with explicit skin colors; AiNPCPlacement part used as authoritative floor Y reference. 8 new bugs identified (BUG-39 through BUG-46) and logged in master file. No code changes this session — all fixes queued for Session 12. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
