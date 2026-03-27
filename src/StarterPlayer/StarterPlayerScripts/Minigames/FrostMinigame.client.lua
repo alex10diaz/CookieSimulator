@@ -132,19 +132,20 @@ startRemote.OnClientEvent:Connect(function()
         resultRemote:FireServer(math.floor(numHit / NUM_CHECKPOINTS * 100))
     end
 
-    -- m7: exit button
+    -- m7: exit button — BUG-43: plain "X" text, floats outside top-right panel corner
     do
         local exitBtn = Instance.new("TextButton")
         exitBtn.Size             = UDim2.new(0, 44, 0, 44)
-        exitBtn.Position         = UDim2.new(1, -48, 0, 0)
+        exitBtn.AnchorPoint      = Vector2.new(1, 0)
+        exitBtn.Position         = UDim2.new(1, 20, 0, -20)
         exitBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
         exitBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
         exitBtn.TextScaled       = true
         exitBtn.Font             = Enum.Font.GothamBold
-        exitBtn.Text             = "✕"
+        exitBtn.Text             = "X"
         exitBtn.BorderSizePixel  = 0
-        exitBtn.ZIndex           = 5
-        exitBtn.Parent           = headerBar
+        exitBtn.ZIndex           = 10
+        exitBtn.Parent           = bg
         Instance.new("UICorner", exitBtn).CornerRadius = UDim.new(0, 6)
         exitBtn.MouseButton1Click:Connect(function()
             if finished then return end
