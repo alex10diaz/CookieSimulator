@@ -84,12 +84,10 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 		-- Parent to workspace first so Humanoid lands on floor, then anchor
 		local hrp = result:FindFirstChild("HumanoidRootPart")
 		if hrp then result.PrimaryPart = hrp end
-		-- Cast just 4 studs down from 1 above spawn so we hit the floor tile,
-		-- not elevated counters/equipment overhead
-		local rcOrigin = spawnCF.Position + Vector3.new(0, 1, 0)
-		local rcResult = workspace:Raycast(rcOrigin, Vector3.new(0, -4, 0))
-		local floorY   = rcResult and rcResult.Position.Y or (spawnCF.Position.Y + 0.25)
-		local finalCF  = CFrame.new(spawnCF.Position.X, floorY + 3.05, spawnCF.Position.Z)
+		-- Place HRP directly above spawn part top surface (no raycast — sub-floor
+		-- was being hit instead of the actual platform the baker stands on)
+		local partTopY = spawnCF.Position.Y + 0.25  -- spawn part center + half-height (0.5/2)
+		local finalCF  = CFrame.new(spawnCF.Position.X, partTopY + 3.05, spawnCF.Position.Z)
 			* CFrame.Angles(0, math.atan2(-spawnCF.LookVector.X, -spawnCF.LookVector.Z), 0)
 		result:SetPrimaryPartCFrame(finalCF)
 		result.Parent = workspace
