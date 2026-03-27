@@ -86,15 +86,23 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 				hum.HealthDisplayDistance = 0
 			end
 
-			-- Position using SetPrimaryPartCFrame (matches NPCSpawner; must move BEFORE
-			-- anchoring — parts are at origin in ServerStorage, manual offset loop = mush)
+			-- Parts are all at 0,0,0 in ServerStorage; Motor6D joints only
+			-- assemble when in workspace. Parent first, wait a frame, then move.
 			local hrp = clone:FindFirstChild("HumanoidRootPart")
 			if hrp then
 				clone.PrimaryPart = hrp
+			end
+
+			-- Parent to workspace so physics assembles the rig
+			clone.Parent = workspace
+			task.wait()  -- one physics step to resolve Motor6D joints
+
+			-- Now move the assembled model into position
+			if clone.PrimaryPart then
 				clone:SetPrimaryPartCFrame(spawnCF)
 			end
 
-			-- Anchor + disable collision AFTER positioning
+			-- Anchor all parts to hold position
 			for _, part in ipairs(clone:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.Anchored   = true
@@ -102,7 +110,6 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 				end
 			end
 
-			clone.Parent = workspace
 			rig = clone
 		end)
 		if not ok then
