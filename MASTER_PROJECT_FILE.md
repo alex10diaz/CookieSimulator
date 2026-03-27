@@ -510,6 +510,14 @@
 - [x] **BUG-26** Rate-limit tables use UserId not player object + PlayerRemoving cleanup ✅ 2026-03-26
 - [x] **BUG-27** Player receives feedback when batch cap is reached (no silent fail) ✅ 2026-03-26
 - [x] **BUG-36** Duplicate AI worker systems resolved — one system canonical, other disabled/removed ✅ 2026-03-26
+- [ ] **BUG-39** Main menu shows correctly for new players — not hidden by PreOpen state
+- [ ] **BUG-40** New player teleported to bakery area on tutorial start
+- [ ] **BUG-41** Per-step teleports in tutorial (step 2→dough, step 3→fridge, step 4→dress)
+- [ ] **BUG-42** AI hire prompts hidden/ignored during tutorial
+- [ ] **BUG-44** Tutorial step 3 directs player to fridge first, not oven
+- [ ] **BUG-45** PreOpen timer pauses while any player is in tutorial
+- [ ] **BUG-46** Tutorial NPC spawned with chocolate_chip ×6 order before dress step
+- [ ] **BUG-43** Minigame exit buttons show bold "X" and float at top-right corner outside panel
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
@@ -815,20 +823,21 @@ StarterGui/
 
 ## 📈 SECTION 14 — FINAL REPORT SNAPSHOT (Updated 2026-03-26 — Post Session 10)
 
-> ⚠️ All MUST HAVE and SHOULD HAVE Section 8 checkboxes are now ✅. Only RISK-5 live load test remains. Do not change OVERALL to ✅ until RISK-5 is completed.
+> ⚠️ Session 11 playtest found 8 new bugs (BUG-39 through BUG-46) that break the new-player experience. Fix all 8 in Session 12, then re-run new-player test, then RISK-5 load test.
 
 | Category | Score | Notes |
 |---|---|---|
 | Core Systems | ✅ 98% | All pipeline bugs resolved. BUG-22/35 closed. BUG-25 SpeedPass/VIPPass now wired. Recipe bypass closed. |
 | Multiplayer Safety | ✅ 95% | BUG-22/29/30/32/36 all resolved. Known low-risk gap: box carry desync (BUG-12, monitor during Alpha). |
 | Data Integrity | ✅ 95% | BUG-34 lock expiry fixed. BUG-23 combo reset fixed. BUG-33 starter coins fixed. Minor known gap: no retry on save failure (post-Alpha). |
-| UI/UX | ✅ 97% | All coach tips, carry pill, order colors, station breakdown, mobile scaling complete. BUG-31 mid-shift tip fixed. |
+| UI/UX | 🟡 88% | BUG-43 exit buttons broken on some clients. BUG-39 main menu hidden for new players. Other coach tips/carry pill/order colors complete. |
+| Onboarding / Tutorial | 🔴 60% | BUG-40/41/44 no teleports. BUG-45 PreOpen races past tutorial. BUG-46 no tutorial NPC for dress step. BUG-42 AI prompts visible during tutorial. |
 | Progression/Retention | ✅ 95% | BUG-35 recipe bypass closed. BUG-33 starter coins added. BUG-23 combo reset fixed. Level unlock content present. |
-| Performance | 🟡 85% | Solo baseline clean. BUG-26 memory leak fixed. RISK-5: 6-player Rush Hour peak load still unverified — must test before Alpha invite. |
+| Performance | 🟡 85% | Solo baseline clean. BUG-26 memory leak fixed. RISK-5: 6-player Rush Hour peak load still unverified. |
 | Anti-Exploit | ✅ 95% | BUG-17/24/25/26/35 all closed. Rate limits in place. GamepassManager now a proper ModuleScript. |
 | Architecture | ✅ 95% | BUG-36 resolved — AIBakerSystem disabled, StaffManager canonical. Single AI worker system. Clean require graph. |
 | Game Feel/Polish | ✅ 95% | 15 SFX, combo popups, rush hour banner, results animation, VIP NPC glow all complete. Screen effects post-Alpha. |
-| **OVERALL** | **🟡 97%** | **CODE COMPLETE — All 37 bugs resolved across Sessions 1–10. All Section 8 MUST HAVE + SHOULD HAVE items checked. Only RISK-5 (4–6 player Rush Hour live session) stands between current state and Alpha invite. Run Section 12 Performance Testing with 4+ players to clear.** |
+| **OVERALL** | **🟡 94%** | **8 new bugs from Session 11 playtest break new-player onboarding. Fix BUG-39 through BUG-46 in Session 12. After that: re-run new-player test, then RISK-5 (4–6 player Rush Hour) to clear Alpha.** |
 
 ### Open Alpha Risks (must be resolved — see Section 5 for tasks)
 ~~1. BUG-34~~ ✅ Resolved 2026-03-26
@@ -842,7 +851,15 @@ StarterGui/
 ~~9. BUG-36~~ ✅ Resolved 2026-03-26
 ~~10. BUG-28 through BUG-33~~ ✅ All Resolved 2026-03-26
 ~~11. BUG-37~~ ✅ Resolved 2026-03-26
-**1. 🟠 RISK-5** — Peak load (4–6 player Rush Hour) never verified — **ONLY REMAINING BLOCKER**. Run Section 12 Performance Testing with 4+ players to clear Alpha.
+**1. 🔴 BUG-39** — Main menu hidden by PreOpen state — new players skip it entirely
+**2. 🔴 BUG-40** — New player not teleported to bakery on tutorial start
+**3. 🔴 BUG-41** — No per-step teleports during tutorial
+**4. 🔴 BUG-42** — AI hire prompts visible/clickable during tutorial
+**5. 🔴 BUG-45** — PreOpen timer advances during tutorial → game enters Open mid-tutorial
+**6. 🔴 BUG-46** — No tutorial NPC → dress step has empty KDS, uncompletable
+**7. 🟠 BUG-43** — Exit buttons render as broken box glyph on many clients
+**8. 🟠 BUG-44** — Step 3 teleport drops player at oven instead of fridge
+**9. 🟠 RISK-5** — Peak load (4–6 player Rush Hour) never verified — run after BUG-39/46 fixed
 
 ### Known Post-Alpha Limitations (acceptable for Alpha once above are fixed)
 1. **Box carry desync (BUG-12)** — BindableEvent timing gap. Low-risk; monitor during Alpha.
