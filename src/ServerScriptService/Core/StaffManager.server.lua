@@ -84,12 +84,12 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 		-- Parent to workspace first so Humanoid lands on floor, then anchor
 		local hrp = result:FindFirstChild("HumanoidRootPart")
 		if hrp then result.PrimaryPart = hrp end
-		-- Raycast down from spawn to find exact floor Y, place feet on ground
-		local origin = spawnCF.Position + Vector3.new(0, 5, 0)
-		local ray = workspace:Raycast(origin, Vector3.new(0, -20, 0))
-		local floorY = ray and ray.Position.Y or (spawnCF.Position.Y - 3)
-		-- HRP sits ~3.05 studs above floor for a standing R6 character
-		local finalCF = CFrame.new(spawnCF.Position.X, floorY + 3.05, spawnCF.Position.Z)
+		-- Cast just 4 studs down from 1 above spawn so we hit the floor tile,
+		-- not elevated counters/equipment overhead
+		local rcOrigin = spawnCF.Position + Vector3.new(0, 1, 0)
+		local rcResult = workspace:Raycast(rcOrigin, Vector3.new(0, -4, 0))
+		local floorY   = rcResult and rcResult.Position.Y or (spawnCF.Position.Y + 0.25)
+		local finalCF  = CFrame.new(spawnCF.Position.X, floorY + 3.05, spawnCF.Position.Z)
 			* CFrame.Angles(0, math.atan2(-spawnCF.LookVector.X, -spawnCF.LookVector.Z), 0)
 		result:SetPrimaryPartCFrame(finalCF)
 		result.Parent = workspace
