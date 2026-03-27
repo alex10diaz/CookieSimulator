@@ -852,8 +852,10 @@ StarterGui/
 - BUG-17: Drive-thru exploit fully verified closed (Session 7) ✅
 - BUG-18/19: HUDController startup crash + showAlert nil guards fixed ✅
 - BUG-20/21: Debug coin script removed + EndOfDaySummary remote restored ✅
-- Session 7 strict audit: BUG-22 through BUG-33 found — 3 critical, 3 high, 6 medium — all open
-- Session 8 Codex repo-wide audit: BUG-34 through BUG-37 + RISK-5 found — 2 critical, 1 high, 1 medium, 1 elevated risk — all open
+- Session 7 strict audit: BUG-22 through BUG-33 found — all resolved in Session 9 ✅
+- Session 8 Codex repo-wide audit: BUG-34 through BUG-37 + RISK-5 found — BUG-34/35/36/37 all resolved ✅
+- Session 9 bulk fix sprint: 13 bugs resolved. 3 remaining (BUG-25/32/36) ✅
+- Session 10: BUG-25/32/36 resolved. GamepassManager Script→ModuleScript fix. Zero-error boot confirmed. Only RISK-5 remains. ✅
 - Codex "BUG-25" cross-reference: confirmed = my BUG-24, no duplicate ✅
 
 ### ⚠️ ALPHA CLEARANCE RULE
