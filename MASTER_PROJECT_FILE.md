@@ -272,10 +272,10 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `RISK-5 — 4–6 Player Rush Hour Live Load Test`
-**Status:** 🟡 PENDING — All code bugs resolved (Sessions 9 + 10). Zero-error boot confirmed. Only RISK-5 load test remains before Alpha invite.
-**Are we ready for Alpha?:** CODE YES — RISK-5 PENDING. Run the Section 12 Performance Testing checklist with 4+ players in a live session. If clean, Alpha is cleared.
-**Codex cross-reference:** Codex "BUG-25" (ShowAlert not in RemoteManager) = already tracked as BUG-24. No duplicate added.
+**TASK:** `Session 12 — Fix BUG-39 through BUG-46 (full new-player tutorial flow)`
+**Status:** 🔴 OPEN — 8 bugs found during live new-player playtest (Session 11). All must be fixed and synced to Studio before RISK-5 load test.
+**Are we ready for Alpha?:** NO — Tutorial is broken for new players (no main menu, no teleports, PreOpen races ahead, no tutorial NPC for dress step). Fix BUG-39/40/41/42/43/44/45/46 first. Then RISK-5.
+**Session 11 work:** Full new-player playtest run. AI baker model fixed (CreateHumanoidModelFromDescription + AiNPCPlacement anchor). DataStore wiped for clean test. 8 bugs identified and logged. No code changes made — all fixes deferred to Session 12.
 
 **Resolved this session (Session 10):**
 - ✅ BUG-25 — SpeedPass wired into GameStateManager PreOpen skip; VIPPass wired into PersistentNPCSpawner + DriveThruServer delivery payout (1.5× multiply)
@@ -287,8 +287,8 @@
 **Resolved this session (Session 9):**
 - ✅ BUG-22/23/24/26/27/28/29/30/31/33/34/35/37 — see Section 6 for details
 
-**What was correctly completed (Sessions 1–8):**
-- All C/H/M priority items complete. All 37 bugs resolved. Performance baseline verified. ✅
+**What was correctly completed (Sessions 1–10):**
+- All C/H/M priority items complete. All 38 bugs resolved. Performance baseline verified. ✅
 
 ---
 
