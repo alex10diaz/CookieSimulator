@@ -26,12 +26,60 @@ local TUTORIAL_REWARD    = 200               -- coins granted on tutorial comple
 local TUTORIAL_COOKIE = "chocolate_chip"
 
 local STEPS = {
-	[1] = { msg = "Go to a Mixer and press E to start mixing!",                 target = "Mixer",       forceCookieId = TUTORIAL_COOKIE },
-	[2] = { msg = "Shape your dough at the Dough Table!",                       target = "DoughTable",  forceCookieId = nil             },
-	[3] = { msg = "Pull your dough from the fridge, then bake it in the Oven!", target = "Oven",        forceCookieId = nil             },
-	[4] = { msg = "Dress and pack your cookies at the Dress Station!",          target = "DressTable",  forceCookieId = nil             },
-	[5] = { msg = "Carry the box to the customer and press E to deliver!",      target = "WaitingArea", forceCookieId = nil             },
+	[1] = { msg = "Go to a Mixer and press E to start mixing!",                       target = "Mixer",       forceCookieId = TUTORIAL_COOKIE },
+	[2] = { msg = "Shape your dough at the Dough Table!",                             target = "DoughTable",  forceCookieId = nil             },
+	[3] = { msg = "Go to the Fridge and pull your dough out, then bake it in the Oven!", target = "Oven",     forceCookieId = nil             },
+	[4] = { msg = "Dress and pack your cookies at the Dress Station!",                target = "DressTable",  forceCookieId = nil             },
+	[5] = { msg = "Carry the box to the customer and press E to deliver!",            target = "WaitingArea", forceCookieId = nil             },
 }
+
+-- BUG-40/41/44: teleport destinations per step.
+-- Step 1 teleport happens on join (not on advance).
+-- Steps 2-4 teleport on advance. Step 5 = no teleport (player stays near dress station).
+local STEP_SPAWNS = {
+	[2] = "TutorialDoughTableSpawn",  -- after mix: go to dough table
+	[3] = "TutorialFridgeSpawn",      -- after dough: go to fridge area
+	[4] = "TutorialDressTableSpawn",  -- after oven: go to dress station
+}
+
+-- Teleport player to a named workspace Part (above it by 3.5 studs).
+-- Falls back gracefully: TutorialFridgeSpawn → nearest fridge in Fridges folder.
+local function teleportPlayer(player, spawnName)
+	local char = player.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	-- Try direct workspace lookup (searches descendants)
+	local sp = workspace:FindFirstChild(spawnName, true)
+	if sp and sp:IsA("BasePart") then
+		hrp.CFrame = CFrame.new(sp.Position + Vector3.new(0, 3.5, 0))
+		return
+	end
+	-- Fridge fallback: find nearest fridge model in Fridges folder
+	if spawnName == "TutorialFridgeSpawn" then
+		local fridgesFolder = workspace:FindFirstChild("Fridges")
+		if fridgesFolder then
+			local nearest, nearestDist = nil, math.huge
+			for _, f in ipairs(fridgesFolder:GetChildren()) do
+				local ok, cf = pcall(function() return f:GetBoundingBox() end)
+				if ok and cf then
+					local dist = (cf.Position - hrp.Position).Magnitude
+					if dist < nearestDist then
+						nearest = cf.Position
+						nearestDist = dist
+					end
+				end
+			end
+			if nearest then
+				-- Step in front of fridge (fridges face -X, so stand 5 studs to their left)
+				hrp.CFrame = CFrame.new(nearest + Vector3.new(-5, 3.5, 0))
+				print("[TutorialController] TutorialFridgeSpawn fallback: placed player near nearest fridge")
+				return
+			end
+		end
+	end
+	warn("[TutorialController] Spawn part not found for teleport: " .. spawnName)
+end
 
 -- ─── State ────────────────────────────────────────────────────────────────────
 local activeTutorials = {}
@@ -67,6 +115,13 @@ local function advance(player)
 	if session.step >= FINAL_MENU_STEP then return end
 	session.step += 1
 	sendStep(player, session.step)
+	-- BUG-41/44: teleport player to the appropriate area for the new step
+	local spawnName = STEP_SPAWNS[session.step]
+	if spawnName then
+		task.defer(function()
+			teleportPlayer(player, spawnName)
+		end)
+	end
 end
 
 -- BUG-37: natural=true for playing through all 5 steps; natural=false for skip path.
