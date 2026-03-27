@@ -551,6 +551,8 @@ local function spawnHirePrompts()
 
 		local capturedId = stationId
 		local conn = prompt.Triggered:Connect(function(player)
+			-- BUG-42: tutorial players don't have context for hiring — silently ignore
+			if player:GetAttribute("InTutorial") then return end
 			local entry = workers[capturedId]
 			if entry and entry.active then
 				dismissWorker(capturedId)

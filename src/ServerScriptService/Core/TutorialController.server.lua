@@ -170,6 +170,10 @@ local function handlePlayerJoin(player)
 	activeTutorials[player.UserId] = { step = 1 }
 	player:SetAttribute("InTutorial", true)
 	sendStep(player, 1)
+	-- BUG-40: teleport new player into the bakery (near the mixers), NOT to a specific station
+	task.defer(function()
+		teleportPlayer(player, "TutorialSpawn")
+	end)
 end
 
 Players.PlayerAdded:Connect(function(player)
@@ -218,7 +222,16 @@ task.spawn(function()
 		if not session then return end
 		if     stationName == "mix"   and session.step == 1 then advance(player)  -- 1→2
 		elseif stationName == "dough" and session.step == 2 then advance(player)  -- 2→3
-		elseif stationName == "oven"  and session.step == 3 then advance(player)  -- 3→4
+		elseif stationName == "oven"  and session.step == 3 then
+			advance(player)  -- 3→4
+			-- BUG-46: spawn tutorial NPC so the dress KDS has an order waiting
+			local spawnEvt = ServerStorage:FindFirstChild("Events")
+			local spawnTutorialNPC = spawnEvt and spawnEvt:FindFirstChild("SpawnTutorialNPC")
+			if spawnTutorialNPC then
+				spawnTutorialNPC:Fire()
+			else
+				warn("[TutorialController] SpawnTutorialNPC BindableEvent not found in ServerStorage/Events")
+			end
 		elseif stationName == "dress" and session.step == 4 then advance(player)  -- 4→5
 		end
 	end)

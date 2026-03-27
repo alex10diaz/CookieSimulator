@@ -993,6 +993,119 @@ OrderManager.On("BoxCreated", function(box)
     end
 end)
 
+-- ─── TUTORIAL NPC (BUG-46) ───────────────────────────────────────────────────
+-- Spawns a pre-ordered tutorial NPC with chocolate_chip × 6 directly in
+-- "ordered" state, bypassing the queue/GameState check.
+-- Fired by TutorialController after the player completes the oven step (step 3→4).
+local function spawnTutorialNPC()
+    local npcId    = nextNpcId
+    nextNpcId     += 1
+    local name     = "Tutorial Customer"
+    local cookieId = "chocolate_chip"
+    local packSize = 6
+    local cookie   = CookieData.GetById(cookieId)
+    local price    = (cookie and cookie.price or 5) * packSize
+
+    local model = NPCSpawner.CreateNPC({
+        name        = name,
+        isVIP       = false,
+        spawnCFrame = getSpawnCFrame(),
+    })
+    if not model then
+        warn("[NPCController] spawnTutorialNPC: failed to create NPC model")
+        return
+    end
+
+    -- BUG-13: keep tutorial NPC out of the NPC-NPC collision group
+    local npcHrp = model:FindFirstChild("HumanoidRootPart")
+    if npcHrp then
+        pcall(function() PhysicsService:SetPartCollisionGroup(npcHrp, "NPCs") end)
+    end
+
+    -- Register order in OrderManager so the Dress KDS shows it
+    local order = OrderManager.AddNPCOrder(name, cookieId, {
+        packSize = packSize,
+        price    = price,
+        isVIP    = false,
+        npcId    = npcId,
+        items    = nil,
+    })
+
+    local maxP = getPatienceTime() * 3  -- generous patience for tutorial
+    local data = {
+        id              = npcId,
+        name            = name,
+        model           = model,
+        isVIP           = false,
+        state           = "ordered",  -- skip queue; order already placed
+        patience        = maxP,
+        maxPatience     = maxP,
+        queueSlot       = nil,
+        waitSpot        = nil,
+        order           = {
+            cookieId   = cookieId,
+            cookieName = cookie and cookie.name or cookieId,
+            packSize   = packSize,
+            price      = price,
+            isVIP      = false,
+            orderId    = order.orderId,
+            isVariety  = false,
+            items      = nil,
+        },
+        cancelMove      = nil,
+        promptConnected = false,
+        assignedBoxId   = nil,
+    }
+    npcs[npcId] = data
+
+    npcOrderReadyRemote:FireAllClients(order.orderId, cookieId)
+
+    -- Walk NPC to a free waiting area spot
+    local spot = getFreeWaitSpot()
+    if spot then
+        data.waitSpot   = spot.Name
+        data.state      = "walking_to_seat"
+        data.cancelMove = NPCSpawner.MoveTo(data.model, spot.Position + Vector3.new(0, 2, 0), function()
+            local d = npcs[npcId]
+            if not d then return end
+            d.state = "seated"
+            if d.pendingCallToCounter then
+                d.pendingCallToCounter = nil
+                callNPCToCounter(npcId)
+            end
+        end)
+        task.delay(12, function()
+            local d = npcs[npcId]
+            if d and d.state == "walking_to_seat" then
+                d.state = "seated"
+                if d.cancelMove then pcall(d.cancelMove); d.cancelMove = nil end
+                if d.pendingCallToCounter then
+                    d.pendingCallToCounter = nil
+                    callNPCToCounter(npcId)
+                end
+            end
+        end)
+    else
+        data.state = "seated"
+    end
+
+    startPatienceTicker(npcId)
+    print(string.format("[NPCController] Tutorial NPC spawned: %s (id=%d, %s x%d, orderId=%s)",
+        name, npcId, cookieId, packSize, tostring(order.orderId)))
+end
+
+-- Listen for SpawnTutorialNPC BindableEvent (created by TutorialController's fix)
+task.spawn(function()
+    local evts = game:GetService("ServerStorage"):WaitForChild("Events", 10)
+    if not evts then warn("[NPCController] ServerStorage/Events not found for SpawnTutorialNPC"); return end
+    local e = evts:WaitForChild("SpawnTutorialNPC", 15)
+    if not e then warn("[NPCController] SpawnTutorialNPC BindableEvent not found"); return end
+    e.Event:Connect(function()
+        spawnTutorialNPC()
+    end)
+    print("[NPCController] SpawnTutorialNPC gate wired")
+end)
+
 -- ─── SPAWN LOOP ───────────────────────────────────────────────────────────────
 task.spawn(function()
     task.wait(2)  -- brief startup buffer before first spawn attempt
