@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-26 (Session 10 — Final Alpha Blockers: BUG-25/32/36 resolved. All MUST HAVE + SHOULD HAVE checks complete. Pending: RISK-5 live load test.)
-**Overall Alpha Readiness:** 🟡 97% — All code fixes complete. Only RISK-5 (4–6 player Rush Hour live load test) stands between current state and Alpha invite. Cross-reference note: Codex "BUG-25" (ShowAlert missing from RemoteManager) = already tracked as BUG-24 in this file — not duplicated.
+**Last Updated:** 2026-03-27 (Session 11 — Full new-player playtest revealed 8 new bugs BUG-39 through BUG-46. All being fixed this session.)
+**Overall Alpha Readiness:** 🟡 94% — BUG-39/40/41/42/43/44/45/46 open from live playtest. Fixing this session. RISK-5 still pending.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
