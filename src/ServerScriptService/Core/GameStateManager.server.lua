@@ -7,6 +7,7 @@ local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):Wait
 local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
 local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
+local GamepassManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("GamepassManager"))
 
 -- C-2: coach tip remote
 -- BUG-31: track the last tip so mid-shift joiners can be caught up
@@ -120,7 +121,17 @@ local function runCycle()
         PlayerDataManager.ResetAllCombos()
         if not DEV_SKIP_PREOPEN then
             fireTipAll("Pick today's cookie menu from the board!")
-            runPhase(PREOPEN_DURATION, "PreOpen")
+            -- BUG-25: SpeedPass skips PreOpen for the whole server (co-op game)
+            local anySpeedPass = false
+            for _, p in ipairs(Players:GetPlayers()) do
+                if GamepassManager.HasSpeedPass(p) then anySpeedPass = true; break end
+            end
+            if not anySpeedPass then
+                runPhase(PREOPEN_DURATION, "PreOpen")
+            else
+                broadcast("PreOpen", 0)
+                print("[GameStateManager] PreOpen skipped — SpeedPass holder present")
+            end
         end
         -- S-1: Open phase with rush hour at 70% elapsed
         do

@@ -21,6 +21,7 @@ local DailyChallengeManager  = require(ServerScriptService:WaitForChild("Core"):
 local WeeklyChallengeManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("WeeklyChallengeManager"))
 local LifetimeChallengeManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("LifetimeChallengeManager"))
 local MenuManager              = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
+local GamepassManager          = require(ServerScriptService:WaitForChild("Core"):WaitForChild("GamepassManager"))
 
 -- ─── CONSTANTS ────────────────────────────────────────────────────────────────
 local MAX_NPCS_IN_SCENE    = 6
@@ -688,6 +689,10 @@ addDeliverPrompt = function(npcId)
         )
 
         if rushHourActive then
+            payout.coins = math.floor(payout.coins * 1.5)
+        end
+        -- BUG-25: VIPPass gives delivering player 1.5x coin bonus
+        if GamepassManager.HasVIPPass(player) then
             payout.coins = math.floor(payout.coins * 1.5)
         end
         -- Apply tip upgrade for the delivering player

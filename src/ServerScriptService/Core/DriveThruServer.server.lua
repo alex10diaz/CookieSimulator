@@ -20,6 +20,7 @@ local EconomyManager    = require(ServerScriptService:WaitForChild("Core"):WaitF
 local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
+local GamepassManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("GamepassManager"))
 
 -- ── CONSTANTS ────────────────────────────────────────────────────────────────
 -- Car travels along Z axis. Window wall is at X≈-33.5, faces -X.
@@ -354,6 +355,10 @@ OrderManager.On("BoxCreated", function(box)
         local deliverCar        = order.car
         local deliverNpcOrderId = order.npcOrderId
         local deliverCoins      = tonumber(order.coins) or 0
+        -- BUG-25: VIPPass gives delivering player 1.5x coin bonus
+        if GamepassManager.HasVIPPass(player) then
+            deliverCoins = math.floor(deliverCoins * 1.5)
+        end
         local deliverXp         = tonumber(order.xp) or 0
         local deliverBoxId      = order.boxId
 

@@ -1,3 +1,10 @@
+-- BUG-36: AIBakerSystem and StaffManager both manage AI workers with overlapping
+-- responsibility. StaffManager is the canonical system (better architecture, proper
+-- spawn positions, GameState wiring, dress worker support). This file is disabled.
+-- Do NOT re-enable without first disabling or removing StaffManager.
+-- BUG-32 is also resolved by this disable — no dismissal-without-refund can occur.
+do return end
+
 local Players      = game:GetService("Players")
 local RS           = game:GetService("ReplicatedStorage")
 local SSS          = game:GetService("ServerScriptService")
