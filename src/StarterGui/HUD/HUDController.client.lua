@@ -451,8 +451,8 @@ end
 -- ══════════════════════════════════════════════════════════════════════════════
 local coachBar = Instance.new("Frame", hud)
 coachBar.Name = "CoachBar"
-coachBar.Size = UDim2.new(0.88, 0, 0, 34)
-coachBar.Position = UDim2.new(0.06, 0, 1, -50)
+coachBar.Size = UDim2.new(0.65, 0, 0, 34)
+coachBar.Position = UDim2.new(0.20, 0, 1, -50)
 coachBar.BackgroundColor3 = Color3.fromRGB(175, 218, 235)
 coachBar.BackgroundTransparency = 0.1; coachBar.BorderSizePixel = 0
 coachBar.ZIndex = 20; coachBar.Visible = false
@@ -464,7 +464,7 @@ coachLbl.Size = UDim2.new(1,-16,1,0); coachLbl.Position = UDim2.new(0,8,0,0)
 coachLbl.BackgroundTransparency = 1; coachLbl.TextColor3 = C.WHITE
 coachLbl.Font = Enum.Font.Gotham; coachLbl.TextSize = 13; coachLbl.TextScaled = true
 coachLbl.ZIndex = 21
-coachLbl.Text = "Mix  →  Dough  →  Oven  →  Warmers  →  Dress  →  Deliver"
+coachLbl.Text = "Mix → Dough → Oven → Dress → Deliver"
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- COMBO PILL
