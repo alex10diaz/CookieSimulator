@@ -1,5 +1,6 @@
--- ServerScriptService/Core/GamepassManager.server.lua
+-- ServerScriptService/Core/GamepassManager (ModuleScript)
 -- M-12: Gamepass scaffold — grants benefits when players own a gamepass.
+-- NOTE: In Studio this is a ModuleScript (not Script) so it can be required.
 -- Replace PLACEHOLDER IDs with real Roblox Gamepass IDs before launch.
 --
 -- SPEED_PASS  (ID: set below) — skips the PreOpen phase on join
