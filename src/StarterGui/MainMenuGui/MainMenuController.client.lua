@@ -5,8 +5,9 @@ local Players           = game:GetService("Players")
 local TweenService      = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local stateRemote   = RemoteManager.Get("GameStateChanged")
+local RemoteManager      = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local stateRemote        = RemoteManager.Get("GameStateChanged")
+local dismissMenuRemote  = RemoteManager.Get("DismissMainMenu")
 
 -- ── Palette (matches HUDController) ──────────────────────────────────────────
 local C = {
@@ -157,15 +158,17 @@ local function hideMenu()
     task.delay(0.45, function() gui.Enabled = false end)
 end
 
+-- Hide when game is actually running (safety net — player should have clicked Play already)
 stateRemote.OnClientEvent:Connect(function(state)
-    if state ~= "Lobby" then hideMenu() end
+    if state == "Open" or state == "EndOfDay" or state == "Intermission" then
+        hideMenu()
+    end
 end)
 
-playBtn.Activated:Connect(function() hideMenu() end)
-
-task.defer(function()
-    local attr = workspace:GetAttribute("GameState")
-    if attr and attr ~= "Lobby" then hideMenu() end
+-- Play button: notify server + hide menu
+playBtn.Activated:Connect(function()
+    dismissMenuRemote:FireServer()
+    hideMenu()
 end)
 
 print("[MainMenuController] Ready.")

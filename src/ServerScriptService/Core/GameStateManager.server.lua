@@ -5,6 +5,31 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
+
+-- ─── Main Menu Tracking ───────────────────────────────────────────────────────
+-- Every joining player starts "on the main menu". PreOpen timer pauses for them
+-- until they click Play (fires DismissMainMenu remote) or are force-removed by
+-- Open/EndOfDay/Intermission. Also pauses for tutorial players (InTutorial=true).
+local dismissMenuRemote = RemoteManager.Get("DismissMainMenu")
+
+Players.PlayerAdded:Connect(function(player)
+    player:SetAttribute("OnMainMenu", true)
+end)
+
+dismissMenuRemote.OnServerEvent:Connect(function(player)
+    player:SetAttribute("OnMainMenu", false)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    player:SetAttribute("OnMainMenu", false)
+end)
+
+-- Handle players already in game when this module loads (Studio play mode)
+for _, p in ipairs(Players:GetPlayers()) do
+    if p:GetAttribute("OnMainMenu") == nil then
+        p:SetAttribute("OnMainMenu", true)
+    end
+end
 local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 local GamepassManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("GamepassManager"))
@@ -103,7 +128,19 @@ local function runPhase(duration, stateName)
             break
         end
         task.wait(1)
-        remaining -= 1
+        -- BUG-45/BUG-39: pause PreOpen while any player is on the main menu OR in tutorial
+        local paused = false
+        if stateName == "PreOpen" then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p:GetAttribute("OnMainMenu") or p:GetAttribute("InTutorial") then
+                    paused = true
+                    break
+                end
+            end
+        end
+        if not paused then
+            remaining -= 1
+        end
         stateChangedRemote:FireAllClients(stateName, remaining)
     end
 end

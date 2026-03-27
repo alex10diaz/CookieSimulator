@@ -136,6 +136,7 @@ local REMOTES = {
     -- C-2: Coach tip bar
     "PlayerTipUpdate",         -- Server->Client: coach tip string shown in bottom-center bar
     "ShowAlert",               -- Server->Client: toast notification (used by GamepassManager ProcessReceipt)
+    "DismissMainMenu",         -- Client->Server: player clicked Play on the main menu
 }
 
 -- Server creates all remotes; client waits for server-created ones.
