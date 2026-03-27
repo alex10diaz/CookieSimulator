@@ -154,12 +154,18 @@ local purchaseRemote = RemoteManager.Get("PurchaseItem")
 local resultRemote   = RemoteManager.Get("PurchaseResult")
 
 -- H-7: rate limiting — 1 purchase request per second per player
+-- BUG-26: use UserId (not player object) as key to prevent memory leak on player leave
 local lastPurchaseTime = {}
+local Players = game:GetService("Players")
+
+Players.PlayerRemoving:Connect(function(player)
+    lastPurchaseTime[player.UserId] = nil
+end)
 
 purchaseRemote.OnServerEvent:Connect(function(player, itemId)
     local now = tick()
-    if (now - (lastPurchaseTime[player] or 0)) < 1 then return end
-    lastPurchaseTime[player] = now
+    if (now - (lastPurchaseTime[player.UserId] or 0)) < 1 then return end
+    lastPurchaseTime[player.UserId] = now
     if type(itemId) ~= "string" then
         resultRemote:FireClient(player, { success = false, reason = "Invalid request" })
         return

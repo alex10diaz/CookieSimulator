@@ -464,11 +464,12 @@ end
 -- MIX COOKIE SELECTION (from client via FireServer)
 local RequestMixStart = RemoteManager.Get("RequestMixStart")
 -- H-7: rate limiting — 1 request per 0.5s per player
+-- BUG-26: use UserId (not player object) as key to prevent memory leak on player leave
 local lastMixRequestTime = {}
 RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
     local now = tick()
-    if (now - (lastMixRequestTime[player] or 0)) < 0.5 then return end
-    lastMixRequestTime[player] = now
+    if (now - (lastMixRequestTime[player.UserId] or 0)) < 0.5 then return end
+    lastMixRequestTime[player.UserId] = now
     local gameState = Workspace:GetAttribute("GameState")
     if gameState ~= "Open" and gameState ~= "PreOpen" then return end  -- lock during Intermission/EndOfDay
     if activeSessions[player] then return end
@@ -485,9 +486,27 @@ RequestMixStart.OnServerEvent:Connect(function(player, cookieId)
         return
     end
 
+    -- BUG-35: Validate cookieId against player's owned recipes (not just the menu).
+    -- Prevents fresh players from mixing cookies_and_cream / lemon_blackraspberry
+    -- before earning them at bakery levels 5 / 10.
+    local profile = PlayerDataManager.GetData(player)
+    if profile then
+        local owned = false
+        for _, id in ipairs(profile.unlockedRecipes or {}) do
+            if id == cookieId then owned = true; break end
+        end
+        if not owned then
+            warn("[AntiExploit] " .. player.Name .. " tried to mix unowned recipe: " .. tostring(cookieId))
+            fireTip(player, "You haven't unlocked " .. cookieId .. " yet! Level up your bakery.")
+            return
+        end
+    end
+
     local batchId = OrderManager.TryStartBatch(player, cookieId)
     if not batchId then
+        -- BUG-27: tell player why mix failed instead of silently dropping the request
         warn("[MinigameServer] Could not start batch for " .. player.Name)
+        fireTip(player, "All mix slots are full — wait for dough to move to the next stage!")
         return
     end
 
@@ -593,6 +612,8 @@ end)
 
 Players.PlayerRemoving:Connect(function(player)
     cleanupPlayerSession(player, "player removing")
+    -- BUG-26: clean up rate-limit entry so table doesn't accumulate dead keys
+    lastMixRequestTime[player.UserId] = nil
 end)
 
 Players.PlayerAdded:Connect(function(player)

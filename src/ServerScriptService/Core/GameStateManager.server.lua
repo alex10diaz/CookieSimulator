@@ -3,9 +3,10 @@ local Players             = game:GetService("Players")
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local OrderManager  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
-local SessionStats  = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
+local RemoteManager     = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))
+local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
+local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
 -- C-2: coach tip remote
 local tipRemote = RemoteManager.Get("PlayerTipUpdate")
