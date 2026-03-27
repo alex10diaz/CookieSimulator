@@ -272,35 +272,23 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Pre-Alpha Hardening — Fix All Audit Findings (Sessions 7 + 8 — Codex Merge)`
-**Status:** 🟡 IN PROGRESS — Session 9 bulk fix sprint resolved 13 of 16 bugs. 3 remain open. See Section 5 for remaining task list.
-**Are we ready for Alpha?:** NO — fix BUG-25, BUG-32, BUG-36 + run RISK-5 live load test first.
-**Codex cross-reference:** Codex "BUG-25" (ShowAlert not in RemoteManager) = already tracked as BUG-24. No duplicate added. All other Codex findings are new: BUG-34, BUG-35, BUG-36, BUG-37, RISK-5.
-**What remains before Alpha clears:**
-1. ❌ BUG-25 — GamepassManager VIP/Speed stubs never wired to any behavior
-2. ❌ BUG-32 — AI worker dismissed on 2nd player join with no warning or refund
-3. ❌ BUG-36 — Both StaffManager + AIBakerSystem active in production — duplicate AI worker systems, overlapping responsibility, regression risk
-4. ❌ RISK-5 — 4–6 player Rush Hour live load test required before Alpha invite
+**TASK:** `RISK-5 — 4–6 Player Rush Hour Live Load Test`
+**Status:** 🟡 PENDING — All code bugs resolved (Sessions 9 + 10). Zero-error boot confirmed. Only RISK-5 load test remains before Alpha invite.
+**Are we ready for Alpha?:** CODE YES — RISK-5 PENDING. Run the Section 12 Performance Testing checklist with 4+ players in a live session. If clean, Alpha is cleared.
+**Codex cross-reference:** Codex "BUG-25" (ShowAlert not in RemoteManager) = already tracked as BUG-24. No duplicate added.
+
+**Resolved this session (Session 10):**
+- ✅ BUG-25 — SpeedPass wired into GameStateManager PreOpen skip; VIPPass wired into PersistentNPCSpawner + DriveThruServer delivery payout (1.5× multiply)
+- ✅ BUG-32 — Resolved by BUG-36 fix: AIBakerSystem disabled, updateSoloMode() never fires, no silent dismissal possible
+- ✅ BUG-36 — AIBakerSystem disabled (do return end + Studio Disabled=true). StaffManager is canonical AI worker system.
+- ✅ GamepassManager converted from Script → ModuleScript (was crashing all three callers with "invalid require argument")
+- ✅ Zero-error boot confirmed in Studio after all fixes
 
 **Resolved this session (Session 9):**
-- ✅ BUG-22 — Oven batch orphan on disconnect fixed (ClearOvenBatch in cleanupPlayerSession + watchdog)
-- ✅ BUG-23 — comboStreak resets each shift (ResetAllCombos called in runCycle)
-- ✅ BUG-24 — ShowAlert added to RemoteManager REMOTES table
-- ✅ BUG-26 — Rate-limit tables use UserId + PlayerRemoving cleanup in MinigameServer + UnlockManager
-- ✅ BUG-27 — fireTip fires when batch cap reached explaining why mix failed
-- ✅ BUG-28 — Drive-thru locked tip fires 3s after Open phase starts
-- ✅ BUG-29 — DriveThruServer clears takenBy on PlayerRemoving so order is reclaimable
-- ✅ BUG-30 — teleportAllTo uses indexed radial spread — no 6-player clip
-- ✅ BUG-31 — Mid-shift joiners receive LastCoachTip via workspace attribute
-- ✅ BUG-33 — New players start with 500 coins
-- ✅ BUG-34 — _serverLock uses lockExpiry timestamp (120s); stale locks ignored
-- ✅ BUG-35 — RequestMixStart validates cookieId against player's unlockedRecipes
-- ✅ BUG-37 — Tutorial skip path passes natural=false; reward only on natural=true
+- ✅ BUG-22/23/24/26/27/28/29/30/31/33/34/35/37 — see Section 6 for details
 
-**What was correctly completed (Sessions 1–7):**
-- BUG-17 in-game verified ✅ | EndOfDaySummary remote ✅ | HUDController crashes ✅
-- DEBUG_GiveCoins removed ✅ | Performance baseline verified ✅
-- Codex "BUG-25" cross-reference confirmed = BUG-24 already tracked ✅
+**What was correctly completed (Sessions 1–8):**
+- All C/H/M priority items complete. All 37 bugs resolved. Performance baseline verified. ✅
 
 ---
 
@@ -323,10 +311,10 @@
 
 | Order | Bug ID | System | Task | Files to Touch |
 |---|---|---|---|---|
-| 1 | BUG-25 | GamepassManager | Wire `HasSpeedPass()` into GameStateManager PreOpen skip; wire `HasVIPPass()` into EconomyManager payout multiplier | GamepassManager.server.lua, GameStateManager.server.lua, EconomyManager.lua |
+| ~~1~~ | ~~BUG-25~~ | ~~GamepassManager~~ | ✅ Resolved 2026-03-26 — SpeedPass wired in GSM PreOpen; VIPPass wired in NPCSpawner + DriveThruServer; GamepassManager converted to ModuleScript | — |
 | ~~7~~ | ~~BUG-26~~ | ~~MinigameServer / UnlockManager~~ | ✅ Resolved 2026-03-26 — UserId keys + PlayerRemoving cleanup in both files | — |
 | ~~8~~ | ~~BUG-27~~ | ~~MinigameServer~~ | ✅ Resolved 2026-03-26 — fireTip fires when batch cap reached | — |
-| 2 | BUG-36 | AIBakerSystem / StaffManager | Both `StaffManager.server.lua` and `AIBakerSystem.server.lua` are active production scripts with overlapping AI worker responsibilities. Decide which is canonical; disable or remove the other. Document the decision. | StaffManager.server.lua, AIBakerSystem.server.lua |
+| ~~2~~ | ~~BUG-36~~ | ~~AIBakerSystem / StaffManager~~ | ✅ Resolved 2026-03-26 — AIBakerSystem disabled (do return end + Studio Disabled=true). StaffManager is canonical. | — |
 
 ### 🟡 MEDIUM — Fix before inviting testers (quality bar)
 
@@ -336,7 +324,7 @@
 | ~~11~~ | ~~BUG-29~~ | ~~DriveThruServer~~ | ✅ Resolved 2026-03-26 — PlayerRemoving clears takenBy so order is reclaimable | — |
 | ~~12~~ | ~~BUG-30~~ | ~~GameStateManager~~ | ✅ Resolved 2026-03-26 — indexed radial spread in teleportAllTo | — |
 | ~~13~~ | ~~BUG-31~~ | ~~MinigameServer / GameStateManager~~ | ✅ Resolved 2026-03-26 — LastCoachTip workspace attribute + resend in M-4 joiner block | — |
-| 3 | BUG-32 | AIBakerSystem | Before `updateSoloMode()` dismisses workers on 2nd player join: fire a notification to owner + refund `HIRE_COST` per dismissed worker | AIBakerSystem.server.lua |
+| ~~3~~ | ~~BUG-32~~ | ~~AIBakerSystem~~ | ✅ Resolved 2026-03-26 — Resolved by BUG-36 fix. AIBakerSystem disabled; updateSoloMode() never fires; no dismissal-without-refund possible. | — |
 | ~~15~~ | ~~BUG-33~~ | ~~PlayerDataManager~~ | ✅ Resolved 2026-03-26 — new players start with 500 coins | — |
 | ~~16~~ | ~~BUG-37~~ | ~~TutorialController~~ | ✅ Resolved 2026-03-26 — natural=false skip path; reward only on natural=true | — |
 
@@ -424,6 +412,10 @@
 | 2026-03-26 | **BUG-23 Combo reset per shift** | PlayerDataManager.ResetAllCombos() zeroes comboStreak in all live profiles. Called in GameStateManager.runCycle() after SessionStats.Reset(). |
 | 2026-03-26 | **BUG-26 MinigameServer UserId keys** | lastMixRequestTime[player.UserId] throughout; PlayerRemoving cleanup clears the entry. No dead references. |
 | 2026-03-26 | **Studio sync verified — zero errors on boot** | All 3 previously broken files (GameStateManager, MinigameServer, TutorialController) pushed clean to Studio. Play mode boot shows 0 script errors. |
+| 2026-03-26 | **BUG-36 Duplicate AI systems resolved** | AIBakerSystem disabled: `do return end` guard added to disk source + `Script.Disabled=true` set in Studio. StaffManager is canonical AI worker system. Documented in source comment. |
+| 2026-03-26 | **BUG-32 AI worker dismiss no refund** | Resolved by BUG-36 fix — AIBakerSystem.updateSoloMode() never fires when script is disabled. No dismissal-without-refund possible. |
+| 2026-03-26 | **BUG-25 GamepassManager stubs wired** | (1) GamepassManager converted from Script→ModuleScript in Studio so require() works. (2) SpeedPass: GSM runCycle checks HasSpeedPass() for all players; if any owns it, PreOpen is broadcast as 0s and skipped. (3) VIPPass: PersistentNPCSpawner delivery path multiplies payout.coins×1.5 if HasVIPPass(player). (4) VIPPass: DriveThruServer delivery path multiplies deliverCoins×1.5 if HasVIPPass(player). Paying players now receive correct benefits even with ID=0 placeholder. |
+| 2026-03-26 | **Zero-error boot confirmed (Session 10)** | All 3 BUG-25/32/36 fixes applied. Play mode boot shows 0 script errors. All [Ready] prints present. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
 | 2026-03-24 | NPC facePosition() function added | Replaced faceClosestPOS calls in waiting_in_queue state |
