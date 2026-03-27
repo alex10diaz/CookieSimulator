@@ -723,7 +723,7 @@ StarterGui/
 - [ ] Player leaves holding box → box destroyed on server
 - [ ] 6-player full session → batch pool not starved
 - [ ] Rush Hour + 6 players → NPC cap (6) enforced
-- [ ] 2nd player joins solo session → AI workers dismissed with notification + coin refund (BUG-32)
+- [ ] 2nd player joins solo session → no AI worker dismissal occurs (AIBakerSystem disabled — BUG-32/36 resolved)
 - [ ] Drive-thru: carrier disconnects after taking order → another player can deliver (BUG-29)
 - [ ] 6 players teleport to intermission → no clipping (BUG-30)
 
@@ -801,36 +801,36 @@ StarterGui/
 
 ---
 
-## 📈 SECTION 14 — FINAL REPORT SNAPSHOT (Updated 2026-03-25 — Post Strict Audit)
+## 📈 SECTION 14 — FINAL REPORT SNAPSHOT (Updated 2026-03-26 — Post Session 10)
 
-> ⚠️ This table reflects the state AFTER Session 7 strict audit + Session 8 Codex repo-wide audit. Do not change OVERALL to ✅ until every open bug in Section 7 is marked Resolved and every Section 8 checkbox is checked.
+> ⚠️ All MUST HAVE and SHOULD HAVE Section 8 checkboxes are now ✅. Only RISK-5 live load test remains. Do not change OVERALL to ✅ until RISK-5 is completed.
 
 | Category | Score | Notes |
 |---|---|---|
-| Core Systems | 🟡 90% | Pipeline solid. BUG-22 (oven orphan) + BUG-35 (locked recipe bypass in mix handler) are open pipeline risks. |
-| Multiplayer Safety | 🟡 83% | dough/frost/dress locks present. BUG-22 oven orphan + BUG-29 drive-thru carrier + BUG-30 teleport overlap are open. |
-| Data Integrity | 🔴 65% | BUG-34 (save lock never expires — systematic silent data loss on server restart) is a critical design flaw downgrading this category. BUG-23 (comboStreak persists) also open. Fix BUG-34 before any real player session. |
-| UI/UX | ✅ 95% | Coach tips, carry pill, order colors, station breakdown, mobile scaling all complete. BUG-31 (mid-shift joiner misses tip) open. |
-| Progression/Retention | 🔴 65% | BUG-35 confirms locked recipes are accessible from day 1 (no ownership enforcement in RequestMixStart). BUG-33 (0 starter coins). Combo streak broken (BUG-23). |
-| Performance | 🟡 80% | BUG-26 (rate-limit memory leak). Solo baseline clean. RISK-5: 6-player Rush Hour peak load unverified — must test before Alpha. |
-| Anti-Exploit | 🟡 80% | BUG-17 closed. BUG-24 (ShowAlert — ProcessReceipt crash) open. BUG-25 (gamepass stubs non-functional). BUG-35 (locked recipe bypass). Rate limits in place. |
-| Architecture | 🔴 70% | BUG-36: two competing AI worker systems both active in production. Undefined interaction under load. Must resolve before Alpha. |
+| Core Systems | ✅ 98% | All pipeline bugs resolved. BUG-22/35 closed. BUG-25 SpeedPass/VIPPass now wired. Recipe bypass closed. |
+| Multiplayer Safety | ✅ 95% | BUG-22/29/30/32/36 all resolved. Known low-risk gap: box carry desync (BUG-12, monitor during Alpha). |
+| Data Integrity | ✅ 95% | BUG-34 lock expiry fixed. BUG-23 combo reset fixed. BUG-33 starter coins fixed. Minor known gap: no retry on save failure (post-Alpha). |
+| UI/UX | ✅ 97% | All coach tips, carry pill, order colors, station breakdown, mobile scaling complete. BUG-31 mid-shift tip fixed. |
+| Progression/Retention | ✅ 95% | BUG-35 recipe bypass closed. BUG-33 starter coins added. BUG-23 combo reset fixed. Level unlock content present. |
+| Performance | 🟡 85% | Solo baseline clean. BUG-26 memory leak fixed. RISK-5: 6-player Rush Hour peak load still unverified — must test before Alpha invite. |
+| Anti-Exploit | ✅ 95% | BUG-17/24/25/26/35 all closed. Rate limits in place. GamepassManager now a proper ModuleScript. |
+| Architecture | ✅ 95% | BUG-36 resolved — AIBakerSystem disabled, StaffManager canonical. Single AI worker system. Clean require graph. |
 | Game Feel/Polish | ✅ 95% | 15 SFX, combo popups, rush hour banner, results animation, VIP NPC glow all complete. Screen effects post-Alpha. |
-| **OVERALL** | **🔴 78%** | **NOT Alpha Ready — Session 7 found BUG-22 to BUG-33 (12 bugs). Session 8 Codex audit found BUG-34 to BUG-37 + RISK-5 (4 new bugs + 1 elevated risk). Total open: 5 critical, 4 high, 8 medium. Alpha cleared only when every Section 8 checkbox is checked and a 4–6 player live session passes clean.** |
+| **OVERALL** | **🟡 97%** | **CODE COMPLETE — All 37 bugs resolved across Sessions 1–10. All Section 8 MUST HAVE + SHOULD HAVE items checked. Only RISK-5 (4–6 player Rush Hour live session) stands between current state and Alpha invite. Run Section 12 Performance Testing with 4+ players to clear.** |
 
 ### Open Alpha Risks (must be resolved — see Section 5 for tasks)
-1. **🔴 BUG-34** — PlayerDataManager save lock never expires — systematic silent data loss on server restart
-2. **🔴 BUG-35** — Locked recipe bypass — players can mix cookies they haven't unlocked from session 1
-3. **🔴 BUG-22** — Oven batch orphaned on disconnect — pipeline stall with multiple disconnects
-4. **🔴 BUG-23** — comboStreak persists across sessions — per-shift mechanic fundamentally broken
-5. **🔴 BUG-24** — ShowAlert not in RemoteManager — ProcessReceipt crash on Boost Token
-6. **🟠 BUG-25** — GamepassManager stubs non-functional — paying players get zero benefit
-7. **🟠 BUG-26** — Rate-limit memory leak — compounds over long server lifetime
-8. **🟠 BUG-27** — No feedback on batch cap — silent fail confuses new players
-9. **🟠 BUG-36** — Two AI worker systems running simultaneously — undefined interaction, regression risk
-10. **🟡 BUG-28 through BUG-33** — Medium quality issues, all fixable in one session
-11. **🟡 BUG-37** — Tutorial skip grants same reward as completion — defeats incentive to learn
-12. **🟠 RISK-5** — Peak load (6-player Rush Hour) never verified — must run before Alpha invite
+~~1. BUG-34~~ ✅ Resolved 2026-03-26
+~~2. BUG-35~~ ✅ Resolved 2026-03-26
+~~3. BUG-22~~ ✅ Resolved 2026-03-26
+~~4. BUG-23~~ ✅ Resolved 2026-03-26
+~~5. BUG-24~~ ✅ Resolved 2026-03-26
+~~6. BUG-25~~ ✅ Resolved 2026-03-26
+~~7. BUG-26~~ ✅ Resolved 2026-03-26
+~~8. BUG-27~~ ✅ Resolved 2026-03-26
+~~9. BUG-36~~ ✅ Resolved 2026-03-26
+~~10. BUG-28 through BUG-33~~ ✅ All Resolved 2026-03-26
+~~11. BUG-37~~ ✅ Resolved 2026-03-26
+**1. 🟠 RISK-5** — Peak load (4–6 player Rush Hour) never verified — **ONLY REMAINING BLOCKER**. Run Section 12 Performance Testing with 4+ players to clear Alpha.
 
 ### Known Post-Alpha Limitations (acceptable for Alpha once above are fixed)
 1. **Box carry desync (BUG-12)** — BindableEvent timing gap. Low-risk; monitor during Alpha.
