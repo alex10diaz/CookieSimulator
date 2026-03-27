@@ -86,26 +86,20 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 				hum.HealthDisplayDistance = 0
 			end
 
-			-- Anchor + disable collision
+			-- Position using SetPrimaryPartCFrame (matches NPCSpawner; must move BEFORE
+			-- anchoring — parts are at origin in ServerStorage, manual offset loop = mush)
+			local hrp = clone:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				clone.PrimaryPart = hrp
+				clone:SetPrimaryPartCFrame(spawnCF)
+			end
+
+			-- Anchor + disable collision AFTER positioning
 			for _, part in ipairs(clone:GetDescendants()) do
 				if part:IsA("BasePart") then
 					part.Anchored   = true
 					part.CanCollide = false
 				end
-			end
-
-			-- Place at spawn
-			local hrp = clone:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				local originCF = hrp.CFrame
-				for _, part in ipairs(clone:GetDescendants()) do
-					if part:IsA("BasePart") then
-						local offset = originCF:ToObjectSpace(part.CFrame)
-						part.CFrame = spawnCF * offset
-					end
-				end
-				hrp.CFrame = spawnCF
-				clone.PrimaryPart = hrp
 			end
 
 			clone.Parent = workspace
