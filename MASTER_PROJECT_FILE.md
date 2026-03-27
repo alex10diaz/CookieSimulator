@@ -295,9 +295,22 @@
 ## 📋 SECTION 5 — NEXT TASK QUEUE
 
 > 🔴 Alpha is NOT cleared. Work top-to-bottom. Do not skip. Mark each resolved in Section 7 before advancing.
-> ⚠️ Codex audit (Session 8) added BUG-34/35/36/37. Cross-reference complete. No duplicates (Codex "BUG-25" = my BUG-24).
+> ⚠️ Session 11 playtest added BUG-39 through BUG-46. These must all be fixed before RISK-5 load test.
 
-### 🔴 CRITICAL BLOCKERS (fix first — in order)
+### 🔴 SESSION 12 — Tutorial Flow Fixes (fix ALL before anything else)
+
+| Order | Bug ID | System | Task | Files to Touch |
+|---|---|---|---|---|
+| 1 | BUG-45 | GameStateManager | Pause PreOpen timer while any player has InTutorial=true — check attribute each second before decrementing | `GameStateManager.server.lua` |
+| 2 | BUG-39 | MainMenuController | Only hide menu on Open/EndOfDay/Intermission — NOT on PreOpen; remove task.defer auto-hide check | `MainMenuController.client.lua` |
+| 3 | BUG-40 | TutorialController | Teleport new player to bakery spawn (NOT mixer) on tutorial start | `TutorialController.server.lua` |
+| 4 | BUG-41 | TutorialController | Per-step teleports: step 2→DoughTableSpawn, step 3→fridge area, step 4→DressTableSpawn; no tp on steps 1 or 5 | `TutorialController.server.lua` |
+| 5 | BUG-44 | TutorialController | Update step 3 spawn to fridge area (TutorialFridgeSpawn or nearest fridge fallback); update message to say go to fridge first | `TutorialController.server.lua` |
+| 6 | BUG-46 | TutorialController + PersistentNPCSpawner | Fire SpawnTutorialNPC BindableEvent after step 3 (oven complete); spawner handles creating tutorial NPC in "ordered" state with chocolate_chip ×6, bypassing GameState check | `TutorialController.server.lua`, `PersistentNPCSpawner.server.lua` |
+| 7 | BUG-42 | StaffManager | Add InTutorial guard to hire prompt Triggered callback so prompts silently ignore tutorial players | `StaffManager.server.lua` |
+| 8 | BUG-43 | All Minigame UIs | Replace "✕" with "X" (GothamBold); reposition exit button to float at top-right corner OUTSIDE panel boundary (AnchorPoint=1,0; offset beyond panel edge) | `MixMinigame.client.lua`, `DoughMinigame.client.lua`, `OvenMinigame.client.lua`, `FrostMinigame.client.lua` |
+
+### ✅ Previously Resolved — CRITICAL BLOCKERS
 
 | Order | Bug ID | System | Task | Files to Touch |
 |---|---|---|---|---|
@@ -306,27 +319,17 @@
 | ~~3~~ | ~~BUG-22~~ | ~~MinigameServer~~ | ✅ Resolved 2026-03-26 — ClearOvenBatch in cleanupPlayerSession + watchdog | — |
 | ~~4~~ | ~~BUG-23~~ | ~~PlayerDataManager~~ | ✅ Resolved 2026-03-26 — ResetAllCombos() called each shift in runCycle | — |
 | ~~5~~ | ~~BUG-24~~ | ~~RemoteManager~~ | ✅ Resolved 2026-03-26 — ShowAlert added to REMOTES table | — |
-
-### 🟠 HIGH — Fix before inviting testers
-
-| Order | Bug ID | System | Task | Files to Touch |
-|---|---|---|---|---|
-| ~~1~~ | ~~BUG-25~~ | ~~GamepassManager~~ | ✅ Resolved 2026-03-26 — SpeedPass wired in GSM PreOpen; VIPPass wired in NPCSpawner + DriveThruServer; GamepassManager converted to ModuleScript | — |
-| ~~7~~ | ~~BUG-26~~ | ~~MinigameServer / UnlockManager~~ | ✅ Resolved 2026-03-26 — UserId keys + PlayerRemoving cleanup in both files | — |
-| ~~8~~ | ~~BUG-27~~ | ~~MinigameServer~~ | ✅ Resolved 2026-03-26 — fireTip fires when batch cap reached | — |
-| ~~2~~ | ~~BUG-36~~ | ~~AIBakerSystem / StaffManager~~ | ✅ Resolved 2026-03-26 — AIBakerSystem disabled (do return end + Studio Disabled=true). StaffManager is canonical. | — |
-
-### 🟡 MEDIUM — Fix before inviting testers (quality bar)
-
-| Order | Bug ID | System | Task | Files to Touch |
-|---|---|---|---|---|
-| ~~10~~ | ~~BUG-28~~ | ~~DriveThruServer / GameStateManager~~ | ✅ Resolved 2026-03-26 — task.delay(3) tip fires in runCycle Open block when !driveThruUnlocked | — |
-| ~~11~~ | ~~BUG-29~~ | ~~DriveThruServer~~ | ✅ Resolved 2026-03-26 — PlayerRemoving clears takenBy so order is reclaimable | — |
-| ~~12~~ | ~~BUG-30~~ | ~~GameStateManager~~ | ✅ Resolved 2026-03-26 — indexed radial spread in teleportAllTo | — |
-| ~~13~~ | ~~BUG-31~~ | ~~MinigameServer / GameStateManager~~ | ✅ Resolved 2026-03-26 — LastCoachTip workspace attribute + resend in M-4 joiner block | — |
-| ~~3~~ | ~~BUG-32~~ | ~~AIBakerSystem~~ | ✅ Resolved 2026-03-26 — Resolved by BUG-36 fix. AIBakerSystem disabled; updateSoloMode() never fires; no dismissal-without-refund possible. | — |
-| ~~15~~ | ~~BUG-33~~ | ~~PlayerDataManager~~ | ✅ Resolved 2026-03-26 — new players start with 500 coins | — |
-| ~~16~~ | ~~BUG-37~~ | ~~TutorialController~~ | ✅ Resolved 2026-03-26 — natural=false skip path; reward only on natural=true | — |
+| ~~1~~ | ~~BUG-25~~ | ~~GamepassManager~~ | ✅ Resolved 2026-03-26 | — |
+| ~~7~~ | ~~BUG-26~~ | ~~MinigameServer / UnlockManager~~ | ✅ Resolved 2026-03-26 | — |
+| ~~8~~ | ~~BUG-27~~ | ~~MinigameServer~~ | ✅ Resolved 2026-03-26 | — |
+| ~~2~~ | ~~BUG-36~~ | ~~AIBakerSystem / StaffManager~~ | ✅ Resolved 2026-03-26 | — |
+| ~~10~~ | ~~BUG-28~~ | ~~DriveThruServer / GameStateManager~~ | ✅ Resolved 2026-03-26 | — |
+| ~~11~~ | ~~BUG-29~~ | ~~DriveThruServer~~ | ✅ Resolved 2026-03-26 | — |
+| ~~12~~ | ~~BUG-30~~ | ~~GameStateManager~~ | ✅ Resolved 2026-03-26 | — |
+| ~~13~~ | ~~BUG-31~~ | ~~MinigameServer / GameStateManager~~ | ✅ Resolved 2026-03-26 | — |
+| ~~3~~ | ~~BUG-32~~ | ~~AIBakerSystem~~ | ✅ Resolved 2026-03-26 | — |
+| ~~15~~ | ~~BUG-33~~ | ~~PlayerDataManager~~ | ✅ Resolved 2026-03-26 | — |
+| ~~16~~ | ~~BUG-37~~ | ~~TutorialController~~ | ✅ Resolved 2026-03-26 | — |
 
 ### ✅ Post-Alpha Queue (do NOT touch until all above are resolved)
 
