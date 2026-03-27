@@ -484,6 +484,15 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
     end
 end)
 
+-- BUG-29: if the player who took the order disconnects, release takenBy so
+-- another player can deliver (otherwise car sits idle for full WINDOW_TIMEOUT)
+Players.PlayerRemoving:Connect(function(player)
+    if currentOrder and currentOrder.takenBy == player then
+        currentOrder.takenBy = nil
+        print("[DriveThruServer] Carrier " .. player.Name .. " disconnected — drive-thru order now claimable")
+    end
+end)
+
 -- ── INIT ──────────────────────────────────────────────────────────────────────
 ensureTVGui()
 onUnlockChanged()

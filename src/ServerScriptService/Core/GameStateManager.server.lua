@@ -9,7 +9,12 @@ local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitF
 local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitForChild("PlayerDataManager"))
 
 -- C-2: coach tip remote
+-- BUG-31: track the last tip so mid-shift joiners can be caught up
 local tipRemote = RemoteManager.Get("PlayerTipUpdate")
+local function fireTipAll(msg)
+    tipRemote:FireAllClients(msg)
+    workspace:SetAttribute("LastCoachTip", msg)  -- BUG-31: persists for late joiners
+end
 
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local DEV_SKIP_PREOPEN    = false     -- PreOpen enabled for live play
@@ -67,13 +72,21 @@ local function broadcast(state, timeRemaining)
     fireListeners(state)
 end
 
+-- BUG-30: use indexed radial spread instead of math.random so 6 players
+-- don't all land on the same spot and clip through each other
 local function teleportAllTo(targetCF)
-    for _, player in ipairs(Players:GetPlayers()) do
+    local playerList = Players:GetPlayers()
+    local count = #playerList
+    for i, player in ipairs(playerList) do
         local char = player.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
-                hrp.CFrame = targetCF + Vector3.new(math.random(-2, 2), 0, math.random(-2, 2))
+                local angle  = (i - 1) / math.max(count, 1) * math.pi * 2
+                local radius = count > 1 and 2.5 or 0
+                local ox = math.cos(angle) * radius
+                local oz = math.sin(angle) * radius
+                hrp.CFrame = targetCF + Vector3.new(ox, 0, oz)
             end
         end
     end
@@ -103,8 +116,10 @@ local function runCycle()
     while true do
         OrderManager.Reset()   -- wipe pipeline state before every new shift
         SessionStats.Reset()
+        -- BUG-23: comboStreak is per-shift — reset for all players at shift boundary
+        PlayerDataManager.ResetAllCombos()
         if not DEV_SKIP_PREOPEN then
-            tipRemote:FireAllClients("Pick today's cookie menu from the board!")
+            fireTipAll("Pick today's cookie menu from the board!")
             runPhase(PREOPEN_DURATION, "PreOpen")
         end
         -- S-1: Open phase with rush hour at 70% elapsed
@@ -115,7 +130,13 @@ local function runCycle()
             local remaining = OPEN_DURATION
             local rushFired = false
             broadcast("Open", remaining)
-            tipRemote:FireAllClients("Head to a Mix Station to start baking!")
+            fireTipAll("Head to a Mix Station to start baking!")
+            -- BUG-28: explain drive-thru is locked if first shift
+            if not driveThruUnlocked then
+                task.delay(3, function()
+                    tipRemote:FireAllClients("Complete this shift to unlock the Drive-Thru!")
+                end)
+            end
             while remaining > 0 do
                 task.wait(1)
                 remaining -= 1
@@ -137,7 +158,7 @@ local function runCycle()
         end
 
         -- End of day
-        tipRemote:FireAllClients("Shift over! Check your results.")
+        fireTipAll("Shift over! Check your results.")
         broadcast("EndOfDay", SUMMARY_DURATION)
         local summary = SessionStats.GetSummary()
         summary.employees = SessionStats.GetEmployeeOfShift()
@@ -147,7 +168,7 @@ local function runCycle()
 
         -- Intermission — teleport to back room
         teleportAllTo(BACK_ROOM_CF)
-        tipRemote:FireAllClients("Break time! Next shift starts soon.")
+        fireTipAll("Break time! Next shift starts soon.")
         runPhase(INTERMISSION_DURATION, "Intermission")
 
         -- Return players to front for next shift

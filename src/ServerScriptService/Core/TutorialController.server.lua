@@ -69,18 +69,23 @@ local function advance(player)
 	sendStep(player, session.step)
 end
 
-local function completeTutorial(player)
+-- BUG-37: natural=true for playing through all 5 steps; natural=false for skip path.
+-- Only natural completion grants the coin/XP reward — skipping just sets the flag.
+local function completeTutorial(player, natural)
 	local userId = player.UserId
 	if not activeTutorials[userId] then return end
 	activeTutorials[userId] = nil
 	player:SetAttribute("InTutorial", false)
-	-- Grant tutorial completion reward
-	pcall(function()
-		PlayerDataManager.AddCoins(player, TUTORIAL_REWARD)
-	end)
+	if natural then
+		pcall(function()
+			PlayerDataManager.AddCoins(player, TUTORIAL_REWARD)
+		end)
+		print("[TutorialController] " .. player.Name .. " tutorial COMPLETE (+$" .. TUTORIAL_REWARD .. " coins) — saved to DataStore")
+	else
+		print("[TutorialController] " .. player.Name .. " tutorial SKIPPED (no reward)")
+	end
 	PlayerDataManager.SetTutorialCompleted(player)
 	sendStep(player, 0)
-	print("[TutorialController] " .. player.Name .. " tutorial COMPLETE (+$" .. TUTORIAL_REWARD .. " coins) — saved to DataStore")
 end
 
 -- ─── Player Join ─────────────────────────────────────────────────────────────
@@ -125,17 +130,18 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 
 -- ─── Skip ────────────────────────────────────────────────────────────────────
--- Allow skip from ANY step — no step restriction.
+-- BUG-37: skip path passes natural=false so no reward is granted
 tutorialDoneRemote.OnServerEvent:Connect(function(player)
 	if not activeTutorials[player.UserId] then return end
-	completeTutorial(player)
+	completeTutorial(player, false)
 end)
 
 -- ─── Start Day / Replay ──────────────────────────────────────────────────────
+-- natural=true: player completed all 5 steps and pressed Start Day at the final menu
 startGameRemote.OnServerEvent:Connect(function(player)
 	local session = activeTutorials[player.UserId]
 	if session and session.step ~= FINAL_MENU_STEP then return end
-	completeTutorial(player)
+	completeTutorial(player, true)
 end)
 
 replayRemote.OnServerEvent:Connect(function(player)

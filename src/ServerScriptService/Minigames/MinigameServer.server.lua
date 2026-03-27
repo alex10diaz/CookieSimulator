@@ -632,6 +632,11 @@ Players.PlayerAdded:Connect(function(player)
             BatchUpdated:FireClient(player, batchState)
             FridgeUpdated:FireClient(player, fridgeState)
             WarmersUpdated:FireClient(player, warmerState, stockByType)
+            -- BUG-31: re-send last coach tip so mid-shift joiners aren't left in silence
+            local lastTip = workspace:GetAttribute("LastCoachTip")
+            if lastTip and lastTip ~= "" then
+                tipRemote:FireClient(player, lastTip)
+            end
         end
     end)
 end)
