@@ -63,31 +63,36 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 	-- Use CreateHumanoidModelFromDescription for a proper default R6 character
 	local Players = game:GetService("Players")
 	local desc = Instance.new("HumanoidDescription")
+	-- Set skin tone (default is black if unset)
+	local skin = Color3.fromRGB(255, 204, 153)
+	desc.HeadColor      = skin
+	desc.TorsoColor     = skin
+	desc.LeftArmColor   = skin
+	desc.RightArmColor  = skin
+	desc.LeftLegColor   = skin
+	desc.RightLegColor  = skin
 	local ok, result = pcall(function()
 		return Players:CreateHumanoidModelFromDescription(desc, Enum.HumanoidRigType.R6)
 	end)
 	if ok and result then
 		result.Name = workerName
-		-- Hide health/name bar
 		local hum = result:FindFirstChildOfClass("Humanoid")
 		if hum then
 			hum.DisplayDistanceType   = Enum.HumanoidDisplayDistanceType.None
 			hum.HealthDisplayDistance = 0
 		end
-		-- Position at spawn
+		-- Parent to workspace first so Humanoid lands on floor, then anchor
 		local hrp = result:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			result.PrimaryPart = hrp
-			result:SetPrimaryPartCFrame(spawnCF)
-		end
-		-- Anchor + disable collision
+		if hrp then result.PrimaryPart = hrp end
+		result.Parent = workspace
+		result:SetPrimaryPartCFrame(spawnCF)
+		task.wait(0.2)  -- let Humanoid settle onto floor
 		for _, part in ipairs(result:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.Anchored   = true
 				part.CanCollide = false
 			end
 		end
-		result.Parent = workspace
 		rig = result
 	end
 
