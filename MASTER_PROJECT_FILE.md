@@ -297,18 +297,24 @@
 > 🔴 Alpha is NOT cleared. Work top-to-bottom. Do not skip. Mark each resolved in Section 7 before advancing.
 > ⚠️ Session 11 playtest added BUG-39 through BUG-46. These must all be fixed before RISK-5 load test.
 
-### 🔴 SESSION 12 — Tutorial Flow Fixes (fix ALL before anything else)
+### ✅ SESSION 12 — Tutorial Flow Fixes (ALL RESOLVED 2026-03-29)
 
-| Order | Bug ID | System | Task | Files to Touch |
-|---|---|---|---|---|
-| 1 | BUG-45 | GameStateManager | Pause PreOpen timer while any player has InTutorial=true — check attribute each second before decrementing | `GameStateManager.server.lua` |
-| 2 | BUG-39 | MainMenuController | Only hide menu on Open/EndOfDay/Intermission — NOT on PreOpen; remove task.defer auto-hide check | `MainMenuController.client.lua` |
-| 3 | BUG-40 | TutorialController | Teleport new player to bakery spawn (NOT mixer) on tutorial start | `TutorialController.server.lua` |
-| 4 | BUG-41 | TutorialController | Per-step teleports: step 2→DoughTableSpawn, step 3→fridge area, step 4→DressTableSpawn; no tp on steps 1 or 5 | `TutorialController.server.lua` |
-| 5 | BUG-44 | TutorialController | Update step 3 spawn to fridge area (TutorialFridgeSpawn or nearest fridge fallback); update message to say go to fridge first | `TutorialController.server.lua` |
-| 6 | BUG-46 | TutorialController + PersistentNPCSpawner | Fire SpawnTutorialNPC BindableEvent after step 3 (oven complete); spawner handles creating tutorial NPC in "ordered" state with chocolate_chip ×6, bypassing GameState check | `TutorialController.server.lua`, `PersistentNPCSpawner.server.lua` |
-| 7 | BUG-42 | StaffManager | Add InTutorial guard to hire prompt Triggered callback so prompts silently ignore tutorial players | `StaffManager.server.lua` |
-| 8 | BUG-43 | All Minigame UIs | Replace "✕" with "X" (GothamBold); reposition exit button to float at top-right corner OUTSIDE panel boundary (AnchorPoint=1,0; offset beyond panel edge) | `MixMinigame.client.lua`, `DoughMinigame.client.lua`, `OvenMinigame.client.lua`, `FrostMinigame.client.lua` |
+| Order | Bug ID | System | Resolution |
+|---|---|---|---|
+| ~~1~~ | ~~BUG-45~~ | ~~GameStateManager~~ | ✅ Resolved 2026-03-29 — runPhase checks OnMainMenu/InTutorial attrs each second |
+| ~~2~~ | ~~BUG-39~~ | ~~MainMenuController~~ | ✅ Resolved 2026-03-27 — hideMenu only fires on Open/EndOfDay/Intermission |
+| ~~3~~ | ~~BUG-40~~ | ~~TutorialController~~ | ✅ Resolved 2026-03-29 — teleportPlayer("TutorialSpawn") on new-player join |
+| ~~4~~ | ~~BUG-41~~ | ~~TutorialController~~ | ✅ Resolved 2026-03-29 — STEP_SPAWNS table; step 2→Dough, 3→Fridge, 4→Dress |
+| ~~5~~ | ~~BUG-44~~ | ~~TutorialController~~ | ✅ Resolved 2026-03-29 — step 3 uses TutorialFridgeSpawn; fallback to nearest fridge |
+| ~~6~~ | ~~BUG-46~~ | ~~TutorialController + PersistentNPCSpawner~~ | ✅ Resolved 2026-03-29 — SpawnTutorialNPC BindableEvent; spawner creates tutorial NPC in ordered state |
+| ~~7~~ | ~~BUG-42~~ | ~~StaffManager~~ | ✅ Resolved 2026-03-29 — InTutorial guard added to hire Triggered callback |
+| ~~8~~ | ~~BUG-43~~ | ~~All Minigame UIs~~ | ✅ Resolved 2026-03-29 — "X" GothamBold; AnchorPoint(1,0), Position(1,20,0,-20) on all 4 |
+
+### 🔴 SESSION 13 — RISK-5 Load Test (do this before inviting Alpha testers)
+
+| Order | Task | System | Notes |
+|---|---|---|---|
+| 1 | Run 4–6 player Rush Hour live session | All systems | No crash, no severe lag, no orphaned batches |
 
 ### ✅ Previously Resolved — CRITICAL BLOCKERS
 
@@ -472,13 +478,13 @@
 | BUG-37 | 🟡 Medium | TutorialController | `completeTutorial()` is called on both the natural 5-step completion path AND the skip path (when player presses the skip button). The completion function grants a reward (coins/XP) and sets `tutorialCompleted = true`. Skipping should NOT grant the reward — it should only set the flag. A player who skips tutorial gets the same reward as one who completes it, making the reward meaningless and making skipping strictly dominant. Fix: pass a `natural` boolean to `completeTutorial()`; only grant reward when `natural == true`. | ✅ Resolved 2026-03-26 — completeTutorial(player, natural): skip fires false, startGame fires true; reward gated on natural==true |
 | BUG-38 | 🟡 Medium | TutorialUI | Tutorial step panel re-appears during Open phase for players who already completed the tutorial. Root cause: (1) Studio DataStore doesn't persist between play sessions so `tutorialCompleted=false` on each play, causing the tutorial to re-run; (2) no client-side guard prevented `panel.Visible=true` if step 1–5 fired after a prior step=0. | ✅ Resolved 2026-03-26 — Added `isTutorialComplete` flag in TutorialUI; set to `true` on step=0; guards `panel.Visible = true` — panel can never re-show after any dismissal or completion. |
 | BUG-39 | 🔴 Critical | MainMenuController | Main menu auto-hides immediately for new players because `stateRemote` fires `PreOpen` shortly after join, and the `stateRemote.OnClientEvent` guard `if state ~= "Lobby" then hideMenu()` treats PreOpen as "not Lobby" and dismisses the menu. A task.defer check also reads the current GameState attribute and hides if it's not "Lobby". New players never see the main menu. Fix: only hide on Open/EndOfDay/Intermission — never on PreOpen or Lobby. | ✅ Resolved 2026-03-27 — Menu only hides on Open/EndOfDay/Intermission or Play click. Play fires DismissMainMenu remote. task.defer auto-hide removed. |
-| BUG-40 | 🔴 Critical | TutorialController | New players are NOT teleported to the tutorial start area on join. `handlePlayerJoin` fires step 1 and sets InTutorial=true but never moves the player. Player spawns at the default spawn location (outside the store or at GameSpawn). Fix: teleport player to TutorialDoughTableSpawn (or a central bakery spawn) on join — NOT to the mixer. Player should be placed in the bakery generally, not force-walked to the mix station. | 🟡 In Progress — Session 11 |
-| BUG-41 | 🔴 Critical | TutorialController | No per-step teleports. When the tutorial advances from step to step, the player is shown a message but is not moved. Fix: on each step advance (steps 2–5), teleport to the relevant TutorialXSpawn part. Step 1 (mix) = NO teleport — player starts in bakery and walks to mixer themselves. Step 2 (dough) → TutorialDoughTableSpawn. Step 3 (fridge→oven) → fridge area (TutorialFridgeSpawn or nearest fridge). Step 4 (dress) → TutorialDressTableSpawn. Step 5 (deliver) = no teleport. | 🟡 In Progress — Session 11 |
-| BUG-42 | 🔴 Critical | StaffManager | AI hire prompts (ProximityPrompts at each station) are visible and functional during the tutorial. A new player can accidentally hire an AI worker, spending coins they don't have context for. Fix: add `if player:GetAttribute("InTutorial") then return end` guard in the hire Triggered callback. | 🟡 In Progress — Session 11 |
-| BUG-43 | 🟠 High | All Minigame UIs | All 4 minigame exit buttons use `exitBtn.Text = "✕"` (Unicode U+2715 multiplication sign). This character renders as a hollow white box on some Roblox clients/platforms ("red square with white square"). Additionally, the button should sit at the top-right corner of the UI panel but positioned OUTSIDE/ON-EDGE of the panel — like a floating close button that hangs off the corner (AnchorPoint = Vector2(1,0), Position = UDim2.new(1, 12, 0, -12) relative to panel) — NOT overlapping the panel's interior content. Fix: (1) change text to plain "X" with GothamBold; (2) reposition button to float at top-right corner edge of the panel frame. Apply to MixMinigame, DoughMinigame, OvenMinigame, FrostMinigame. | 🟡 In Progress — Session 11 |
-| BUG-44 | 🟠 High | TutorialController | Step 3 message says "Pull your dough from the fridge, then bake it in the Oven!" but the teleport (to be added by BUG-41 fix) sends the player to the oven area, not the fridge. Player arrives at oven but needs to go to fridge first. Fix: update step 3 spawnName to use TutorialFridgeSpawn (or nearest fridge) so player lands at the fridge; update message accordingly. | 🟡 In Progress — Session 11 |
-| BUG-45 | 🔴 Critical | GameStateManager | PreOpen timer continues counting down while a new player is in the tutorial. With a 3-minute PreOpen, the game can advance to Open phase while the tutorial is still running (steps 1–5 can easily take 5–10 minutes for a first-time player). Open phase spawns NPCs and fires tutorial-hostile game state changes. Fix: in `runPhase` PreOpen loop, check if any player has `InTutorial=true` attribute; skip decrement while true. | 🟡 In Progress — Session 11 |
-| BUG-46 | 🔴 Critical | TutorialController / PersistentNPCSpawner | Tutorial dress step (step 4) has no NPC with an order — the DressStation KDS is empty. During PreOpen, `isSpawnAllowed()` returns false so no NPCs spawn. The player can't dress or deliver because there's no order in OrderManager and no NPC to deliver to. Fix: add `SpawnTutorialNPC` BindableEvent; TutorialController fires it after step 3 (oven complete); PersistentNPCSpawner spawns a tutorial NPC directly in "ordered" state with chocolate_chip × 6, bypassing GameState check. | 🟡 In Progress — Session 11 |
+| BUG-40 | 🔴 Critical | TutorialController | New players are NOT teleported to the tutorial start area on join. | ✅ Resolved 2026-03-29 — teleportPlayer("TutorialSpawn") called in handlePlayerJoin for new players. Player placed inside bakery near mixers. |
+| BUG-41 | 🔴 Critical | TutorialController | No per-step teleports. Players shown messages but not moved between stations. | ✅ Resolved 2026-03-29 — STEP_SPAWNS table added: step 2→TutorialDoughTableSpawn, step 3→TutorialFridgeSpawn, step 4→TutorialDressTableSpawn. Steps 1 and 5 have no teleport. |
+| BUG-42 | 🔴 Critical | StaffManager | AI hire prompts visible and functional during tutorial — new player can accidentally spend coins. | ✅ Resolved 2026-03-29 — `if player:GetAttribute("InTutorial") then return end` guard added to hire Triggered callback in StaffManager. |
+| BUG-43 | 🟠 High | All Minigame UIs | Exit buttons used ✕ (U+2715) which renders as hollow box on some clients. Button also overlapped panel interior. | ✅ Resolved 2026-03-29 — Text changed to "X" (GothamBold) on all 4 minigames. AnchorPoint=(1,0), Position=(1,20,0,-20) floats button outside top-right panel corner. |
+| BUG-44 | 🟠 High | TutorialController | Step 3 message directed player to oven but they need to go to fridge first. | ✅ Resolved 2026-03-29 — Step 3 teleports to TutorialFridgeSpawn (fallback: nearest fridge); message updated to instruct fridge pull first, then oven. |
+| BUG-45 | 🔴 Critical | GameStateManager | PreOpen timer counted down while tutorial players were still playing — game advanced to Open mid-tutorial. | ✅ Resolved 2026-03-29 — runPhase checks each second for any player with OnMainMenu=true or InTutorial=true; skips decrement while any are present. |
+| BUG-46 | 🔴 Critical | TutorialController / PersistentNPCSpawner | Tutorial dress step had no NPC with an order — DressStation KDS was empty, player couldn't complete tutorial. | ✅ Resolved 2026-03-29 — SpawnTutorialNPC BindableEvent added; TutorialController fires after step 3 complete; PersistentNPCSpawner spawns tutorial NPC in ordered state with chocolate_chip ×6, bypassing GameState guard. |
 | RISK-1 | 🟠 High | DataStore | Server crash before session lock release = silent save skip = data loss | Known Limitation — post-Alpha. DataStore retry loop is a post-Alpha hardening task. BUG-34 is the active blocker form of this risk. |
 | RISK-2 | 🟠 High | Progression | Level unlocks nothing — players have no reason to grind | ✅ Addressed 2026-03-25 — H-5: tip_boost_1 gated at bakery level 3; C&C auto-granted at level 5; lemon_blackraspberry auto-granted at level 10. Sufficient incentive for Alpha. |
 | RISK-3 | 🟡 Medium | Onboarding | No waypoints = new players quit before first delivery | ✅ Addressed 2026-03-25 — C-2: Coach tip bar fires on every station completion and phase change (9 triggers). Waypoint arrows are post-Alpha (L-15). |
@@ -511,14 +517,14 @@
 - [x] **BUG-26** Rate-limit tables use UserId not player object + PlayerRemoving cleanup ✅ 2026-03-26
 - [x] **BUG-27** Player receives feedback when batch cap is reached (no silent fail) ✅ 2026-03-26
 - [x] **BUG-36** Duplicate AI worker systems resolved — one system canonical, other disabled/removed ✅ 2026-03-26
-- [ ] **BUG-39** Main menu shows correctly for new players — not hidden by PreOpen state
-- [ ] **BUG-40** New player teleported to bakery area on tutorial start
-- [ ] **BUG-41** Per-step teleports in tutorial (step 2→dough, step 3→fridge, step 4→dress)
-- [ ] **BUG-42** AI hire prompts hidden/ignored during tutorial
-- [ ] **BUG-44** Tutorial step 3 directs player to fridge first, not oven
-- [ ] **BUG-45** PreOpen timer pauses while any player is in tutorial
-- [ ] **BUG-46** Tutorial NPC spawned with chocolate_chip ×6 order before dress step
-- [ ] **BUG-43** Minigame exit buttons show bold "X" and float at top-right corner outside panel
+- [x] **BUG-39** Main menu shows correctly for new players — not hidden by PreOpen state ✅ 2026-03-27
+- [x] **BUG-40** New player teleported to bakery area on tutorial start ✅ 2026-03-29
+- [x] **BUG-41** Per-step teleports in tutorial (step 2→dough, step 3→fridge, step 4→dress) ✅ 2026-03-29
+- [x] **BUG-42** AI hire prompts hidden/ignored during tutorial ✅ 2026-03-29
+- [x] **BUG-44** Tutorial step 3 directs player to fridge first, not oven ✅ 2026-03-29
+- [x] **BUG-45** PreOpen timer pauses while any player is in tutorial ✅ 2026-03-29
+- [x] **BUG-46** Tutorial NPC spawned with chocolate_chip ×6 order before dress step ✅ 2026-03-29
+- [x] **BUG-43** Minigame exit buttons show bold "X" and float at top-right corner outside panel ✅ 2026-03-29
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
