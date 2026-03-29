@@ -272,10 +272,10 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Session 12 — Fix BUG-39 through BUG-46 (full new-player tutorial flow)`
-**Status:** 🔴 OPEN — 8 bugs found during live new-player playtest (Session 11). All must be fixed and synced to Studio before RISK-5 load test.
-**Are we ready for Alpha?:** NO — Tutorial is broken for new players (no main menu, no teleports, PreOpen races ahead, no tutorial NPC for dress step). Fix BUG-39/40/41/42/43/44/45/46 first. Then RISK-5.
-**Session 11 work:** Full new-player playtest run. AI baker model fixed (CreateHumanoidModelFromDescription + AiNPCPlacement anchor). DataStore wiped for clean test. 8 bugs identified and logged. No code changes made — all fixes deferred to Session 12.
+**TASK:** `Session 13 — RISK-5 load test (4–6 player Rush Hour live session)`
+**Status:** 🟡 READY — All BUG-39 through BUG-46 resolved. Tutorial flow complete. Only blocker remaining is RISK-5 live load test before inviting Alpha testers.
+**Are we ready for Alpha?:** ALMOST — All code bugs are fixed. Need a controlled 4–6 player Rush Hour session to verify no crash/severe lag under peak load. Do that, then open to testers.
+**Session 12 work:** All 8 tutorial flow bugs resolved. BUG-39 (menu hide), BUG-40 (bakery spawn on join), BUG-41 (per-step teleports), BUG-42 (InTutorial hire guard), BUG-43 (X exit button), BUG-44 (fridge-first step 3), BUG-45 (PreOpen pause), BUG-46 (tutorial NPC spawn) — all fixed and verified in code.
 
 **Resolved this session (Session 10):**
 - ✅ BUG-25 — SpeedPass wired into GameStateManager PreOpen skip; VIPPass wired into PersistentNPCSpawner + DriveThruServer delivery payout (1.5× multiply)
