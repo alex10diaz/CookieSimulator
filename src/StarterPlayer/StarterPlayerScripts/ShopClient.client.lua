@@ -168,8 +168,19 @@ local function showPreview(item)
     clone.Parent    = vpWorld
     previewModelClone = clone
 
-    -- Bounding box: center + size for camera distance
-    local bboxCF, bsize = clone:GetBoundingBox()
+    -- Bounding box: center + size for camera distance.
+    -- Accessory objects don't have GetBoundingBox() — use Handle part directly.
+    local bboxCF, bsize
+    if clone:IsA("Accessory") then
+        local handle = clone:FindFirstChild("Handle")
+        if not handle or not handle:IsA("BasePart") then
+            clearPreview(); return
+        end
+        bboxCF = handle.CFrame
+        bsize  = handle.Size
+    else
+        bboxCF, bsize = clone:GetBoundingBox()
+    end
     local center  = bboxCF.Position
     local maxDim  = math.max(bsize.X, bsize.Y, math.max(bsize.Z, 0.5))
     local radius  = math.max(maxDim * 1.8, 2.5)
@@ -219,6 +230,7 @@ local function renderItems()
             and Color3.fromRGB(18, 48, 24)
             or  Color3.fromRGB(22, 42, 80)
         row.BorderSizePixel  = 0
+        row.Active           = true   -- must be true for InputBegan to fire on Frame
         row.Parent           = itemList
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
         local rowStroke = Instance.new("UIStroke", row)
