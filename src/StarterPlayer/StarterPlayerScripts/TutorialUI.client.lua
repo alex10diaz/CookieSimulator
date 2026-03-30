@@ -259,4 +259,32 @@ replayBtn.MouseButton1Click:Connect(function()
 	replayRemote:FireServer()
 end)
 
+-- Hide AI hire prompts while this player is in tutorial
+local function setHirePromptsEnabled(enabled)
+	for _, obj in ipairs(workspace:GetChildren()) do
+		if string.sub(obj.Name, 1, 11) == "HireAnchor_" then
+			local prompt = obj:FindFirstChildOfClass("ProximityPrompt")
+			if prompt then prompt.Enabled = enabled end
+		end
+	end
+end
+
+local lp = Players.LocalPlayer
+local function onInTutorialChanged()
+	local inTutorial = lp:GetAttribute("InTutorial")
+	setHirePromptsEnabled(not inTutorial)
+end
+
+lp:GetAttributeChangedSignal("InTutorial"):Connect(onInTutorialChanged)
+onInTutorialChanged()  -- apply immediately on load
+
+workspace.ChildAdded:Connect(function(child)
+	if string.sub(child.Name, 1, 11) == "HireAnchor_" then
+		if lp:GetAttribute("InTutorial") then
+			local prompt = child:WaitForChild("ProximityPrompt", 3)
+			if prompt then prompt.Enabled = false end
+		end
+	end
+end)
+
 print("[TutorialUI] Ready.")
