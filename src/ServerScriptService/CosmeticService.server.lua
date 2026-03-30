@@ -69,7 +69,12 @@ local function applyCosmetic(character, slot, cosmeticId)
         or clone:FindFirstChildWhichIsA("BasePart")
     if not part then clone:Destroy(); return end
 
-    part.Anchored = false
+    -- Unanchor ALL parts so they don't fight the Weld constraint
+    for _, p in ipairs(clone:GetDescendants()) do
+        if p:IsA("BasePart") then p.Anchored = false end
+    end
+    if clone:IsA("BasePart") then clone.Anchored = false end
+
     clone.Parent = character
 
     local weld = Instance.new("Weld")
