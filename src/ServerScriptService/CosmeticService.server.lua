@@ -23,7 +23,7 @@ end
 -- CFrame offsets relative to the body part (R6)
 local OFFSETS = {
     hat   = CFrame.new(0, 0.85, 0),   -- above Head center
-    apron = CFrame.new(0, 0, -0.6),   -- front face of Torso
+    apron = CFrame.new(0, -0.5, -0.2),   -- front face of Torso
 }
 
 -- Body part each slot attaches to
