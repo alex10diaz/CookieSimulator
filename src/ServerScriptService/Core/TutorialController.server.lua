@@ -81,6 +81,57 @@ local function teleportPlayer(player, spawnName)
 	warn("[TutorialController] Spawn part not found for teleport: " .. spawnName)
 end
 
+-- ─── Fridge Arrow ────────────────────────────────────────────────────────────
+-- Red ▼ BillboardGui on the chocolate_chip fridge during oven/fridge step (step 3).
+local FRIDGE_ARROW_TAG = "TutorialFridgeArrow"
+
+local function showFridgeArrow()
+	local fridgesFolder = workspace:FindFirstChild("Fridges")
+	if not fridgesFolder then return end
+	local fridge = fridgesFolder:FindFirstChild("fridge_chocolate_chip")
+	if not fridge then return end
+	-- Find the highest part to attach to
+	local attachPart = nil
+	for _, p in ipairs(fridge:GetDescendants()) do
+		if p:IsA("BasePart") then
+			if not attachPart or p.Position.Y > attachPart.Position.Y then
+				attachPart = p
+			end
+		end
+	end
+	if not attachPart then return end
+	-- Remove stale arrow if any
+	local old = attachPart:FindFirstChild(FRIDGE_ARROW_TAG)
+	if old then old:Destroy() end
+	-- Create billboard
+	local bb = Instance.new("BillboardGui")
+	bb.Name        = FRIDGE_ARROW_TAG
+	bb.Size        = UDim2.new(0, 60, 0, 70)
+	bb.StudsOffset = Vector3.new(0, 2.5, 0)
+	bb.AlwaysOnTop = false
+	bb.Parent      = attachPart
+	local lbl = Instance.new("TextLabel")
+	lbl.Size                 = UDim2.new(1, 0, 1, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text                 = "▼"
+	lbl.TextColor3           = Color3.fromRGB(220, 40, 40)
+	lbl.TextScaled           = true
+	lbl.Font                 = Enum.Font.GothamBold
+	lbl.ZIndex               = 5
+	lbl.Parent               = bb
+end
+
+local function hideFridgeArrow()
+	local fridgesFolder = workspace:FindFirstChild("Fridges")
+	if not fridgesFolder then return end
+	local fridge = fridgesFolder:FindFirstChild("fridge_chocolate_chip")
+	if not fridge then return end
+	for _, p in ipairs(fridge:GetDescendants()) do
+		local arrow = p:FindFirstChild(FRIDGE_ARROW_TAG)
+		if arrow then arrow:Destroy() end
+	end
+end
+
 -- ─── State ────────────────────────────────────────────────────────────────────
 local activeTutorials = {}
 
@@ -122,6 +173,12 @@ local function advance(player)
 			teleportPlayer(player, spawnName)
 		end)
 	end
+	-- Show red arrow on chocolate_chip fridge at step 3; hide it at step 4
+	if session.step == 3 then
+		showFridgeArrow()
+	elseif session.step == 4 then
+		hideFridgeArrow()
+	end
 end
 
 -- BUG-37: natural=true for playing through all 5 steps; natural=false for skip path.
@@ -131,6 +188,7 @@ local function completeTutorial(player, natural)
 	if not activeTutorials[userId] then return end
 	activeTutorials[userId] = nil
 	player:SetAttribute("InTutorial", false)
+	hideFridgeArrow()  -- clean up fridge arrow if tutorial ends mid-step-3
 	if natural then
 		pcall(function()
 			PlayerDataManager.AddCoins(player, TUTORIAL_REWARD)
