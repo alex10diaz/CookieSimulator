@@ -81,6 +81,18 @@ local function teleportPlayer(player, spawnName)
 	warn("[TutorialController] Spawn part not found for teleport: " .. spawnName)
 end
 
+-- ─── Warmer Prompts ──────────────────────────────────────────────────────────
+-- WarmerPickupPrompts are disabled outside of Open state by StaffManager.
+-- During the tutorial dress step (step 4) we need them enabled regardless.
+local function setTutorialWarmersEnabled(enabled)
+	local warmersFolder = workspace:FindFirstChild("Warmers")
+	if not warmersFolder then return end
+	for _, warmer in ipairs(warmersFolder:GetChildren()) do
+		local wpp = warmer:FindFirstChild("WarmerPickupPrompt", true)
+		if wpp then wpp.Enabled = enabled end
+	end
+end
+
 -- ─── Fridge Arrow ────────────────────────────────────────────────────────────
 -- Red ▼ BillboardGui on the chocolate_chip fridge during oven/fridge step (step 3).
 local FRIDGE_ARROW_TAG = "TutorialFridgeArrow"
@@ -178,6 +190,14 @@ local function advance(player)
 		showFridgeArrow()
 	elseif session.step == 4 then
 		hideFridgeArrow()
+		-- Enable warmer pickup prompts for dress step (normally gated to Open state)
+		setTutorialWarmersEnabled(true)
+	elseif session.step == 5 then
+		-- Disable warmer prompts again after dress step (unless game is actually Open)
+		local gameState = workspace:GetAttribute("GameState") or ""
+		if gameState ~= "Open" then
+			setTutorialWarmersEnabled(false)
+		end
 	end
 end
 
@@ -189,6 +209,11 @@ local function completeTutorial(player, natural)
 	activeTutorials[userId] = nil
 	player:SetAttribute("InTutorial", false)
 	hideFridgeArrow()  -- clean up fridge arrow if tutorial ends mid-step-3
+	-- Disable warmer prompts if we unlocked them for the dress step and game isn't Open
+	local gameState = workspace:GetAttribute("GameState") or ""
+	if gameState ~= "Open" then
+		setTutorialWarmersEnabled(false)
+	end
 	if natural then
 		pcall(function()
 			PlayerDataManager.AddCoins(player, TUTORIAL_REWARD)
