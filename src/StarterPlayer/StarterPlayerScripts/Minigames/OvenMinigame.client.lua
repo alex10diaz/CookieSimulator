@@ -312,7 +312,7 @@ startRemote.OnClientEvent:Connect(function()
                 clicked = true
                 rackBtn.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
                 rackBtn.TextColor3       = Color3.fromRGB(20, 50, 20)
-                rackBtn.Text             = "✓  Rack " .. i .. " loaded"
+                rackBtn.Text             = "✓"
                 rackStroke.Color = Color3.fromRGB(50, 160, 50)
                 traySlide.Size = UDim2.new(0.85, 0, 0.7, 0)
                 rackLoaded = rackLoaded + 1
