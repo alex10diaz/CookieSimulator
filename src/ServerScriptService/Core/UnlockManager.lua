@@ -31,7 +31,7 @@ local CATALOG = {
     { id = "apron_cookie",      tab = "Cosmetics", itemType = "cosmetic", source = "shop",    name = "Cookie Print Apron",     price = 1200, desc = "Covered in tiny cookie prints" },
 
     -- STATION COSMETICS (earned via mastery — cannot be purchased)
-    { id = "hat_station_mix",   tab = "Cosmetics", itemType = "cosmetic", source = "station", name = "Flour Dusted Cap",       stationReq = "Mixer",     levelReq = 3, desc = "Earned by reaching Mixer level 3" },
+    { id = "hat_station_mix",   tab = "Cosmetics", itemType = "cosmetic", source = "station", name = "Cookie Dough Tophat",    stationReq = "Mixer",     levelReq = 3, desc = "Earned by reaching Mixer level 3" },
     { id = "apron_station_bake",tab = "Cosmetics", itemType = "cosmetic", source = "station", name = "Oven Master Apron",      stationReq = "Baker",     levelReq = 3, desc = "Earned by reaching Baker level 3" },
     { id = "hat_station_dec",   tab = "Cosmetics", itemType = "cosmetic", source = "station", name = "Decorator's Crown",      stationReq = "Decorator", levelReq = 5, desc = "Earned by reaching Decorator level 5" },
     { id = "apron_station_frost",tab= "Cosmetics", itemType = "cosmetic", source = "station", name = "Glazer's Apron",         stationReq = "Glazer",    levelReq = 3, desc = "Earned by reaching Glazer level 3" },
