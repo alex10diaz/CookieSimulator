@@ -103,6 +103,7 @@ end
 local function completeTutorial(player, natural)
 	sessions[player.UserId] = nil
 	player:SetAttribute("InTutorial", false)
+	player:SetAttribute("OnMainMenu", false)  -- new players never fire DismissMainMenu; clear it so PreOpen timer resumes
 	if natural then
 		pcall(function() PlayerDataManager.AddCoins(player, TUTORIAL_REWARD) end)
 		print("[TutorialKitchen]", player.Name, "tutorial COMPLETE (+$" .. TUTORIAL_REWARD .. ")")
