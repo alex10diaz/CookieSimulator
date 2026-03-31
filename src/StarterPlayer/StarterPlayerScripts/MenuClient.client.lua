@@ -436,6 +436,7 @@ end
 
 -- ── Listeners ─────────────────────────────────────────────────────────────────
 openMenuBoardRemote.OnClientEvent:Connect(function(payload)
+    if Players.LocalPlayer:GetAttribute("InTutorial") then return end
     buildMenuBoard(payload)
 end)
 
