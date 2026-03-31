@@ -375,6 +375,7 @@
 
 | Date | Task | Notes |
 |---|---|---|
+| 2026-03-31 | **Session 14 — TEMP scripts deleted** | TEMP_ResetTutorial + TEMP_UnlockAllCosmetics destroyed in SSS via MCP. Verified no TEMP scripts remain. |
 | 2026-03-24 | OrderManager moved from ReplicatedStorage → SSS/Core | All 12 require paths updated in disk + Studio |
 | 2026-03-24 | DEV_SKIP_PREOPEN set to false | PreOpen (3 min) now runs in live play |
 | 2026-03-24 | OPEN_DURATION set to 8 minutes | Agreed pacing after discussion |
