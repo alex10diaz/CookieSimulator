@@ -120,24 +120,34 @@ local function saveProfile(userId)
     end
     -- BUG-34: UpdateAsync with session lock + expiry. Lock expires after 120s so a new
     -- server can take ownership instead of skipping saves forever after an abnormal shutdown.
-    local ok, err = pcall(function()
-        playerStore:UpdateAsync(key, function(current)
-            if current and current._serverLock
-                and current._serverLock ~= SESSION_ID
-                and (not current._lockExpiry or os.time() < current._lockExpiry) then
-                warn("[PlayerDataManager] Save skipped for", userId,
-                    "— locked by another server")
-                return nil  -- nil = no change written
-            end
-            toSave._serverLock = SESSION_ID
-            toSave._lockExpiry = os.time() + 120  -- lock expires in 2 minutes
-            return toSave
+    -- GAP-2b: retry up to 3 times with 2s backoff on DataStore failure (network blip, budget spike).
+    local MAX_RETRIES = 3
+    local saved = false
+    for attempt = 1, MAX_RETRIES do
+        local ok, err = pcall(function()
+            playerStore:UpdateAsync(key, function(current)
+                if current and current._serverLock
+                    and current._serverLock ~= SESSION_ID
+                    and (not current._lockExpiry or os.time() < current._lockExpiry) then
+                    warn("[PlayerDataManager] Save skipped for", userId,
+                        "— locked by another server")
+                    return nil  -- nil = no change written
+                end
+                toSave._serverLock = SESSION_ID
+                toSave._lockExpiry = os.time() + 120  -- lock expires in 2 minutes
+                return toSave
+            end)
         end)
-    end)
-    if not ok then
-        warn("[PlayerDataManager] Save failed for", userId, err)
-    else
-        print("[PlayerDataManager] Saved profile for userId", userId)
+        if ok then
+            saved = true
+            print("[PlayerDataManager] Saved profile for userId", userId)
+            break
+        end
+        warn("[PlayerDataManager] Save attempt", attempt, "failed for", userId, err)
+        if attempt < MAX_RETRIES then task.wait(2) end
+    end
+    if not saved then
+        warn("[PlayerDataManager] All", MAX_RETRIES, "save attempts failed for userId", userId)
     end
 end
 
