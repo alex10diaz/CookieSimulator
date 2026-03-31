@@ -27,11 +27,11 @@ local TOTAL_STEPS     = 5
 local FINAL_MENU_STEP = TOTAL_STEPS + 1
 
 local STEPS = {
-	[1] = { msg = "Go to the Mixer and press E to start mixing!" },
-	[2] = { msg = "Shape your dough at the Dough Table!" },
-	[3] = { msg = "Pull your dough from the Fridge, then bake it in the Oven!" },
-	[4] = { msg = "Pack your cookies at the Dress Station!" },
-	[5] = { msg = "Carry the box to the customer and press E to deliver!" },
+	[1] = { msg = "Go to the Mixer and press E to start mixing!",         target = "TutKitMixer"        },
+	[2] = { msg = "Shape your dough at the Dough Table!",                  target = "TutKitDoughTable"   },
+	[3] = { msg = "Pull your dough from the Fridge, then bake it in the Oven!", target = "TutKitFridge" },
+	[4] = { msg = "Pack your cookies at the Dress Station!",               target = "TutKitDressStation" },
+	[5] = { msg = "Carry the box to the customer and press E to deliver!", target = "TutKitCustomer"     },
 }
 
 -- sessions[userId] = { step, waitingForMix, waitingForDough, fridgeDone, waitingForOven }
@@ -58,6 +58,7 @@ local function sendStep(player, step, overrideMsg)
 			total         = TOTAL_STEPS,
 			msg           = overrideMsg or (data and data.msg) or "",
 			forceCookieId = (step == 1) and TUTORIAL_COOKIE or nil,
+			target        = data and data.target or nil,
 		}
 	end
 	tutorialStepRemote:FireClient(player, payload)
@@ -106,7 +107,7 @@ end
 local function wirePrompt(partName, actionText, onTriggered)
 	local part = kitchenFolder:FindFirstChild(partName, true)
 	if not part then warn("[TutorialKitchen] Part not found:", partName); return end
-	local base = part:IsA("BasePart") and part or part:FindFirstChildWhichIsA("BasePart")
+	local base = part:IsA("BasePart") and part or part:FindFirstChildWhichIsA("BasePart", true)
 	if not base then warn("[TutorialKitchen] No BasePart in:", partName); return end
 	local prompt = base:FindFirstChildOfClass("ProximityPrompt")
 	if not prompt then

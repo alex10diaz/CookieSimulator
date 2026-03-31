@@ -600,6 +600,7 @@ hookFridgeOvenPrompts()
 for name, config in pairs(MINIGAMES) do
     local resultRemote = RemoteManager.Get(config.result)
     resultRemote.OnServerEvent:Connect(function(player, score)
+        if player:GetAttribute("InTutorial") then return end
         endSession(player, name, score)
     end)
 end

@@ -40,6 +40,13 @@ local TARGET_PARTS = {
 	GameSpawn       = workspace:FindFirstChild("GameSpawn"),
 	-- Display POS machine used for tutorial step 1
 	FOS             = w(workspace, "POS") and w(workspace, "POS"):FindFirstChild("FOS"),
+	-- Tutorial Kitchen stations
+	TutKitMixer        = workspace:FindFirstChild("TutorialKitchen") and workspace.TutorialKitchen:FindFirstChild("TutorialMixer"),
+	TutKitDoughTable   = workspace:FindFirstChild("TutorialKitchen") and workspace.TutorialKitchen:FindFirstChild("TutorialDoughTable"),
+	TutKitFridge       = workspace:FindFirstChild("TutorialKitchen") and workspace.TutorialKitchen:FindFirstChild("TutorialFridge"),
+	TutKitOven         = workspace:FindFirstChild("TutorialKitchen") and workspace.TutorialKitchen:FindFirstChild("TutorialOven"),
+	TutKitDressStation = workspace:FindFirstChild("TutorialKitchen") and workspace.TutorialKitchen:FindFirstChild("TutorialDressStation"),
+	TutKitCustomer     = workspace:FindFirstChild("TutorialKitchen") and workspace.TutorialKitchen:FindFirstChild("TutorialCustomer"),
 }
 
 -- Tutorial spawn marker names — one green Part per station, user positions them in Studio
