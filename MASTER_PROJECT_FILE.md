@@ -88,7 +88,8 @@
 | Tray / Inventory UI | ✅ Verified Implemented | CarryPill shows NPC name when holding box; fires on BoxCreated, clears on delivery |
 | Top Bar | 🔶 Post-Alpha | Coins + level/XP + timer implemented. Bakery XP not shown separately — post-Alpha polish. |
 | Station/Minigame UI | ✅ Verified Implemented | Per-station UI, result popup (emoji+%), MinigameBase.ShowResult |
-| Tutorial UI | 🔶 Post-Alpha | 5-step panel + skip button covers full pipeline (incl. fridge→oven step verified). No waypoint arrows — post-Alpha. |
+| Tutorial UI | ✅ Verified Implemented | 5-step panel + skip button. TutorialCamera cinematic transitions per step. HUD hidden during tutorial (InTutorial attribute). |
+| Tutorial Kitchen | ✅ Verified Implemented | Fully isolated workspace area. Standalone TutorialKitchen.lua module. No MinigameServer/OrderManager dependency. DeliverPrompt on customer, FridgeDisplay hidden, 6 spawn markers. |
 | Results Screen UI | ✅ Verified Implemented | Slide-up + staggered counters + grade bounce. Per-station strip (Mix/Dough/Oven/Frost/Dress) — Nice-to-have ✅ |
 | Shop UI | 🔶 Post-Alpha | Two tabs, buy/equip, owned states, desc tooltips. No cosmetic avatar preview — post-Alpha. |
 | Daily Challenges UI | ✅ Verified Implemented | DailyChallengeClient, WeeklyChallengeClient, LifetimeChallengeClient all exist |
@@ -183,6 +184,7 @@
 | Rush Hour Announcement | Complete | — | ✅ Done |
 | Dress Station Quality Fix | Complete | — | ✅ Done |
 | Tutorial Fridge→Oven Step | Complete | — | ✅ Done |
+| Tutorial Kitchen (isolated area) | Complete | — | ✅ Done 2026-03-30 |
 | Warmer Sync for New Joiners | Complete | — | ✅ Done |
 | Dress Order Lock Timeout | Complete | — | ✅ Done |
 | Remote Rate Limiting | Complete | — | ✅ Done |
@@ -272,10 +274,10 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Session 13 — RISK-5 load test (4–6 player Rush Hour live session)`
-**Status:** 🟡 READY — All BUG-39 through BUG-46 resolved. Tutorial flow complete. Only blocker remaining is RISK-5 live load test before inviting Alpha testers.
-**Are we ready for Alpha?:** ALMOST — All code bugs are fixed. Need a controlled 4–6 player Rush Hour session to verify no crash/severe lag under peak load. Do that, then open to testers.
-**Session 12 work:** All 8 tutorial flow bugs resolved. BUG-39 (menu hide), BUG-40 (bakery spawn on join), BUG-41 (per-step teleports), BUG-42 (InTutorial hire guard), BUG-43 (X exit button), BUG-44 (fridge-first step 3), BUG-45 (PreOpen pause), BUG-46 (tutorial NPC spawn) — all fixed and verified in code.
+**TASK:** `Session 14 — Delete TEMP scripts + RISK-5 load test (4–6 player Rush Hour live session)`
+**Status:** 🟡 ALMOST READY — Tutorial Kitchen complete and tested. 2 TEMP scripts need deletion. 3 P1 gaps documented but do not block Alpha. RISK-5 load test is the final blocker before inviting testers.
+**Are we ready for Alpha?:** ALMOST — Delete TEMP_ResetTutorial + TEMP_UnlockAllCosmetics from SSS first. Then run a 4–6 player Rush Hour session. If clean, open to Alpha testers.
+**Session 13 work:** Rebuilt tutorial as fully isolated TutorialKitchen area. BUG-47 through BUG-52 resolved (wirePrompt nested model fix, AntiExploit false positives, HUD hidden in tutorial, menu race condition, FridgeDisplay confusion, OnMainMenu not cleared after tutorial → PreOpen never started). Cosmetic apron weld fix. 3 P1 gaps logged for post-Alpha: mid-shift join catch-up, stuck minigame on EndOfDay, ghost box on NPC timeout.
 
 **Resolved this session (Session 10):**
 - ✅ BUG-25 — SpeedPass wired into GameStateManager PreOpen skip; VIPPass wired into PersistentNPCSpawner + DriveThruServer delivery payout (1.5× multiply)
@@ -310,11 +312,27 @@
 | ~~7~~ | ~~BUG-42~~ | ~~StaffManager~~ | ✅ Resolved 2026-03-29 — InTutorial guard added to hire Triggered callback |
 | ~~8~~ | ~~BUG-43~~ | ~~All Minigame UIs~~ | ✅ Resolved 2026-03-29 — "X" GothamBold; AnchorPoint(1,0), Position(1,20,0,-20) on all 4 |
 
-### 🔴 SESSION 13 — RISK-5 Load Test (do this before inviting Alpha testers)
+### ✅ SESSION 13 — Tutorial Kitchen Rebuild (COMPLETE 2026-03-30)
+
+| Order | Task | Resolution |
+|---|---|---|
+| 1 | Build isolated TutorialKitchen module | ✅ TutorialKitchen.lua — standalone, no MinigameServer/OrderManager dependency |
+| 2 | Fix wirePrompt for nested model stations | ✅ Scans descendants for existing ProximityPrompt first |
+| 3 | Fix AntiExploit false positives | ✅ InTutorial guard added to MinigameServer result handlers |
+| 4 | Hide HUD during tutorial | ✅ hud.Enabled tied to InTutorial attribute in HUDController |
+| 5 | Fix menu race condition | ✅ InTutorial=true set immediately on PlayerAdded |
+| 6 | Fix FridgeDisplay showing "Empty" | ✅ Disabled at TutorialKitchen startup |
+| 7 | Fix PreOpen never starting after tutorial | ✅ OnMainMenu=false cleared in completeTutorial |
+| 8 | Add TutorialCamera cinematic transitions | ✅ TutKit TARGET_PARTS + spawn markers in TutorialKitchen folder |
+| 9 | Fix apron teleport bug | ✅ CosmeticService unanchors all BaseParts before welding |
+
+### 🔴 SESSION 14 — Pre-Alpha Cleanup + Load Test
 
 | Order | Task | System | Notes |
 |---|---|---|---|
-| 1 | Run 4–6 player Rush Hour live session | All systems | No crash, no severe lag, no orphaned batches |
+| 1 | Delete TEMP_ResetTutorial from SSS | Studio (manual) | Resets tutorialCompleted on every join — must not ship |
+| 2 | Delete TEMP_UnlockAllCosmetics from SSS | Studio (manual) | Grants all cosmetics free — must not ship |
+| 3 | Run 4–6 player Rush Hour live session | All systems | No crash, no severe lag, no orphaned batches |
 
 ### ✅ Previously Resolved — CRITICAL BLOCKERS
 
@@ -426,6 +444,8 @@
 | 2026-03-26 | **BUG-25 GamepassManager stubs wired** | (1) GamepassManager converted from Script→ModuleScript in Studio so require() works. (2) SpeedPass: GSM runCycle checks HasSpeedPass() for all players; if any owns it, PreOpen is broadcast as 0s and skipped. (3) VIPPass: PersistentNPCSpawner delivery path multiplies payout.coins×1.5 if HasVIPPass(player). (4) VIPPass: DriveThruServer delivery path multiplies deliverCoins×1.5 if HasVIPPass(player). Paying players now receive correct benefits even with ID=0 placeholder. |
 | 2026-03-26 | **Zero-error boot confirmed (Session 10)** | All 3 BUG-25/32/36 fixes applied. Play mode boot shows 0 script errors. All [Ready] prints present. |
 | 2026-03-27 | **Session 11 — New-player playtest + AI baker fix** | Full playtest as new player (DataStore wiped). AI baker rig fixed: switched to CreateHumanoidModelFromDescription with explicit skin colors; AiNPCPlacement part used as authoritative floor Y reference. 8 new bugs identified (BUG-39 through BUG-46) and logged in master file. No code changes this session — all fixes queued for Session 12. |
+| 2026-03-30 | **Session 13 — Tutorial Kitchen fully rebuilt as isolated workspace area** | Designed and implemented complete TutorialKitchen isolation. New players route to separate physical area in workspace; complete 5-step tutorial; teleport to GameSpawn on completion. TutorialKitchen.lua is standalone with no MinigameServer/OrderManager dependency. Fires same Start*/Result remotes so client minigame UIs work unchanged. wirePrompt() fixed to scan descendants for existing ProximityPrompts. DeliverPrompt added to TutorialCustomer.HumanoidRootPart (RequiresLineOfSight=false). FridgeDisplay hidden at startup. 6 spawn marker Parts placed in TutorialKitchen folder. TutorialCamera updated with TutKit TARGET_PARTS. InTutorial guard added to MinigameServer result handlers. HUD hidden via InTutorial attribute. OnMainMenu cleared in completeTutorial so PreOpen timer starts. Apron weld teleport bug fixed (unanchor all parts). Cosmetic offsets confirmed. |
+| 2026-03-30 | **Session 13 — Known gaps documented** | 3 P1 gaps logged: (1) Mid-shift returning player join needs catch-up state fire. (2) Stuck minigame GUI when EndOfDay teleports player mid-session. (3) Ghost box when NPC patience expires while player is carrying. 2 P2 gaps: empty menu fallback, all-player disconnect recovery. All documented in Section 7 as BUG-47 through BUG-51. |
 | 2026-03-29 | **Session 12 — All tutorial flow bugs resolved (BUG-39/40/41/42/43/44/45/46)** | **BUG-45** GSM runPhase pauses PreOpen timer while any player has OnMainMenu or InTutorial=true. **BUG-39** MainMenuController only hides on Open/EndOfDay/Intermission — not PreOpen. **BUG-40** TutorialController teleports new player to TutorialSpawn on join. **BUG-41/44** STEP_SPAWNS table: step 2→Dough, step 3→TutorialFridgeSpawn (nearest fridge fallback), step 4→Dress. **BUG-46** SpawnTutorialNPC BindableEvent: fired after oven complete; PersistentNPCSpawner spawns tutorial NPC ordered state chocolate_chip ×6. **BUG-42** StaffManager hire Triggered guards on InTutorial=true. **BUG-43** All 4 minigame exit buttons: "X" GothamBold, AnchorPoint(1,0), Position(1,20,0,-20) floating outside panel. All synced to Studio via auto-checkpoint. |
 | 2026-03-24 | Dress station ScrollingFrame implemented | Orders list now scrollable for 4+ entries |
 | 2026-03-24 | BoxCarryServer.server.lua created | Physical box welded to player HRP, transfers to NPC |
