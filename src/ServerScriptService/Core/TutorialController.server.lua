@@ -29,6 +29,7 @@ local function handlePlayerJoin(player)
 	end
 
 	if data.tutorialCompleted then
+		player:SetAttribute("InTutorial", false)  -- clear the early-set flag
 		tutorialStepRemote:FireClient(player, { step = 0, total = TOTAL_STEPS, msg = "", isReturn = true })
 		print("[TutorialController] " .. player.Name .. " returning player -> GameSpawn")
 		return
@@ -40,6 +41,8 @@ local function handlePlayerJoin(player)
 end
 
 Players.PlayerAdded:Connect(function(player)
+	-- Block menu immediately — cleared below if returning player
+	player:SetAttribute("InTutorial", true)
 	task.spawn(handlePlayerJoin, player)
 end)
 
