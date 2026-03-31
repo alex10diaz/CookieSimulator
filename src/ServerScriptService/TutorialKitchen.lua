@@ -44,6 +44,17 @@ if not kitchenFolder then
 	return {}
 end
 
+-- Hide TutorialFridge's FridgeDisplay — it shows "Empty" which confuses players
+-- (FridgeDisplayServer only tracks workspace.Fridges, so this stays at default "Empty")
+local fridgeModel = kitchenFolder:FindFirstChild("TutorialFridge", true)
+if fridgeModel then
+	for _, d in ipairs(fridgeModel:GetDescendants()) do
+		if d:IsA("BillboardGui") and d.Name == "FridgeDisplay" then
+			d.Enabled = false
+		end
+	end
+end
+
 -- ─── Helpers ─────────────────────────────────────────────────────────────────
 local function sendStep(player, step, overrideMsg)
 	local payload
