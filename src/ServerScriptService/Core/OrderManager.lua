@@ -286,8 +286,13 @@ function OrderManager.TakeFromWarmersByType(cookieId, quantity)
     for i, entry in ipairs(warmers) do
         if not entry.needsFrost and entry.cookieId == cookieId then
             local entryQty = entry.quantity or 1
-            if entryQty <= quantity then
-                -- Take the whole entry
+            if entryQty < quantity then
+                -- BUG-53: entry is undersized — skip it so we don't produce a
+                -- box whose packSize is less than the order's packSize.
+                -- (GetWarmerCountsByType sums all entries; a fragmented warmer can
+                -- pass the availability check even when no single entry is large enough.)
+            elseif entryQty == quantity then
+                -- Exact match: take the whole entry
                 table.remove(warmers, i)
                 notify("WarmersUpdated", OrderManager.GetWarmerState())
                 return entry
