@@ -116,11 +116,6 @@ local function performTransition(targetKey)
 
 	local stationPos = getPosition(targetObj)
 
-	-- Look up spawn marker. When a marker exists:
-	--   • Camera focuses ON the marker (where the player stands)
-	--   • Player spawns exactly AT the marker, facing the real station
-	-- When no marker: camera focuses on station, player offset from it.
-	-- Always using stationPos as the CFrame look-at keeps it non-degenerate.
 	-- TutKit stations: spawn marker is inside TutorialKitchen folder, named <targetKey>Spawn
 	-- Main kitchen stations: spawn marker is in workspace["Tutorial Spawns"]
 	local marker
