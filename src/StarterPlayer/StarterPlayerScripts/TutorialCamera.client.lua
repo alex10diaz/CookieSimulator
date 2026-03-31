@@ -121,9 +121,17 @@ local function performTransition(targetKey)
 	--   • Player spawns exactly AT the marker, facing the real station
 	-- When no marker: camera focuses on station, player offset from it.
 	-- Always using stationPos as the CFrame look-at keeps it non-degenerate.
-	local markerName   = SPAWN_MARKER_NAMES[targetKey]
-	local spawnFolder  = workspace:FindFirstChild("Tutorial Spawns")
-	local marker       = markerName and spawnFolder and spawnFolder:FindFirstChild(markerName)
+	-- TutKit stations: spawn marker is inside TutorialKitchen folder, named <targetKey>Spawn
+	-- Main kitchen stations: spawn marker is in workspace["Tutorial Spawns"]
+	local marker
+	if string.sub(targetKey, 1, 6) == "TutKit" then
+		local kitFolder = workspace:FindFirstChild("TutorialKitchen")
+		marker = kitFolder and kitFolder:FindFirstChild(targetKey .. "Spawn")
+	else
+		local markerName  = SPAWN_MARKER_NAMES[targetKey]
+		local spawnFolder = workspace:FindFirstChild("Tutorial Spawns")
+		marker = markerName and spawnFolder and spawnFolder:FindFirstChild(markerName)
+	end
 	local targetPos  = marker and marker.Position or stationPos
 	local spawnPos   = marker and marker.Position or (stationPos + SPAWN_OFFSET_FROM_TARGET)
 
