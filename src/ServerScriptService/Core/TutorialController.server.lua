@@ -13,6 +13,8 @@ local TutorialKitchen   = require(ServerScriptService:WaitForChild("TutorialKitc
 local tutorialStepRemote = RemoteManager.Get("TutorialStep")
 local TOTAL_STEPS = 5
 
+local DEV_FORCE_TUTORIAL = true  -- SET false to restore normal routing
+
 local function handlePlayerJoin(player)
 	local data
 	local deadline = tick() + 10
@@ -28,7 +30,7 @@ local function handlePlayerJoin(player)
 		return
 	end
 
-	if data.tutorialCompleted then
+	if data.tutorialCompleted and not DEV_FORCE_TUTORIAL then
 		player:SetAttribute("InTutorial", false)  -- clear the early-set flag
 		tutorialStepRemote:FireClient(player, { step = 0, total = TOTAL_STEPS, msg = "", isReturn = true })
 		print("[TutorialController] " .. player.Name .. " returning player -> GameSpawn")
