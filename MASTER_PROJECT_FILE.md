@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-31 (Session 14 — TEMP_ResetTutorial + TEMP_UnlockAllCosmetics deleted from SSS. RISK-5 load test is the final blocker before Alpha.)
-**Overall Alpha Readiness:** 🟡 97% — TEMP scripts gone. Only RISK-5 (4–6 player Rush Hour live session) remains before inviting testers. 3 P1 gaps documented but do not block Alpha.
+**Last Updated:** 2026-03-31 (Session 14 — TEMP scripts deleted, Codex diff reviewed (all already on disk), Studio synced, regression matrix run (6/6 pass), GAP-2 fixed, save retry added. Playtest-ready.)
+**Overall Alpha Readiness:** 🟢 92% — All automatable regression tests pass. Only mobile readability + Rush Hour 4–6 player perf remain — these require real players and ARE the playtest. Safe to invite friends.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -274,9 +274,9 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Session 14 — Delete TEMP scripts + RISK-5 load test (4–6 player Rush Hour live session)`
-**Status:** 🟡 ALMOST READY — Tutorial Kitchen complete and tested. 2 TEMP scripts need deletion. 3 P1 gaps documented but do not block Alpha. RISK-5 load test is the final blocker before inviting testers.
-**Are we ready for Alpha?:** ALMOST — Delete TEMP_ResetTutorial + TEMP_UnlockAllCosmetics from SSS first. Then run a 4–6 player Rush Hour session. If clean, open to Alpha testers.
+**TASK:** `Session 15 — Friend Playtest (RISK-5)`
+**Status:** 🟢 READY — All automatable regression tests pass. TEMP scripts deleted. GAP-2 fixed. Save retry added. Studio fully synced.
+**Are we ready for Alpha?:** YES — Invite friends. Run a 4–6 player Rush Hour session. Collect feedback. Patch any failures, then open wider.
 **Session 13 work:** Rebuilt tutorial as fully isolated TutorialKitchen area. BUG-47 through BUG-52 resolved (wirePrompt nested model fix, AntiExploit false positives, HUD hidden in tutorial, menu race condition, FridgeDisplay confusion, OnMainMenu not cleared after tutorial → PreOpen never started). Cosmetic apron weld fix. 3 P1 gaps logged for post-Alpha: mid-shift join catch-up, stuck minigame on EndOfDay, ghost box on NPC timeout.
 
 **Resolved this session (Session 10):**
