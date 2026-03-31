@@ -659,4 +659,15 @@ task.spawn(function()
     print("[MinigameServer] StationCompleted BindableEvent ready")
 end)
 
+-- GAP-2: Clean up all active minigame sessions when shift ends.
+-- Prevents stuck GUI + movement lock after EndOfDay teleport.
+workspace:GetAttributeChangedSignal("GameState"):Connect(function()
+    local state = workspace:GetAttribute("GameState")
+    if state == "EndOfDay" or state == "Intermission" then
+        for player in pairs(activeSessions) do
+            cleanupPlayerSession(player, "shift ended")
+        end
+    end
+end)
+
 print("[MinigameServer] Ready")
