@@ -1025,6 +1025,17 @@ dataInitEvent.OnClientEvent:Connect(function(data)
     xpFill.Size = UDim2.new(ratio, 0, 1, 0)
 end)
 
+-- BUG-54: Pull current data from server immediately so we don't miss the
+-- PlayerDataInit event that fires before this LocalScript connects.
+task.defer(function()
+    local ok, requestRemote = pcall(function()
+        return RemoteManager.Get("RequestPlayerData")
+    end)
+    if ok and requestRemote then
+        requestRemote:FireServer()
+    end
+end)
+
 -- ── Station Status Dots ──────────────────────────────────────────────────────
 local STATUS_GREEN  = Color3.fromRGB(80, 220, 100)
 local STATUS_YELLOW = Color3.fromRGB(255, 200, 0)

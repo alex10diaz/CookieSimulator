@@ -362,5 +362,28 @@ for _, player in ipairs(Players:GetPlayers()) do
     end
 end
 
+-- BUG-54: client-pull remote so HUDController can request data any time after spawn,
+-- avoiding the PlayerDataInit race where task.defer fires before LocalScripts connect.
+local function getRemoteManagerNow()
+    return require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+end
+local ok54, rm54 = pcall(getRemoteManagerNow)
+if ok54 then
+    rm54.Get("RequestPlayerData").OnServerEvent:Connect(function(player)
+        local p = profiles[player.UserId]
+        if not p then return end
+        rm54.Get("PlayerDataInit"):FireClient(player, {
+            coins             = p.coins,
+            level             = p.level,
+            xp                = p.xp,
+            unlockedStations  = p.unlockedStations,
+            unlockedCosmetics = p.unlockedCosmetics,
+            equippedCosmetics = p.equippedCosmetics,
+            bakeryName        = p.bakeryName,
+            bakeryLevel       = p.bakeryLevel,
+        })
+    end)
+end
+
 print("[PlayerDataManager] Ready (DataStore: PlayerData_v1).")
 return PlayerDataManager

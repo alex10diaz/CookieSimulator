@@ -137,6 +137,7 @@ local REMOTES = {
     "PlayerTipUpdate",         -- Server->Client: coach tip string shown in bottom-center bar
     "ShowAlert",               -- Server->Client: toast notification (used by GamepassManager ProcessReceipt)
     "DismissMainMenu",         -- Client->Server: player clicked Play on the main menu
+    "RequestPlayerData",       -- BUG-54: Client->Server pull to avoid PlayerDataInit race condition
 }
 
 -- Server creates all remotes; client waits for server-created ones.
