@@ -315,7 +315,66 @@ All data shapes and system interfaces must support these without refactor:
 
 ---
 
-## 12. Key Design Rules (Enforced Throughout)
+## 12. Implementation Log
+
+### 2026-03-30 — Tutorial Kitchen + Stability Fixes
+
+**Tutorial Kitchen (fully implemented)**
+- New players route to isolated `TutorialKitchen` workspace area instead of the live bakery
+- `TutorialKitchen.lua` (SSS ModuleScript) — standalone 5-step tutorial driver, zero dependency on MinigameServer or OrderManager
+- Fires same `Start*/Result` remotes as MinigameServer so client minigame UIs work unchanged
+- `wirePrompt()` scans existing ProximityPrompts in each station model before creating new ones — handles nested model structures
+- `TutorialController.server.lua` gutted to router only: checks `tutorialCompleted` → routes to kitchen or GameSpawn
+- `InTutorial=true` set immediately on `PlayerAdded` (before PDM loads) to block menu race condition
+- `OnMainMenu=false` cleared on tutorial completion so PreOpen timer resumes for new players
+- Tutorial reward: 200 coins on natural completion
+
+**Tutorial Kitchen — Workspace Setup**
+- 6 green spawn marker Parts added to `TutorialKitchen` folder (`TutKitMixerSpawn`, `TutKitDoughTableSpawn`, etc.) — moveable in Studio
+- `DeliverPrompt` permanently added to `TutorialCustomer.HumanoidRootPart` with `RequiresLineOfSight=false`
+- `FridgeDisplay` BillboardGui hidden on TutorialFridge at server startup (FridgeDisplayServer only tracks `workspace.Fridges`)
+
+**Supporting fixes**
+- `GameStateManager.teleportAllTo()` — skips players with `InTutorial=true` (not swept by EndOfDay/Intermission)
+- `MinigameServer` result handlers — `InTutorial` guard added; tutorial players no longer trigger AntiExploit warnings
+- `HUDController` — `hud.Enabled` tied to `InTutorial` attribute; HUD hidden during tutorial, restores on completion
+- `MenuClient` — `InTutorial` guard on `OpenMenuBoard`; today's menu not shown to tutorial players
+- `TutorialCamera` — `TutKit*` entries added to `TARGET_PARTS`; each tutorial step sends a `target` key for cinematic transitions; TutKit steps look for spawn markers in `TutorialKitchen` folder
+
+**Cosmetic fixes**
+- `CosmeticService` — unanchors ALL BaseParts before welding to prevent apron teleport bug (Anchored parts fighting WeldConstraint)
+- Confirmed offsets: `hat_cap` HatAttachment `(0,-0.1,0.25)`, `hat_station_dec` HairAttachment `(0,-0.2,0)`, apron `CFrame.new(0,-0.65,-0.1)`
+
+---
+
+## 13. Known Gaps — Pre-Alpha
+
+These are confirmed missing behaviors to fix before or shortly after first alpha playtest.
+
+### P0 — Fix Before Alpha
+
+| Gap | Description | Where to fix |
+|-----|-------------|--------------|
+| **TEMP scripts** | `TEMP_ResetTutorial` and `TEMP_UnlockAllCosmetics` both live in SSS — delete before going live | SSS (Studio, manual delete) |
+
+### P1 — Fix Soon (Visible During Multiplayer Playtest)
+
+| Gap | Description | Where to fix |
+|-----|-------------|--------------|
+| **Mid-shift join catch-up** | Returning player joins during Open/Intermission/EndOfDay — sees blank state. Needs a catch-up fire of `GameStateChanged` + current orders on `PlayerAdded` | `GameStateManager` + `OrderManager` |
+| **Stuck minigame on state change** | Player mid-minigame when EndOfDay fires → gets teleported, GUI stays open, session locked for 45s | `MinigameServer.cleanupPlayerSession()` — call on EndOfDay/Intermission broadcast |
+| **Ghost box on NPC timeout** | Player carries delivery box, NPC patience expires and walks out — box orphaned in player's hands | `OrderManager` / delivery carry system |
+
+### P2 — Fix Before Full Launch
+
+| Gap | Description | Where to fix |
+|-----|-------------|--------------|
+| **Empty menu on Open** | PreOpen ends with nobody selecting the cookie menu → NPCs order nothing | `MenuManager` — auto-select a default menu if none chosen when PreOpen ends |
+| **All-player disconnect recovery** | All players leave mid-shift — orders pile up, NPCs never leave, pipeline frozen on rejoin | `GameStateManager.runCycle()` — reset OrderManager when player count drops to 0 |
+
+---
+
+## 14. Key Design Rules (Enforced Throughout)
 
 1. **Server authoritative on all state changes** — no exceptions
 2. **Milestones 1–3: zero polish** — function over form until Milestone 7
