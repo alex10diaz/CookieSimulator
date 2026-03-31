@@ -326,13 +326,25 @@
 | 8 | Add TutorialCamera cinematic transitions | ✅ TutKit TARGET_PARTS + spawn markers in TutorialKitchen folder |
 | 9 | Fix apron teleport bug | ✅ CosmeticService unanchors all BaseParts before welding |
 
-### 🟡 SESSION 14 — Pre-Alpha Cleanup + Load Test
+### ✅ SESSION 14 — Pre-Alpha Cleanup + Regression Matrix (COMPLETE 2026-03-31)
 
 | Order | Task | System | Notes |
 |---|---|---|---|
 | ~~1~~ | ~~Delete TEMP_ResetTutorial from SSS~~ | ~~Studio~~ | ✅ Deleted 2026-03-31 via MCP |
 | ~~2~~ | ~~Delete TEMP_UnlockAllCosmetics from SSS~~ | ~~Studio~~ | ✅ Deleted 2026-03-31 via MCP |
-| 3 | Run 4–6 player Rush Hour live session | All systems | No crash, no severe lag, no orphaned batches |
+| ~~3~~ | ~~Review Codex diff (4 files)~~ | ~~All~~ | ✅ All changes already on disk or weaker than existing — nothing applied |
+| ~~4~~ | ~~Studio sync (OrderManager packSize gap)~~ | ~~OrderManager~~ | ✅ Synced |
+| ~~5~~ | ~~Run regression matrix tests 1–6~~ | ~~All~~ | ✅ 5 passed immediately; Test 6 failed → GAP-2 fixed |
+| ~~6~~ | ~~Fix GAP-2 (EndOfDay mid-minigame stuck)~~ | ~~MinigameServer~~ | ✅ GetAttributeChangedSignal("GameState") listener added |
+| ~~7~~ | ~~Save retry / backoff~~ | ~~PlayerDataManager~~ | ✅ 3-attempt retry with 2s backoff in saveProfile |
+
+### 🟢 SESSION 15 — Friend Playtest (RISK-5)
+
+| Order | Task | System | Notes |
+|---|---|---|---|
+| 1 | Run 4–6 player Rush Hour live session | All systems | No crash, no severe lag, no orphaned batches |
+| 2 | Mobile readability check | UI | At least one player on mobile; verify all prompts readable |
+| 3 | Log all bugs/feedback | MASTER_PROJECT_FILE | Add to Section 7, fix P0s before next session |
 
 ### ✅ Previously Resolved — CRITICAL BLOCKERS
 
@@ -375,7 +387,7 @@
 
 | Date | Task | Notes |
 |---|---|---|
-| 2026-03-31 | **Session 14 — TEMP scripts deleted** | TEMP_ResetTutorial + TEMP_UnlockAllCosmetics destroyed in SSS via MCP. Verified no TEMP scripts remain. |
+| 2026-03-31 | **Session 14 — Full pre-alpha sweep complete** | TEMP scripts deleted. Codex diff reviewed (all already on disk — nothing applied). OrderManager packSize synced to Studio. Regression matrix 6/6 pass after GAP-2 fix. GAP-2 (EndOfDay mid-minigame stuck) fixed: MinigameServer now listens for GameState attribute change and calls cleanupPlayerSession on EndOfDay/Intermission. Save retry added to PlayerDataManager: 3 attempts, 2s backoff. Readiness updated to 92%. |
 | 2026-03-24 | OrderManager moved from ReplicatedStorage → SSS/Core | All 12 require paths updated in disk + Studio |
 | 2026-03-24 | DEV_SKIP_PREOPEN set to false | PreOpen (3 min) now runs in live play |
 | 2026-03-24 | OPEN_DURATION set to 8 minutes | Agreed pacing after discussion |
@@ -518,7 +530,7 @@
 | BUG-51 | 🟠 High | CosmeticService | Apron (and any cosmetic with Anchored=true parts) teleported the player when equipped. Root cause: WeldConstraint from Torso to cosmetic model fought against Anchored=true parts in the model; physics solver moved the character. | ✅ Resolved 2026-03-30 — CosmeticService now unanchors ALL BaseParts in cloned cosmetic model before parenting to character. |
 | BUG-52 | 🟡 Medium | TutorialKitchen / FridgeDisplayServer | TutorialFridge has a FridgeDisplay BillboardGui (copied from main fridge model). FridgeDisplayServer only updates fridges in workspace.Fridges folder — TutorialFridge never updated, so it showed "Empty" by default. Players saw "Empty" and thought they needed to put real dough in before baking. | ✅ Resolved 2026-03-30 — TutorialKitchen hides the FridgeDisplay BillboardGui on TutorialFridge at server startup. |
 | GAP-1 | 🟠 High | GameStateManager / OrderManager | Returning player joins during Open/Intermission/EndOfDay — sees blank state. `GameStateChanged` fires on join (M-4 pattern) but current orders, warmer stock, and game timer are not sent in a catch-up packet at that moment. Player has no idea what's happening. | Open — P1, fix before stable multiplayer |
-| GAP-2 | 🟠 High | MinigameServer / GameStateManager | Player is mid-minigame (oven, mix, etc.) when EndOfDay fires and `teleportAllTo` moves them to the back room. Minigame GUI stays open. Session is stuck until 45s timeout. Player is in back room with a locked minigame overlay. | Open — P1, fix before stable multiplayer |
+| GAP-2 | 🟠 High | MinigameServer / GameStateManager | Player is mid-minigame (oven, mix, etc.) when EndOfDay fires and `teleportAllTo` moves them to the back room. Minigame GUI stays open. Session is stuck until 45s timeout. Player is in back room with a locked minigame overlay. | ✅ Resolved 2026-03-31 — workspace:GetAttributeChangedSignal("GameState") in MinigameServer; iterates activeSessions and calls cleanupPlayerSession on EndOfDay/Intermission |
 | GAP-3 | 🟠 High | OrderManager / BoxCarryServer | Player picks up delivery box. NPC patience expires and NPC walks out. Box is still welded to player — they carry a "ghost" box for an orphaned order that no longer exists. No cleanup of carried box on NPC order expiry. | Open — P1, fix before stable multiplayer |
 | GAP-4 | 🟡 Medium | MenuManager | PreOpen ends with no player having selected the cookie menu. Open phase starts with an empty active menu. NPCs either order nothing or crash trying to pick from an empty list. | Open — P2 |
 | GAP-5 | 🟡 Medium | GameStateManager | All players disconnect mid-shift. Server shift cycle continues (timers run out, EndOfDay fires, Intermission runs). On rejoin, state may be mid-Intermission or at start of next PreOpen with no reset having happened for the previous incomplete shift. OrderManager tables may be stale. | Open — P2 |
@@ -564,8 +576,8 @@
 - [x] **BUG-50** OnMainMenu cleared after tutorial completion — PreOpen timer starts correctly ✅ 2026-03-30
 - [x] **BUG-51** Cosmetic apron weld teleport bug fixed (unanchor all parts) ✅ 2026-03-30
 - [x] **BUG-52** TutorialFridge FridgeDisplay hidden at startup ✅ 2026-03-30
-- [ ] **CLEANUP** Delete TEMP_ResetTutorial from SSS before going live
-- [ ] **CLEANUP** Delete TEMP_UnlockAllCosmetics from SSS before going live
+- [x] **CLEANUP** Delete TEMP_ResetTutorial from SSS ✅ 2026-03-31
+- [x] **CLEANUP** Delete TEMP_UnlockAllCosmetics from SSS ✅ 2026-03-31
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
@@ -587,6 +599,9 @@
 - [x] **BUG-32** AI worker dismiss — notification + refund fired to owner ✅ 2026-03-26 (resolved by BUG-36 fix)
 - [x] **BUG-33** New players start with 500 starter coins ✅ 2026-03-26
 - [x] **BUG-37** Tutorial skip path does NOT grant completion reward — only natural completion does ✅ 2026-03-26
+- [x] **GAP-2** EndOfDay mid-minigame stuck — MinigameServer cleans up all sessions on state change ✅ 2026-03-31
+- [x] **GAP-2b** SaveProfile retry — 3 attempts with 2s backoff on DataStore failure ✅ 2026-03-31
+- [x] **Regression matrix** Tests 1–6 all pass in Studio ✅ 2026-03-31
 - [ ] **RISK-5** 4–6 player Rush Hour live load test completed with no server crash or severe lag
 
 ### NICE TO HAVE (Polish for Alpha)
