@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-30 (Session 13 — Tutorial Kitchen fully rebuilt as isolated area. All BUG-47 through BUG-52 resolved. Delete TEMP scripts + RISK-5 load test remain before Alpha.)
-**Overall Alpha Readiness:** 🟡 95% — Tutorial Kitchen complete and tested. 2 TEMP scripts must be deleted from SSS. RISK-5 load test still required. 3 P1 gaps documented (mid-shift join, stuck minigame on EndOfDay, ghost box).
+**Last Updated:** 2026-03-31 (Session 14 — TEMP_ResetTutorial + TEMP_UnlockAllCosmetics deleted from SSS. RISK-5 load test is the final blocker before Alpha.)
+**Overall Alpha Readiness:** 🟡 97% — TEMP scripts gone. Only RISK-5 (4–6 player Rush Hour live session) remains before inviting testers. 3 P1 gaps documented but do not block Alpha.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -326,12 +326,12 @@
 | 8 | Add TutorialCamera cinematic transitions | ✅ TutKit TARGET_PARTS + spawn markers in TutorialKitchen folder |
 | 9 | Fix apron teleport bug | ✅ CosmeticService unanchors all BaseParts before welding |
 
-### 🔴 SESSION 14 — Pre-Alpha Cleanup + Load Test
+### 🟡 SESSION 14 — Pre-Alpha Cleanup + Load Test
 
 | Order | Task | System | Notes |
 |---|---|---|---|
-| 1 | Delete TEMP_ResetTutorial from SSS | Studio (manual) | Resets tutorialCompleted on every join — must not ship |
-| 2 | Delete TEMP_UnlockAllCosmetics from SSS | Studio (manual) | Grants all cosmetics free — must not ship |
+| ~~1~~ | ~~Delete TEMP_ResetTutorial from SSS~~ | ~~Studio~~ | ✅ Deleted 2026-03-31 via MCP |
+| ~~2~~ | ~~Delete TEMP_UnlockAllCosmetics from SSS~~ | ~~Studio~~ | ✅ Deleted 2026-03-31 via MCP |
 | 3 | Run 4–6 player Rush Hour live session | All systems | No crash, no severe lag, no orphaned batches |
 
 ### ✅ Previously Resolved — CRITICAL BLOCKERS
