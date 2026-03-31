@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-29 (Session 12 — All BUG-39 through BUG-46 resolved. Tutorial flow fully fixed. Only RISK-5 load test remains before Alpha.)
-**Overall Alpha Readiness:** 🟢 98% — All code bugs fixed. RISK-5 (live 4–6 player Rush Hour load test) is the only remaining blocker before inviting Alpha testers.
+**Last Updated:** 2026-03-30 (Session 13 — Tutorial Kitchen fully rebuilt as isolated area. All BUG-47 through BUG-52 resolved. Delete TEMP scripts + RISK-5 load test remain before Alpha.)
+**Overall Alpha Readiness:** 🟡 95% — Tutorial Kitchen complete and tested. 2 TEMP scripts must be deleted from SSS. RISK-5 load test still required. 3 P1 gaps documented (mid-shift join, stuck minigame on EndOfDay, ghost box).
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
