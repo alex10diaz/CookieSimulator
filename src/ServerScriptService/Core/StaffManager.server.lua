@@ -426,7 +426,8 @@ local STATIONS = {
 		end,
 	},
 	dress = {
-		label   = "Packing",
+		label       = "Packing",
+		hireEnabled = false,  -- BUG-55: dress station not available for AI hire
 		spawnCF = workerSpawnCF("TutorialDressTableSpawn", CFrame.new(-27, 5, -32), Vector3.new(-1, 0, 0)),
 		work = function(_proxy)
 			-- Dress packing is handled by human players via the KDS screen.
@@ -529,6 +530,7 @@ end
 local function spawnHirePrompts()
 	if next(hirePrompts) ~= nil then return end  -- guard against double-call
 	for stationId, stationDef in pairs(STATIONS) do
+		if stationDef.hireEnabled == false then continue end  -- BUG-55: skip non-hireable stations
 		-- m-9: destroy any previous anchor from a prior call to prevent leaking Parts into workspace
 		local existing = workspace:FindFirstChild("HireAnchor_" .. stationId)
 		if existing then existing:Destroy() end

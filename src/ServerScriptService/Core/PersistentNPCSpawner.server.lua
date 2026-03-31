@@ -652,6 +652,8 @@ addDeliverPrompt = function(npcId)
         local ok, quality = OrderManager.DeliverBox(player, pending.boxId, d.order.orderId)
         if not ok then
             warn("[NPCController] DeliverBox failed for", player.Name)
+            -- BUG-56: clear carry UI so player isn't stuck holding the box
+            forceDropBoxRemote:FireClient(player)
             d.deliveryLocked = false
             return
         end
