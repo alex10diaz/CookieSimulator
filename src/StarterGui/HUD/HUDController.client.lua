@@ -27,6 +27,12 @@ local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local hud       = playerGui:WaitForChild("HUD")
 
+-- Hide HUD during tutorial; restore when InTutorial clears
+hud.Enabled = not player:GetAttribute("InTutorial")
+player:GetAttributeChangedSignal("InTutorial"):Connect(function()
+    hud.Enabled = not player:GetAttribute("InTutorial")
+end)
+
 -- Cached player data (initialized by PlayerDataInit, updated by HUDUpdate)
 local localLevel = 1
 local function xpRequired(lvl) return math.floor(100 * (lvl ^ 1.35)) end
