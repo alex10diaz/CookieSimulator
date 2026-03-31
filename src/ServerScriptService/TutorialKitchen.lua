@@ -116,16 +116,22 @@ end
 
 -- ─── Station wiring ──────────────────────────────────────────────────────────
 local function wirePrompt(partName, actionText, onTriggered)
-	local part = kitchenFolder:FindFirstChild(partName, true)
-	if not part then warn("[TutorialKitchen] Part not found:", partName); return end
-	local base = part:IsA("BasePart") and part or part:FindFirstChildWhichIsA("BasePart", true)
-	if not base then warn("[TutorialKitchen] No BasePart in:", partName); return end
-	local prompt = base:FindFirstChildOfClass("ProximityPrompt")
+	local container = kitchenFolder:FindFirstChild(partName, true)
+	if not container then warn("[TutorialKitchen] Part not found:", partName); return end
+	-- Prefer any existing ProximityPrompt in the model (preserves visual placement)
+	local prompt
+	for _, d in ipairs(container:GetDescendants()) do
+		if d:IsA("ProximityPrompt") then prompt = d; break end
+	end
 	if not prompt then
+		local base = container:IsA("BasePart") and container or container:FindFirstChildWhichIsA("BasePart", true)
+		if not base then warn("[TutorialKitchen] No BasePart in:", partName); return end
 		prompt = Instance.new("ProximityPrompt")
 		prompt.ActionText      = actionText
 		prompt.KeyboardKeyCode = Enum.KeyCode.E
 		prompt.Parent          = base
+	else
+		prompt.ActionText = actionText
 	end
 	prompt.Triggered:Connect(onTriggered)
 end
