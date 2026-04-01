@@ -409,19 +409,22 @@ function OrderManager.DeliverBox(player, boxId, npcOrderId)
                     warn(string.format("[AntiExploit] DeliverBox rejected: box #%d is not variety for variety order #%d", boxId, npcOrderId))
                     return false
                 end
+                -- BUG-67: for variety orders skip packSize check — isVariety flag is the
+                -- meaningful discriminator. packSize was previously nil in Studio (missing
+                -- from CreateVarietyBox box table), always producing box=1 → mismatch.
             else
                 if box.cookieId ~= o.cookieId then
                     warn(string.format("[AntiExploit] DeliverBox rejected: cookie mismatch box=%s order=%s",
                         tostring(box.cookieId), tostring(o.cookieId)))
                     return false
                 end
-            end
-            local orderPackSize = tonumber(o.packSize) or 1
-            local boxPackSize = tonumber(box.packSize) or 1
-            if boxPackSize ~= orderPackSize then
-                warn(string.format("[AntiExploit] DeliverBox rejected: packSize mismatch box=%d order=%d",
-                    boxPackSize, orderPackSize))
-                return false
+                local orderPackSize = tonumber(o.packSize) or 1
+                local boxPackSize = tonumber(box.packSize) or 1
+                if boxPackSize ~= orderPackSize then
+                    warn(string.format("[AntiExploit] DeliverBox rejected: packSize mismatch box=%d order=%d",
+                        boxPackSize, orderPackSize))
+                    return false
+                end
             end
             order = table.remove(npcOrders, i)
             break
@@ -574,6 +577,10 @@ function OrderManager.CreateVarietyBox(player, entries, dressScore)
     for _, entry in ipairs(entries) do postOvenScores[entry.batchId] = nil end
 
     local id = nextBox; nextBox += 1
+    -- BUG-67: sum entry quantities for correct packSize (Studio was missing this field,
+    -- causing tonumber(nil) or 1 = 1 in DeliverBox → mismatch with order.packSize)
+    local totalQty = 0
+    for _, entry in ipairs(entries) do totalQty += entry.quantity or 1 end
     local box = {
         boxId               = id,
         batchId             = entries[1].batchId,
@@ -581,19 +588,13 @@ function OrderManager.CreateVarietyBox(player, entries, dressScore)
         carrier             = player.Name,
         status              = "ready",
         cookieId            = "variety",
-        packSize            = (function()
-            local total = 0
-            for _, entry in ipairs(entries) do
-                total += entry.quantity or 1
-            end
-            return total
-        end)(),
+        packSize            = totalQty,
         isVariety           = true,
         _warmerEntries      = entries,
         _batchPostOvenScores = savedScores,
     }
     boxes[id] = box
-    print(string.format("[OrderManager] Variety Box #%d created by %s | Quality: %d%%", id, player.Name, finalQuality))
+    print(string.format("[OrderManager] Variety Box #%d created by %s | Quality: %d%% | packSize: %d", id, player.Name, finalQuality, totalQty))
     notify("BoxCreated", box)
     return box
 end
