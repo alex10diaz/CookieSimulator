@@ -15,6 +15,7 @@ local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitF
 local hudUpdate                = RemoteManager.Get("HUDUpdate")
 local driveThruArrivedRemote   = RemoteManager.Get("DriveThruCarArrived")
 local npcOrderCancelledRemote  = RemoteManager.Get("NPCOrderCancelledClient")
+local boxCarriedRemote         = RemoteManager.Get("BoxCarried")  -- BUG-61: clear carry pill on delivery
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local EconomyManager    = require(ServerScriptService:WaitForChild("Core"):WaitForChild("EconomyManager"))
 local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
@@ -390,6 +391,10 @@ OrderManager.On("BoxCreated", function(box)
             profile and profile.coins or 0,
             profile and profile.xp    or 0,
             nil)
+        -- BUG-61: clear carry pill and destroy physical box after drive-thru delivery
+        boxCarriedRemote:FireClient(player, nil)
+        local carriedModel = workspace:FindFirstChild("CarriedBox_" .. player.Name)
+        if carriedModel then carriedModel:Destroy() end
 
         print(string.format("[DriveThruServer] %s delivered | %s x%d | +%d coins",
             player.Name, order.cookieId, order.packSize, deliverCoins))
