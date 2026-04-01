@@ -199,7 +199,17 @@ dataInitRemote.OnClientEvent:Connect(function(data)
     if data.bakeryLevel then updateLevelLabel(data.bakeryLevel) end
     -- Show naming dialog only if bakery name is not yet set
     if data.bakeryName == "" then
-        task.defer(showDialog)
+        -- BUG-65: don't show during tutorial; watch for InTutorial to clear instead
+        if player:GetAttribute("InTutorial") then
+            player:GetAttributeChangedSignal("InTutorial"):Connect(function()
+                if not player:GetAttribute("InTutorial") then
+                    task.wait(1)  -- let teleport settle before showing dialog
+                    showDialog()
+                end
+            end)
+        else
+            task.defer(showDialog)
+        end
     end
 end)
 
