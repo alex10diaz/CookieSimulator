@@ -28,6 +28,9 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
         DailyChallengeManager.InvalidateChallengeCache()
         for _, p in ipairs(Players:GetPlayers()) do
             DailyChallengeManager.ResetShiftCounters(p)
+            -- BUG-57: re-send challenge data so widget becomes visible for players
+            -- who were already in-game when Open fires (no new PlayerAdded event)
+            task.defer(function() DailyChallengeManager.SendToPlayer(p) end)
         end
     end
 end)
