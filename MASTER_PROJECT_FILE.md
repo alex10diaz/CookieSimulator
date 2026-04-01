@@ -659,6 +659,20 @@
 - [x] **BUG-52** TutorialFridge FridgeDisplay hidden at startup ✅ 2026-03-30
 - [x] **CLEANUP** Delete TEMP_ResetTutorial from SSS ✅ 2026-03-31
 - [x] **CLEANUP** Delete TEMP_UnlockAllCosmetics from SSS ✅ 2026-03-31
+- [ ] **BUG-67** Variety pack packSize mismatch resolved — all variety pack orders deliverable
+- [ ] **BUG-68** HUD fully hidden during tutorial (InTutorial=true gates all HUD panels)
+- [ ] **BUG-69** "Cookie ready to box" alert blocked during tutorial
+- [ ] **BUG-70** Oven TP camera aimed at oven, not fridge
+- [ ] **BUG-71** Tutorial 200-coin reward awarded on natural completion
+- [ ] **BUG-72** Coin counter updates after every purchase without rejoin
+- [ ] **BUG-73** Carry pill clears on delivery failure and on phase transition to Intermission
+- [ ] **BUG-74** Warmer pickup prompts disabled on EndOfDay transition
+- [ ] **BUG-75** Combo resets when NPC leaves due to patience expiry
+- [ ] **BUG-76** Fridge display shows only active menu selections (re-investigate BUG-58)
+- [ ] **BUG-77** Drive-thru box removed from player after successful delivery (re-investigate BUG-61)
+- [ ] **BUG-78** Lifetime milestones tracking order count correctly
+- [ ] **BUG-79** End-of-day timer counts down visually from :30 to :00
+- [ ] **BUG-80** Cookie menu selection board opens after tutorial ends (re-investigate BUG-60)
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
@@ -683,6 +697,11 @@
 - [x] **GAP-2** EndOfDay mid-minigame stuck — MinigameServer cleans up all sessions on state change ✅ 2026-03-31
 - [x] **GAP-2b** SaveProfile retry — 3 attempts with 2s backoff on DataStore failure ✅ 2026-03-31
 - [x] **Regression matrix** Tests 1–6 all pass in Studio ✅ 2026-03-31
+- [x] **BUG-57** Daily/weekly challenges visible on first shift Open ✅ 2026-04-01
+- [x] **BUG-62** NPC walks out after delivery rejection — no permanent queue pile-up ✅ 2026-04-01
+- [x] **BUG-63** Fridge/warmer displays cleared before Intermission ✅ 2026-04-01
+- [x] **BUG-64** Summary screen auto-dismisses after 30s — no infinite hang ✅ 2026-04-01
+- [x] **BUG-65** Bakery naming dialog shown after tutorial completion ✅ 2026-04-01
 - [ ] **RISK-5** 4–6 player Rush Hour live load test completed with no server crash or severe lag
 
 ### NICE TO HAVE (Polish for Alpha)
