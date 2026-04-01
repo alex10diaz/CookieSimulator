@@ -214,6 +214,9 @@ local function runCycle()
         summaryRemote:FireAllClients(summary)
         task.wait(SUMMARY_DURATION)
 
+        -- BUG-63: clear fridge/warmer displays before Intermission so they don't
+        -- show stale shift data during the break
+        OrderManager.Reset()
         -- Intermission — teleport to back room
         teleportAllTo(BACK_ROOM_CF)
         fireTipAll("Break time! Next shift starts soon.")
