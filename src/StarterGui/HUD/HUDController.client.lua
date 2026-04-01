@@ -825,9 +825,11 @@ warmersStockEvent.OnClientEvent:Connect(function(warmerState)
         for _ in pairs(warmerState) do count += 1 end
     end
     if count > _prevWarmerCount then
-        -- Warmer just filled — show toast and play chime
-        showAlert("Cookie ready to box!", Color3.fromRGB(255, 200, 60), Color3.fromRGB(255, 240, 120), 2.5)
-        if orderAlertSound then orderAlertSound:Play() end
+        -- BUG-69: suppress "Cookie ready to box!" during tutorial — player has no warmer interaction
+        if not player:GetAttribute("InTutorial") then
+            showAlert("Cookie ready to box!", Color3.fromRGB(255, 200, 60), Color3.fromRGB(255, 240, 120), 2.5)
+            if orderAlertSound then orderAlertSound:Play() end
+        end
     end
     _prevWarmerCount = count
 end)
