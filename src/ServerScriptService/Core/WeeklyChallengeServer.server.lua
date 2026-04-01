@@ -18,4 +18,13 @@ Players.PlayerRemoving:Connect(function(player)
     WeeklyChallengeManager.Cleanup(player)
 end)
 
+-- BUG-57: re-send weekly challenge data when Open fires so widget shows for existing players
+workspace:GetAttributeChangedSignal("GameState"):Connect(function()
+    if workspace:GetAttribute("GameState") == "Open" then
+        for _, p in ipairs(Players:GetPlayers()) do
+            task.defer(function() WeeklyChallengeManager.SendToPlayer(p) end)
+        end
+    end
+end)
+
 print("[WeeklyChallengeServer] Ready.")

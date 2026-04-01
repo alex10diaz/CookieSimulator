@@ -173,6 +173,11 @@ initRemote.OnClientEvent:Connect(function(data)
     state.resetIn    = data.resetIn    or 0
     updateHudWidget()
     updateBoard()
+    -- BUG-57: show widget immediately if game is already Open when init data arrives
+    if hudWidget then
+        local currentState = workspace:GetAttribute("GameState")
+        hudWidget.Visible = (currentState == "Open")
+    end
 end)
 
 progressRemote.OnClientEvent:Connect(function(data)
