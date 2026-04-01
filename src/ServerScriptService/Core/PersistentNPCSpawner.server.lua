@@ -654,6 +654,8 @@ addDeliverPrompt = function(npcId)
             warn("[NPCController] DeliverBox failed for", player.Name)
             -- BUG-56: clear carry UI so player isn't stuck holding the box
             forceDropBoxRemote:FireClient(player)
+            -- BUG-62: walk NPC out so they don't stand at counter forever
+            npcLeave(npcId, "delivery_rejected")
             d.deliveryLocked = false
             return
         end
