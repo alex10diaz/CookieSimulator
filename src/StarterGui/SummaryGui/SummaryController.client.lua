@@ -396,6 +396,7 @@ summaryEvent.OnClientEvent:Connect(function(data)
             task.wait(1)
             t -= 1
         end
+        dismissThread = nil  -- BUG-64: clear before dismiss() so it doesn't self-cancel
         dismiss()
     end)
 end)
