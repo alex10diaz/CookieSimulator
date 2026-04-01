@@ -78,6 +78,18 @@ end)
 
 -- ── PLAYER JOINS ────────────────────────────────────────────────
 Players.PlayerAdded:Connect(function(player)
+    -- BUG-60: if player joins mid-tutorial, send menu board when InTutorial clears
+    -- (the broadcast on PreOpen start was silently dropped by the client guard)
+    player:GetAttributeChangedSignal("InTutorial"):Connect(function()
+        if not player:GetAttribute("InTutorial") then
+            local state = workspace:GetAttribute("GameState")
+            if state == "PreOpen" then
+                task.wait(0.5)  -- brief yield so teleport lands first
+                sendOpenMenuBoard(player)
+            end
+        end
+    end)
+
     -- Grant starter cookies (idempotent — safe to call every join)
     -- Wait for PlayerDataManager profile to load before granting/reading ownership
     task.spawn(function()
