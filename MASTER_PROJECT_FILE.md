@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-03-31 (Session 15 — Solo playtest completed. 14 new bugs logged (BUG-53 through BUG-66 + 3 FR items). P0: variety pack delivery broken (packSize mismatch). P1: coins display wrong, AI worker at dress, carry UI not clearing, challenges missing first shift, fridge/warmer filtering. Fix pass in progress.)
-**Overall Alpha Readiness:** 🟡 78% — Core loop functional. P0 packSize bug blocks all variety pack delivery. 6 P1 issues need fixing before friend playtest. P2 items are polish.
+**Last Updated:** 2026-04-01 (Session 16 — Second solo playtest completed (3 shifts). 14 new bugs logged BUG-67–BUG-80 + 3 feature requests FEAT-1–3. Session 15 partial fix pass resolved BUG-57/62/63/64/65. BUG-58/60/61 disk fixes not taking effect in-game — re-logged as BUG-76/80/77. Warmers reverted to original positions Z=-49→-79 after BUG-59 move phased through wall. P0: BUG-67 variety pack still completely broken.)
+**Overall Alpha Readiness:** 🟡 70% — Core loop functional across 3 shifts. Delivery, ratings, challenges, cosmetics working. P0 variety pack still broken. 14 new bugs from solo playtest. Fix pass needed before any friend invite.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -274,10 +274,18 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Session 15 — Friend Playtest (RISK-5)`
-**Status:** 🟢 READY — All automatable regression tests pass. TEMP scripts deleted. GAP-2 fixed. Save retry added. Studio fully synced.
-**Are we ready for Alpha?:** YES — Invite friends. Run a 4–6 player Rush Hour session. Collect feedback. Patch any failures, then open wider.
-**Session 13 work:** Rebuilt tutorial as fully isolated TutorialKitchen area. BUG-47 through BUG-52 resolved (wirePrompt nested model fix, AntiExploit false positives, HUD hidden in tutorial, menu race condition, FridgeDisplay confusion, OnMainMenu not cleared after tutorial → PreOpen never started). Cosmetic apron weld fix. 3 P1 gaps logged for post-Alpha: mid-shift join catch-up, stuck minigame on EndOfDay, ghost box on NPC timeout.
+**TASK:** `Session 17 — Bug Fix Pass: BUG-67 through BUG-80 + FEAT-1/2/3`
+**Status:** 🔴 FIX PASS NEEDED — 14 new bugs from 2026-04-01 solo playtest. P0 variety pack still fully broken (BUG-67). Multiple disk fixes from session 15 not taking effect in Studio (BUG-76/77/80). Friend playtest blocked until critical issues resolved.
+**Fix Priority Order:**
+1. BUG-67 — variety pack packSize mismatch (P0, blocks a whole order type)
+2. BUG-68/69/70/71/80 — tutorial bugs (HUD visible, cookie prompt, oven cam, coin reward, menu board)
+3. BUG-73/74/75/79 — carry/UI persistence (pill persists on fail, warmer prompt persists, combo not clearing, timer frozen)
+4. BUG-72 — coin counter not updating after purchases
+5. BUG-76/77 — re-investigate BUG-58/61 fixes not taking effect in Studio
+6. BUG-78 — lifetime milestones not tracking
+7. FEAT-1/2/3 — trash dough, shift counter, leaderboard label rename
+
+**Session 16 — Solo Playtest (2026-04-01) findings:** See Section 7 BUG-67 through BUG-80. What's working: delivery to NPC, box → customer transfer, rating system, bakery level-up popup, challenges rewarding, variety orders (non-pack), combo UI, NPC patience timers, end-of-shift summary, 3-shift loop, drive-thru prompt, movement locked during break, cosmetics purchase/equip. What's broken: variety pack delivery (P0), tutorial HUD/UI bleed-through, coin counter stale, carry pill persists, warmer prompt persists, fridge showing all 6 types.
 
 **Resolved this session (Session 10):**
 - ✅ BUG-25 — SpeedPass wired into GameStateManager PreOpen skip; VIPPass wired into PersistentNPCSpawner + DriveThruServer delivery payout (1.5× multiply)
