@@ -346,13 +346,49 @@
 | ~~6~~ | ~~Fix GAP-2 (EndOfDay mid-minigame stuck)~~ | ~~MinigameServer~~ | ✅ GetAttributeChangedSignal("GameState") listener added |
 | ~~7~~ | ~~Save retry / backoff~~ | ~~PlayerDataManager~~ | ✅ 3-attempt retry with 2s backoff in saveProfile |
 
-### 🟢 SESSION 15 — Friend Playtest (RISK-5)
+### ✅ SESSION 15 — Solo Playtest + Bug Fix Pass (COMPLETE 2026-03-31 / 2026-04-01)
 
 | Order | Task | System | Notes |
 |---|---|---|---|
-| 1 | Run 4–6 player Rush Hour live session | All systems | No crash, no severe lag, no orphaned batches |
-| 2 | Mobile readability check | UI | At least one player on mobile; verify all prompts readable |
-| 3 | Log all bugs/feedback | MASTER_PROJECT_FILE | Add to Section 7, fix P0s before next session |
+| ~~1~~ | ~~Run solo playtest as new player~~ | ~~All systems~~ | ✅ Completed 2026-03-31 — logged BUG-53 through BUG-66 |
+| ~~2~~ | ~~Fix BUG-57 (challenges not showing first shift)~~ | ~~DailyChallengeServer/WeeklyChallengeServer/Clients~~ | ✅ Resolved 2026-04-01 |
+| ~~3~~ | ~~Fix BUG-62 (NPC stuck after delivery rejected)~~ | ~~PersistentNPCSpawner~~ | ✅ Resolved 2026-04-01 |
+| ~~4~~ | ~~Fix BUG-63 (stale warmer/fridge during intermission)~~ | ~~GameStateManager~~ | ✅ Resolved 2026-04-01 |
+| ~~5~~ | ~~Fix BUG-64 (summary screen no auto-dismiss)~~ | ~~SummaryController~~ | ✅ Resolved 2026-04-01 |
+| ~~6~~ | ~~Fix BUG-65 (bakery naming dialog not shown post-tutorial)~~ | ~~BakeryClient~~ | ✅ Resolved 2026-04-01 |
+| 7 | Fix BUG-58 (fridge shows all 6 types) | StationRemapService | ⚠️ Disk patch applied — not taking effect in-game. Re-logged as BUG-76 |
+| 8 | Fix BUG-60 (menu board not shown after tutorial) | MenuServer | ⚠️ Disk patch applied — not taking effect in-game. Re-logged as BUG-80 |
+| 9 | Fix BUG-61 (drive-thru box stays on player) | DriveThruServer | ⚠️ Disk patch applied — not taking effect in-game. Re-logged as BUG-77 |
+| 10 | Fix BUG-53/54/55/56/59/66 | Various | Still open — not yet addressed |
+
+### ✅ SESSION 16 — Second Solo Playtest (COMPLETE 2026-04-01)
+
+| Order | Task | System | Notes |
+|---|---|---|---|
+| ~~1~~ | ~~Run 3-shift solo playtest (new player run)~~ | ~~All systems~~ | ✅ Completed — 14 new bugs BUG-67 through BUG-80 + FEAT-1/2/3 logged |
+| ~~2~~ | ~~Document all findings in MEMORY.md and MASTER_PROJECT_FILE~~ | ~~MASTER_PROJECT_FILE~~ | ✅ Completed 2026-04-01 |
+
+### 🔴 SESSION 17 — Fix Pass: BUG-67 through BUG-80
+
+| Order | Bug ID | System | Priority |
+|---|---|---|---|
+| 1 | BUG-67 | OrderManager / DressStationServer | P0 — variety pack never delivers |
+| 2 | BUG-68 | HUDController / TutorialUI | P1 — HUD visible during tutorial |
+| 3 | BUG-69 | HUDController / WarmersSystem | P1 — "cookie ready" alert in tutorial |
+| 4 | BUG-70 | TutorialController / TutorialCamera | P1 — oven cam still at fridge |
+| 5 | BUG-71 | TutorialController / PlayerDataManager | P1 — tutorial 200-coin reward not awarded |
+| 6 | BUG-80 | MenuServer | P1 — menu board not appearing post-tutorial |
+| 7 | BUG-73 | HUDController / BoxCarryServer | P1 — carry pill persists on fail + during break |
+| 8 | BUG-74 | WarmersSystem | P1 — warmer pickup prompt after EndOfDay |
+| 9 | BUG-75 | HUDController / PersistentNPCSpawner | P1 — combo not clearing on patience expiry |
+| 10 | BUG-79 | SummaryController | P1 — end of day timer display frozen at :30 |
+| 11 | BUG-72 | HUDController / PlayerDataManager | P1 — coin counter stale after purchases |
+| 12 | BUG-76 | StationRemapService / FridgeDisplayServer | P1 — fridge shows 6 types (re-investigate BUG-58) |
+| 13 | BUG-77 | DriveThruServer / BoxCarryServer | P1 — drive-thru box stays on player (re-investigate BUG-61) |
+| 14 | BUG-78 | LifetimeChallengeManager | P1 — lifetime milestones at 0 despite orders |
+| 15 | FEAT-1 | DoughTable2 / OrderManager | Trash/discard option at Dough Table 2 |
+| 16 | FEAT-2 | GameStateManager / HUDController | Shift counter above PreOpen/Open timer |
+| 17 | FEAT-3 | SummaryController / LeaderboardManager | "This Shift" → "This Session" label |
 
 ### ✅ Previously Resolved — CRITICAL BLOCKERS
 
@@ -395,6 +431,8 @@
 
 | Date | Task | Notes |
 |---|---|---|
+| 2026-04-01 | **Session 16 — Second solo playtest (3 full shifts)** | New-player run (DataStore wiped). Tutorial → PreOpen → Open → EndOfDay → Intermission → Shift 2 → Shift 3. Working: delivery to NPC, box → customer, rating system, bakery level-up popup, daily/weekly challenges, variety orders (non-pack), combo UI, NPC patience timers, end-of-shift summary, cosmetics. Broken: variety pack (BUG-67 P0), tutorial HUD bleed (BUG-68/69), coin counter stale (BUG-72), carry UI persistence (BUG-73/74), fridge still 6 types (BUG-76), drive-thru box visual (BUG-77), lifetime milestones 0 (BUG-78), timer frozen (BUG-79), menu board after tutorial (BUG-80). 14 new bugs + 3 feature requests logged. |
+| 2026-04-01 | **Session 15 bug fix pass — BUG-57/62/63/64/65 resolved** | BUG-57: DailyChallengeServer + WeeklyChallengeServer now send data on Open state change; clients check current GameState on init. BUG-62: PersistentNPCSpawner calls npcLeave after delivery rejection. BUG-63: OrderManager.Reset() called before Intermission teleport in GameStateManager. BUG-64: SummaryController auto-dismiss self-cancel bug fixed (nil thread ref before dismiss). BUG-65: BakeryClient defers bakery naming dialog until InTutorial clears. Three other disk patches applied (BUG-58/60/61) but not taking effect in-game — re-logged BUG-76/77/80 for re-investigation. |
 | 2026-03-31 | **Session 15 — Solo playtest completed** | Full new-player run: tutorial, PreOpen, Open (5 min), EndOfDay, break, second shift start. 14 bugs logged (BUG-53–66) + 3 feature requests. P0: variety pack delivery broken. P1: coins display, AI at dress, carry UI stale, challenges first shift, fridge/warmer filtering. All items logged in §7. |
 | 2026-03-31 | **Session 14 — Full pre-alpha sweep complete** | TEMP scripts deleted. Codex diff reviewed (all already on disk — nothing applied). OrderManager packSize synced to Studio. Regression matrix 6/6 pass after GAP-2 fix. GAP-2 (EndOfDay mid-minigame stuck) fixed: MinigameServer now listens for GameState attribute change and calls cleanupPlayerSession on EndOfDay/Intermission. Save retry added to PlayerDataManager: 3 attempts, 2s backoff. Readiness updated to 92%. |
 | 2026-03-24 | OrderManager moved from ReplicatedStorage → SSS/Core | All 12 require paths updated in disk + Studio |
@@ -546,8 +584,8 @@
 | BUG-54 | 🟠 High | HUDController / StaffManager | Coins display shows wrong value — player saw 247 coins but StaffManager logged `cannot afford worker (need 50 coins)`. In-memory profile coins and displayed coins are out of sync. Possible cause: HUD reads a stale snapshot instead of live profile value. | Open — P1 |
 | BUG-55 | 🟠 High | StaffManager | AI worker spawns at Dress Station during Open phase — only Mix, Dough, Oven, and Frost workers are intended. Dress station requires a real player (order-matching logic needs human judgment). | Open — P1 |
 | BUG-56 | 🟠 High | HUDController / BoxCarryServer | Carry UI ("Deliver to [NPC]" header + carry pill top-right) does not clear after a failed delivery (packSize mismatch rejection). Player is stuck showing stale carry state indefinitely. Also persists into break/intermission. | Open — P1 |
-| BUG-57 | 🟠 High | DailyChallengeClient / WeeklyChallengeClient | Daily and weekly challenge panels pop up on second shift Open but NOT on first shift Open. New players never see them on their first play session. Root cause likely: UI listener fires on GameStateChanged but challenge data not yet loaded on first shift. | Open — P1 |
-| BUG-58 | 🟠 High | FridgeDisplayServer / MenuManager | Fridge UI shows all 6 fridge stock displays during Open regardless of active menu. Should only show the fridges for the cookies currently on the menu (e.g. 4 chosen = 4 visible). Also, active fridges should be the 4 physically nearest to the Oven/Frost stations. | Open — P1 |
+| BUG-57 | 🟠 High | DailyChallengeClient / WeeklyChallengeClient | Daily and weekly challenge panels pop up on second shift Open but NOT on first shift Open. New players never see them on their first play session. Root cause likely: UI listener fires on GameStateChanged but challenge data not yet loaded on first shift. | ✅ Resolved 2026-04-01 — Server now sends data on Open state change for all players; client initRemote checks current GameState and shows widget if already Open. Verified working in April 1 playtest. |
+| BUG-58 | 🟠 High | FridgeDisplayServer / StationRemapService | Fridge UI shows all 6 fridge stock displays during Open regardless of active menu. Should only show the fridges for the cookies currently on the menu (e.g. 4 chosen = 4 visible). Disk patch applied to StationRemapService (display.Enabled on active/inactive fridges) but NOT taking effect in-game as of 2026-04-01 playtest. Re-logged as BUG-76. | ⚠️ Disk patch applied 2026-04-01 — not taking effect in-game. See BUG-76 for re-investigation. |
 | BUG-59 | 🟠 High | WarmersSystem | Warmers show all slots spaced across the wall instead of clustering the active 4 near the Dress Station. Should display only the active menu cookie warmers and position them nearest to the Dress Station. | Open — P1 |
 | BUG-60 | 🟡 Medium | TutorialController / MenuClient | After tutorial completion, player is teleported to GameSpawn but the cookie menu selection board never opens/prompts. New players enter PreOpen with no idea they should pick today's menu. | Open — P2 |
 | BUG-61 | 🟡 Medium | DriveThruServer / BoxCarryServer | After delivering a box to the drive-thru customer, the physical box remains welded to the player's character. It is never removed. Player carries it indefinitely until manual drop or shift reset. | Open — P2 |
