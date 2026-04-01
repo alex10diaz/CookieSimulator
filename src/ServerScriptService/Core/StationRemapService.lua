@@ -188,6 +188,7 @@ function StationRemapService.RemapStations(orderedMenuIds)
                 end
                 local display = model:FindFirstChild("FridgeDisplay", true)
                 if display then
+                    display.Enabled = false  -- BUG-58: hide billboard for inactive fridge
                     local lbl = display:FindFirstChild("CookieName", true)
                         or display:FindFirstChild("TextLabel", true)
                     if lbl then lbl.Text = "" end
