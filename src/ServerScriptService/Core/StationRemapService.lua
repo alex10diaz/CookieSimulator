@@ -152,6 +152,7 @@ function StationRemapService.RemapStations(orderedMenuIds)
 
             local display = model:FindFirstChild("FridgeDisplay", true)
             if display then
+                display.Enabled = true  -- BUG-58: show billboard for active fridge
                 local nameLbl = display:FindFirstChild("CookieName", true)
                     or display:FindFirstChild("TextLabel", true)
                 if nameLbl then nameLbl.Text = cookie.name end
