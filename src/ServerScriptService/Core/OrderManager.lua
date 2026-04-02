@@ -420,8 +420,9 @@ function OrderManager.DeliverBox(player, boxId, npcOrderId)
                 end
                 local orderPackSize = tonumber(o.packSize) or 1
                 local boxPackSize = tonumber(box.packSize) or 1
-                if boxPackSize ~= orderPackSize then
-                    warn(string.format("[AntiExploit] DeliverBox rejected: packSize mismatch box=%d order=%d",
+                -- BUG-93: use >= not strict equality (box may have more than ordered; cookieId is the real validator)
+                if boxPackSize < orderPackSize then
+                    warn(string.format("[AntiExploit] DeliverBox rejected: packSize too small box=%d order=%d",
                         boxPackSize, orderPackSize))
                     return false
                 end
