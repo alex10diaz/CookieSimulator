@@ -15,7 +15,8 @@ local OrderManager      = require(ServerScriptService:WaitForChild("Core"):WaitF
 local hudUpdate                = RemoteManager.Get("HUDUpdate")
 local driveThruArrivedRemote   = RemoteManager.Get("DriveThruCarArrived")
 local npcOrderCancelledRemote  = RemoteManager.Get("NPCOrderCancelledClient")
-local boxCarriedRemote         = RemoteManager.Get("BoxCarried")  -- BUG-61: clear carry pill on delivery
+local boxCarriedRemote         = RemoteManager.Get("BoxCarried")   -- BUG-61: clear carry pill on delivery
+local carryPoseRemote          = RemoteManager.Get("CarryPoseUpdate")  -- BUG-86: clear arm pose on delivery
 local CookieData        = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local EconomyManager    = require(ServerScriptService:WaitForChild("Core"):WaitForChild("EconomyManager"))
 local MenuManager       = require(ServerScriptService:WaitForChild("Core"):WaitForChild("MenuManager"))
@@ -391,8 +392,9 @@ OrderManager.On("BoxCreated", function(box)
             profile and profile.coins or 0,
             profile and profile.xp    or 0,
             nil)
-        -- BUG-61: clear carry pill and destroy physical box after drive-thru delivery
+        -- BUG-61/86: clear carry pill, arm pose, and physical box after drive-thru delivery
         boxCarriedRemote:FireClient(player, nil)
+        carryPoseRemote:FireClient(player, false)  -- BUG-86: restore arm pose
         local carriedModel = workspace:FindFirstChild("CarriedBox_" .. player.Name)
         if carriedModel then carriedModel:Destroy() end
 

@@ -214,7 +214,13 @@ local function runCycle()
         local summary = SessionStats.GetSummary()
         summary.employees = SessionStats.GetEmployeeOfShift()
         summary.shiftGrade = SessionStats.GetShiftGrade(summary)
-        summaryRemote:FireAllClients(summary)
+        -- BUG-88: fire per-player so each gets their own station breakdown
+        for _, p in ipairs(Players:GetPlayers()) do
+            local personalSummary = {}
+            for k, v in pairs(summary) do personalSummary[k] = v end
+            personalSummary.stationBreakdown = SessionStats.GetPlayerBreakdown(p.UserId)
+            summaryRemote:FireClient(p, personalSummary)
+        end
         do  -- BUG-79: tick EndOfDay countdown so client timer actually counts down
             local _eod = SUMMARY_DURATION
             while _eod > 0 do
