@@ -629,7 +629,14 @@
 | BUG-89 | 🟡 Medium | MenuClient / CookieUnlockManager | 2nd and 3rd cookie unlock buttons show "..." indefinitely after click — purchase result callback only sets `onPurchaseResultCallback` inside the locked section block, but that block may not be reached if there are no locked cookies on the current `buildMenuBoard` call. After 1st cookie is unlocked and board rebuilds, the new board's locked section creates new `unlockBtnRefs` but the old `onPurchaseResultCallback` closure still references the OLD `unlockBtnRefs`. | Open — P1. Fix: ensure `onPurchaseResultCallback` always references the current board's button refs after each rebuild. |
 | BUG-90 | 🟡 Medium | StationRemapService / FridgeDisplayServer | New cookie type (recently unlocked) is not showing on the warmer display panel after the player unlocks and selects it. Warmer remap fires on MenuLocked but may not fire HUDUpdate for all fridge/warmer displays if the unlock happens during PreOpen after StationRemapService already ran. | Open — P2. May resolve itself if BUG-89 is fixed and menu locks properly. |
 | BUG-91 | 🟡 Medium | DressStationServer / WarmersSystem | Missing warmer slot for newly unlocked cookie in current shift. If a cookie is unlocked and added to the menu mid-PreOpen, StationRemapService may not have assigned a warmer slot for it. Dress station won't show it. | Open — P2. Investigate whether StationRemapService re-runs on MenuLocked. |
-| BUG-92 | 🟡 Medium | FridgeDisplayServer / DressStationServer | Fridge and warmer ProximityPrompts have non-empty `ObjectText` — small grey label visible below prompt action text. Should be empty string `""`. Confirmed 18 prompts with non-empty ObjectText (e.g. "FridgePrompt ObjectText=[Chocolate Chip]"). | Open — P1. Fix: iterate all fridge/warmer ProximityPrompts and set ObjectText = "". |
+| BUG-92 | 🟡 Medium | FridgeDisplayServer / DressStationServer | Fridge and warmer ProximityPrompts have non-empty `ObjectText` — small grey label visible below prompt action text. Should be empty string `""`. Confirmed 18 prompts with non-empty ObjectText (e.g. "FridgePrompt ObjectText=[Chocolate Chip]"). | ✅ Resolved 2026-04-02 Session 18 — StationRemapService clears ObjectText at 3 sites. |
+| BUG-93 | 🔴 Critical | OrderManager / AntiExploit | AntiExploit incorrectly rejects variety pack delivery: `packSize mismatch box=1 order=4`. `box.packSize` = `warmerEntry.quantity` (always 1 per cookie type pulled) but `order.packSize` = total cookies in variety pack (e.g. 4). The validation compares apples to oranges — variety packs are multi-cookie but each pull is 1 unit. Breaks every variety pack delivery. | Open — P0. Fix: AntiExploit must check box count against order slot count, not raw packSize. |
+| BUG-94 | 🟠 High | PersistentNPCSpawner / NPCQueueManager | Customer counter pile-up / queue congestion — multiple NPCs stack at the counter when several orders are pending simultaneously. Slot-assignment exists but positional spread is insufficient; NPCs clip through each other when 3+ are queued. | Open — P1. Fix: increase spread radius or use grid-based slot assignment. |
+| BUG-95 | 🟠 High | StationRemapService / WarmersSystem | Newly unlocked cookie's warmer slot has no name label and wrong material/colour after remap. `showWarmerSlot` updates `WarmerNameGui` and `DoorPanel` colour but the physical warmer mesh/material may not update if the model lacks a `Shell` or `DoorPanel` matching the expected hierarchy. | Open — P1. Investigate warmer model hierarchy for new cookie types. |
+| BUG-96 | 🟠 High | FridgeDisplayServer / MenuServer | Locked (unowned) cookie fridge still shows the `E` proximity prompt allowing players to attempt a pull. `FridgePickupPrompt.Enabled` should be false for any cookie not in the active menu. Currently only active-menu fridges are explicitly enabled; locked fridges are never explicitly disabled after StationRemapService runs. | Open — P1. Fix: disable all fridge prompts first, then re-enable only active-menu ones in RemapStations. |
+| BAL-3 | 🟡 Balance | AIWorkerService / OvenServer | AI stations are over-producing — warmer stock reaches 40+ cookies, far exceeding NPC demand. AI bake loop does not check warmer fullness before queueing another batch. No production cap or max-stock throttle is implemented. | Open — P2. Fix: throttle AI bake when warmer stock for that cookie ≥ target threshold (e.g. 12). |
+| FEAT-7 | 🟡 Feature | LeaderboardController | Leaderboard only shows top ~10 entries and is not scrollable. Players want to see their own rank even if outside top 10. Needs ScrollingFrame + rank-highlight for the local player's row. | Open — P2. Post-alpha OK. |
+| FEAT-8 | 🟡 Feature | GameStateManager / HUDController | Skip Break button — allow all players (or majority vote) to skip the Intermission early. Currently no SkipIntermission remote exists. Relates to SpeedPass gamepass design. | Open — P2. Post-alpha OK. |
 
 ---
 
@@ -694,7 +701,18 @@
 - [x] **BUG-89** Cookie unlock buttons work (not stuck on "...") ✅ 2026-04-02 Session 18 — MenuClient _currentPayload closure fix + smart Destroying guard
 - [x] **BUG-92** ProximityPrompt ObjectText cleared on all fridges/warmers ✅ 2026-04-02 Session 18 — StationRemapService clears ObjectText at 3 sites
 - [ ] **BUG-83** Warmer prompt disabled at EndOfDay (re-verify in next session)
+- [ ] **BUG-93** Variety pack delivery accepted (AntiExploit packSize fix)
+- [ ] **BUG-94** NPC queue spread — no counter pile-up with 3+ concurrent orders
+- [ ] **BUG-95** New cookie warmer shows correct label + material after remap
+- [ ] **BUG-96** Locked fridge prompts disabled (no E prompt for non-menu cookies)
 - [ ] **RISK-5** 4–6 player Rush Hour live load test
+- [ ] **RISK-6** Two players attempt to deliver the same box simultaneously — first delivery wins, second rejected gracefully
+- [ ] **RISK-7** Player leaves during an active order — order released, no ghost box on other players
+- [ ] **RISK-8** Player rejoins mid-shift — receives correct game state (timer, orders, warmer stock)
+- [ ] **RISK-9** Save data persists correctly on rejoin (coins, XP, cosmetics, milestones)
+- [ ] **RISK-10** NPC does not get permanently stuck — pathfinding fallback clears stuck NPCs
+- [ ] **RISK-11** Performance stable with 4 players + 6+ active NPCs (no frame-rate crash)
+- [ ] **RISK-12** Player cannot grief by holding a delivery box indefinitely (timeout or drop mechanic)
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
@@ -725,6 +743,8 @@
 - [x] **BUG-64** Summary screen auto-dismisses after 30s — no infinite hang ✅ 2026-04-01
 - [x] **BUG-65** Bakery naming dialog shown after tutorial completion ✅ 2026-04-01
 - [ ] **RISK-5** 4–6 player Rush Hour live load test completed with no server crash or severe lag
+- [ ] **BAL-3** AI production throttle — warmers do not exceed ~12 stock per cookie type
+- [ ] **VERIFY** Shift Day label ("SHIFT N") renders correctly in HUD above timer
 
 ### NICE TO HAVE (Polish for Alpha)
 - [x] Per-station breakdown in shift results
@@ -742,6 +762,8 @@
 
 | Idea | Category | Why Later |
 |---|---|---|
+| FEAT-7: Leaderboard Top 100 + scroll + local rank highlight | Social | Native leaderstats sufficient for Alpha |
+| FEAT-8: Skip Break vote button | QOL | SpeedPass design decision needed first |
 | Daily login reward streak | Retention | Need live player data to balance rewards |
 | Event system (Valentine's, Halloween) | Content | Seasonal; post-launch |
 | Controller/gamepad support for minigames | Accessibility | Keyboard only needed for Alpha |
