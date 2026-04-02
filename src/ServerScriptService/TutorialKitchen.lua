@@ -29,7 +29,7 @@ local FINAL_MENU_STEP = TOTAL_STEPS + 1
 local STEPS = {
 	[1] = { msg = "Go to the Mixer and press E to start mixing!",         target = "TutKitMixer"        },
 	[2] = { msg = "Shape your dough at the Dough Table!",                  target = "TutKitDoughTable"   },
-	[3] = { msg = "Pull your dough from the Fridge, then bake it in the Oven!", target = "TutKitFridge" },
+	[3] = { msg = "Pull your dough from the Fridge, then bake it in the Oven!", target = "TutKitOven"   },
 	[4] = { msg = "Pack your cookies at the Dress Station!",               target = "TutKitDressStation" },
 	[5] = { msg = "Carry the box to the customer and press E to deliver!", target = "TutKitCustomer"     },
 }
