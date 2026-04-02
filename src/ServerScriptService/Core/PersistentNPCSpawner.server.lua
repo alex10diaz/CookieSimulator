@@ -525,6 +525,7 @@ npcLeave = function(npcId, reason)
             local carrier = Players:FindFirstChild(pending.carrier)
             if carrier then
                 forceDropBoxRemote:FireClient(carrier)
+                boxCarriedRemote:FireClient(carrier, nil)  -- BUG-73: clear carryPill
                 -- Destroy physical carry model and restore player arms
                 local boxModel = workspace:FindFirstChild("CarriedBox_" .. pending.carrier)
                 if boxModel then boxModel:Destroy() end
@@ -654,6 +655,7 @@ addDeliverPrompt = function(npcId)
             warn("[NPCController] DeliverBox failed for", player.Name)
             -- BUG-56: clear carry UI so player isn't stuck holding the box
             forceDropBoxRemote:FireClient(player)
+            boxCarriedRemote:FireClient(player, nil)  -- BUG-73: clear carryPill on rejected delivery
             -- BUG-62: walk NPC out so they don't stand at counter forever
             npcLeave(npcId, "delivery_rejected")
             d.deliveryLocked = false

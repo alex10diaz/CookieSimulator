@@ -664,6 +664,7 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
         for key in pairs(orderCards) do removeCard(key) end
         activeOrders = {}; emptyLbl.Visible = true; coachBar.Visible = false
         hideTray()
+        carryPill.Visible = false  -- BUG-73: clear carry pill on state change
     end
     if state == "Open" and coachCount < 3 then coachBar.Visible = true end
 end)
