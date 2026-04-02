@@ -274,18 +274,20 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Session 17 — Bug Fix Pass: BUG-67 through BUG-80 + FEAT-1/2/3`
-**Status:** 🔴 FIX PASS NEEDED — 14 new bugs from 2026-04-01 solo playtest. P0 variety pack still fully broken (BUG-67). Multiple disk fixes from session 15 not taking effect in Studio (BUG-76/77/80). Friend playtest blocked until critical issues resolved.
+**TASK:** `Session 18 — Pre-Release Final Fix Pass: BUG-81 through BUG-92 + FEAT-4`
+**Status:** 🟡 IN PROGRESS — Session 17 completed all 14 BUG-67–80 fixes. Session 18 playtest (2026-04-02) found 12 new bugs + 3 feature requests. Release is tomorrow. Fixing P1 bugs now.
 **Fix Priority Order:**
-1. BUG-67 — variety pack packSize mismatch (P0, blocks a whole order type)
-2. BUG-68/69/70/71/80 — tutorial bugs (HUD visible, cookie prompt, oven cam, coin reward, menu board)
-3. BUG-73/74/75/79 — carry/UI persistence (pill persists on fail, warmer prompt persists, combo not clearing, timer frozen)
-4. BUG-72 — coin counter not updating after purchases
-5. BUG-76/77 — re-investigate BUG-58/61 fixes not taking effect in Studio
-6. BUG-78 — lifetime milestones not tracking
-7. FEAT-1/2/3 — trash dough, shift counter, leaderboard label rename
+1. BUG-84 — combo pill not clearing on EndOfDay/Intermission (2 lines in HUDController)
+2. BUG-85 — coin counter stale after cosmetic purchases (DeductCoins missing HUDUpdate)
+3. BUG-87 — shift counter label clipped/invisible (repositioning shiftLbl)
+4. BUG-86 — drive-thru arm carry pose persists (CarryPoseUpdate not fired after delivery)
+5. BUG-88 — station grades show "--" (stationBreakdown missing from summaryRemote payload)
+6. BUG-89 — 2nd/3rd cookie unlock "..." stuck (callback closure referencing stale unlockBtnRefs)
+7. BUG-92 — fridge/warmer ProximityPrompt ObjectText not cleared
+8. BUG-83 — warmer prompt still visible at EndOfDay (re-investigate hook timing)
+9. Delete TEMP scripts, add FEAT-4 (skip intermission)
 
-**Session 16 — Solo Playtest (2026-04-01) findings:** See Section 7 BUG-67 through BUG-80. What's working: delivery to NPC, box → customer transfer, rating system, bakery level-up popup, challenges rewarding, variety orders (non-pack), combo UI, NPC patience timers, end-of-shift summary, 3-shift loop, drive-thru prompt, movement locked during break, cosmetics purchase/equip. What's broken: variety pack delivery (P0), tutorial HUD/UI bleed-through, coin counter stale, carry pill persists, warmer prompt persists, fridge showing all 6 types.
+**Session 18 — Solo Playtest (2026-04-02) findings:** What's working: delivery to NPC ✅, variety pack ✅, tutorial flow ✅, rating system ✅, bakery level-up ✅, challenges ✅, combo UI ✅, NPC patience ✅, end-of-shift summary ✅, shift loop ✅, drive-thru ✅. New issues: BUG-81 (AntiExploit mismatch log), BUG-82 (NPC pileup), BUG-83 (warmer prompt), BUG-84 (combo not clearing), BUG-85 (coin after cosmetics), BUG-86 (drive-thru arm), BUG-87 (shift label invisible), BUG-88 (station grades "--"), BUG-89 (unlock "..."), BUG-90/91 (new cookie warmer display), BUG-92 (ObjectText).
 
 **Resolved this session (Session 10):**
 - ✅ BUG-25 — SpeedPass wired into GameStateManager PreOpen skip; VIPPass wired into PersistentNPCSpawner + DriveThruServer delivery payout (1.5× multiply)
@@ -671,20 +673,27 @@
 - [x] **BUG-52** TutorialFridge FridgeDisplay hidden at startup ✅ 2026-03-30
 - [x] **CLEANUP** Delete TEMP_ResetTutorial from SSS ✅ 2026-03-31
 - [x] **CLEANUP** Delete TEMP_UnlockAllCosmetics from SSS ✅ 2026-03-31
-- [ ] **BUG-67** Variety pack packSize mismatch resolved — all variety pack orders deliverable
-- [ ] **BUG-68** HUD fully hidden during tutorial (InTutorial=true gates all HUD panels)
-- [ ] **BUG-69** "Cookie ready to box" alert blocked during tutorial
-- [ ] **BUG-70** Oven TP camera aimed at oven, not fridge
-- [ ] **BUG-71** Tutorial 200-coin reward awarded on natural completion
-- [ ] **BUG-72** Coin counter updates after every purchase without rejoin
-- [ ] **BUG-73** Carry pill clears on delivery failure and on phase transition to Intermission
-- [ ] **BUG-74** Warmer pickup prompts disabled on EndOfDay transition
-- [ ] **BUG-75** Combo resets when NPC leaves due to patience expiry
-- [ ] **BUG-76** Fridge display shows only active menu selections (re-investigate BUG-58)
-- [ ] **BUG-77** Drive-thru box removed from player after successful delivery (re-investigate BUG-61)
-- [ ] **BUG-78** Lifetime milestones tracking order count correctly
-- [ ] **BUG-79** End-of-day timer counts down visually from :30 to :00
-- [ ] **BUG-80** Cookie menu selection board opens after tutorial ends (re-investigate BUG-60)
+- [x] **BUG-67** Variety pack packSize mismatch resolved ✅ 2026-04-02 Session 17
+- [x] **BUG-68** HUD fully hidden during tutorial ✅ 2026-04-02 Session 17
+- [x] **BUG-69** "Cookie ready to box" alert blocked during tutorial ✅ 2026-04-02 Session 17
+- [x] **BUG-70** Oven TP camera aimed at oven ✅ 2026-04-02 Session 17
+- [x] **BUG-71** Tutorial 200-coin reward awarded on natural completion ✅ 2026-04-02 Session 17
+- [x] **BUG-72** Coin counter updates after AddCoins ✅ 2026-04-02 Session 17
+- [x] **BUG-73** Carry pill clears on delivery failure and Intermission ✅ 2026-04-02 Session 17
+- [x] **BUG-74** Warmer pickup prompts disabled on EndOfDay transition ✅ 2026-04-02 Session 17
+- [x] **BUG-75** Combo resets when NPC patience expires ✅ 2026-04-02 Session 17
+- [x] **BUG-76** Fridge display shows only active menu selections ✅ 2026-04-02 Session 17
+- [x] **BUG-78** Lifetime milestones tracking order count correctly ✅ 2026-04-02 Session 17
+- [x] **BUG-79** End-of-day timer counts down visually from :30 to :00 ✅ 2026-04-02 Session 17
+- [x] **BUG-80** Cookie menu selection board opens after tutorial ends ✅ 2026-04-02 Session 17
+- [ ] **BUG-77/86** Drive-thru arm pose + box removed after delivery — still broken, see BUG-86
+- [ ] **BUG-83** Warmer prompt disabled at EndOfDay (re-verify)
+- [ ] **BUG-84** Combo pill clears on EndOfDay/Intermission
+- [ ] **BUG-85** Coin counter updates after cosmetic purchases (DeductCoins fix)
+- [ ] **BUG-87** Shift counter label visible on HUD
+- [ ] **BUG-88** Station grades show real values in summary (not "--")
+- [ ] **BUG-89** 2nd/3rd cookie unlock buttons work (not stuck on "...")
+- [ ] **BUG-92** ProximityPrompt ObjectText cleared on all fridges/warmers
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator

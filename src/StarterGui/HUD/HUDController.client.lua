@@ -915,7 +915,7 @@ npcOrderFailedEvent.OnClientEvent:Connect(function(npcName, _orderId, position)
     end
 end)
 local _prevComboStreak = 0
-comboUpdateEvent.OnClientEvent:Connect(function(streak)
+local function applyComboStreak(streak)
     streak = streak or 0
     if streak >= 2 then
         comboLbl.Text = "x" .. streak .. " COMBO"
@@ -931,7 +931,8 @@ comboUpdateEvent.OnClientEvent:Connect(function(streak)
         if tw2 then tw2:Play() end
     end
     _prevComboStreak = streak
-end)
+end
+comboUpdateEvent.OnClientEvent:Connect(applyComboStreak)
 
 -- ── Carrying Visual (visible to all players) ──────────────────────────────────
 local function showCarryingVisual(carrierName, cid)
