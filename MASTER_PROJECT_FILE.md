@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-04-01 (Session 16 — Second solo playtest completed (3 shifts). 14 new bugs logged BUG-67–BUG-80 + 3 feature requests FEAT-1–3. Session 15 partial fix pass resolved BUG-57/62/63/64/65. BUG-58/60/61 disk fixes not taking effect in-game — re-logged as BUG-76/80/77. Warmers reverted to original positions Z=-49→-79 after BUG-59 move phased through wall. P0: BUG-67 variety pack still completely broken.)
-**Overall Alpha Readiness:** 🟡 70% — Core loop functional across 3 shifts. Delivery, ratings, challenges, cosmetics working. P0 variety pack still broken. 14 new bugs from solo playtest. Fix pass needed before any friend invite.
+**Last Updated:** 2026-04-02 (Session 18 — Pre-release final fix pass. Session 17 completed all 14 BUG-67–80 + FEAT-2/3. Session 18 playtest (2026-04-02) found 12 new bugs BUG-81–92 + 3 features FEAT-4/5/6. Release is tomorrow. Key fixes this session: BUG-84 combo clear, BUG-85 DeductCoins HUDUpdate, BUG-86 drive-thru arm pose, BUG-87 shift label position, BUG-88 station grades, BUG-89 menu unlock "...", BUG-92 ObjectText cleanup.)
+**Overall Alpha Readiness:** 🟢 88% — All Session 17 bugs resolved. Core loop verified 3-shift solo. Variety pack, tutorial, combo, carry, warmer prompts all working. 12 new Session 18 bugs — most are cosmetic/polish. Release candidate with known issues documented.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
