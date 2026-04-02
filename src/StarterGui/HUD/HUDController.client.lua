@@ -233,6 +233,17 @@ timerLbl.BackgroundTransparency = 1; timerLbl.TextColor3 = C.WHITE
 timerLbl.Font = Enum.Font.GothamBold; timerLbl.TextScaled = true
 timerLbl.Text = "LOADING..."; timerLbl.ZIndex = 12
 
+-- FEAT-2: shift counter label above timer badge
+local shiftLbl = Instance.new("TextLabel", topBar)
+shiftLbl.Size               = UDim2.new(0, 120, 0, 16)
+shiftLbl.Position           = UDim2.new(0.5, -60, 0.5, -32)
+shiftLbl.BackgroundTransparency = 1
+shiftLbl.TextColor3         = C.TEXT_LT
+shiftLbl.Font               = Enum.Font.GothamBold
+shiftLbl.TextScaled         = true
+shiftLbl.Text               = ""
+shiftLbl.ZIndex             = 13
+
 -- SETTINGS BUTTON
 local settingsBtn = Instance.new("TextButton", topBar)
 settingsBtn.Name = "SettingsBtn"
@@ -648,7 +659,7 @@ local STATE_ACCENT = { Open=C.GREEN, Intermission=C.BLUE, EndOfDay=C.ORANGE }
 
 local coachCount = 0
 
-stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
+stateRemote.OnClientEvent:Connect(function(state, timeRemaining, shiftNum)
     local bg = STATE_ACCENT[state] and
         (state == "Open" and Color3.fromRGB(160, 218, 175) or
          state == "Intermission" and Color3.fromRGB(148, 195, 215) or
@@ -656,6 +667,7 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining)
     TweenService:Create(timerBadge, TI(0.3), { BackgroundColor3 = bg }):Play()
     timerStroke.Color = STATE_ACCENT[state] or C.TEXT_LT
     timerLbl.Text = (STATE_LABELS[state] or state) .. "  " .. formatTime(timeRemaining or 0)
+    if shiftNum and shiftNum > 0 then shiftLbl.Text = "SHIFT " .. shiftNum else shiftLbl.Text = "" end  -- FEAT-2
 
     timerBadge.Visible = not (state == "PreOpen" and player:GetAttribute("InTutorial"))
     skipBtn.Visible = (state == "PreOpen" and not player:GetAttribute("InTutorial"))
