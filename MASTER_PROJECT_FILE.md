@@ -1,6 +1,6 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-04-02 (Session 18 — Pre-release final fix pass. Session 17 completed all 14 BUG-67–80 + FEAT-2/3. Session 18 playtest (2026-04-02) found 12 new bugs BUG-81–92 + 3 features FEAT-4/5/6. Release is tomorrow. Key fixes this session: BUG-84 combo clear, BUG-85 DeductCoins HUDUpdate, BUG-86 drive-thru arm pose, BUG-87 shift label position, BUG-88 station grades, BUG-89 menu unlock "...", BUG-92 ObjectText cleanup.)
+**Last Updated:** 2026-04-02 (Session 19 — Post-playtest intake. Session 18 fixed BUG-84–89/92 + duplicate fridge label (BUG-92 StationRemapService). Session 19 intake: BUG-93 packSize mismatch, BUG-94 NPC queue pile-up, BUG-95 new warmer missing label, BUG-96 locked cookie prompt showing, BAL-3 AI overproduction, FEAT-7 leaderboard scroll, FEAT-8 skip break. Alpha-killer risk items logged.)
 **Overall Alpha Readiness:** 🟢 88% — All Session 17 bugs resolved. Core loop verified 3-shift solo. Variety pack, tutorial, combo, carry, warmer prompts all working. 12 new Session 18 bugs — most are cosmetic/polish. Release candidate with known issues documented.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
