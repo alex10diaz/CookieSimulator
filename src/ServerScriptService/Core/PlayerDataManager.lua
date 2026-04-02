@@ -162,6 +162,8 @@ function PlayerDataManager.AddCoins(player, amount)
     local p = profiles[player.UserId]
     if not p then return 0 end
     p.coins = math.max(0, p.coins + amount)
+    -- BUG-71/72: push updated coin total to client HUD immediately
+    pcall(function() getRemoteManager().Get("HUDUpdate"):FireClient(player, p.coins, p.xp, nil) end)
     return p.coins
 end
 
