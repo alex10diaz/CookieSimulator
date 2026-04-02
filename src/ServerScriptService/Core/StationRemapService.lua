@@ -178,26 +178,26 @@ function StationRemapService.RemapStations(orderedMenuIds)
         if wEntry then hideWarmerSlot(wEntry.model) end
     end
 
-    -- ── Hide unused fridge slots (any fridge whose FridgeId is not in active menu) ──
-    local fridgesFolder = Workspace:FindFirstChild("Fridges")
-    if fridgesFolder then
-        for _, model in ipairs(fridgesFolder:GetChildren()) do
-            local fId = model:GetAttribute("FridgeId") or ""
-            if fId ~= "" and not activeFridgeIds[fId] then
-                -- Clear and hide
-                for _, desc in ipairs(model:GetDescendants()) do
-                    if desc:IsA("ProximityPrompt") then
-                        desc.Enabled    = false
-                        desc.ObjectText = ""  -- BUG-92: clear subtitle text
-                    end
+    -- ── Hide unused fridge slots ──────────────────────────────────────────────
+    -- Track by SLOT INDEX (not FridgeId) to avoid stale-attribute false negatives.
+    -- Any fridge beyond the active menu count gets hidden and its FridgeId cleared.
+    for i = #orderedMenuIds + 1, #fridges do
+        local fEntry = fridges[i]
+        if fEntry then
+            local model = fEntry.model
+            model:SetAttribute("FridgeId", "")  -- clear so no duplicate IDs linger
+            for _, desc in ipairs(model:GetDescendants()) do
+                if desc:IsA("ProximityPrompt") then
+                    desc.Enabled    = false
+                    desc.ObjectText = ""  -- BUG-92
                 end
-                local display = model:FindFirstChild("FridgeDisplay", true)
-                if display then
-                    display.Enabled = false  -- BUG-58: hide billboard for inactive fridge
-                    local lbl = display:FindFirstChild("CookieName", true)
-                        or display:FindFirstChild("TextLabel", true)
-                    if lbl then lbl.Text = "" end
-                end
+            end
+            local display = model:FindFirstChild("FridgeDisplay", true)
+            if display then
+                display.Enabled = false
+                local lbl = display:FindFirstChild("CookieName", true)
+                    or display:FindFirstChild("TextLabel", true)
+                if lbl then lbl.Text = "" end
             end
         end
     end
