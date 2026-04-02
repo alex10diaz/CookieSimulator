@@ -233,12 +233,13 @@ timerLbl.BackgroundTransparency = 1; timerLbl.TextColor3 = C.WHITE
 timerLbl.Font = Enum.Font.GothamBold; timerLbl.TextScaled = true
 timerLbl.Text = "LOADING..."; timerLbl.ZIndex = 12
 
--- FEAT-2: shift counter label above timer badge
-local shiftLbl = Instance.new("TextLabel", topBar)
-shiftLbl.Size               = UDim2.new(0, 120, 0, 16)
-shiftLbl.Position           = UDim2.new(0.5, -60, 0.5, -32)
+-- FEAT-2 / BUG-87: shift counter label — parented to hud (not topBar) so it isn't clipped
+-- Positioned just below the top bar (topBar height = 52), centered above the timer badge
+local shiftLbl = Instance.new("TextLabel", hud)
+shiftLbl.Size               = UDim2.new(0, 140, 0, 18)
+shiftLbl.Position           = UDim2.new(0.5, -70, 0, 54)  -- 54 = topBar bottom + 2px gap
 shiftLbl.BackgroundTransparency = 1
-shiftLbl.TextColor3         = C.TEXT_LT
+shiftLbl.TextColor3         = Color3.fromRGB(200, 190, 150)
 shiftLbl.Font               = Enum.Font.GothamBold
 shiftLbl.TextScaled         = true
 shiftLbl.Text               = ""
@@ -498,6 +499,7 @@ comboLbl.Name = "ComboLabel"; comboLbl.Size = UDim2.new(1,0,1,0)
 comboLbl.BackgroundTransparency = 1; comboLbl.TextColor3 = Color3.fromRGB(255,200,80)
 comboLbl.Font = Enum.Font.GothamBold; comboLbl.TextScaled = true; comboLbl.ZIndex = 31
 comboLbl.Text = ""  -- prevent default "Label" showing as gold text
+local _prevComboStreak = 0  -- BUG-84: hoisted so state handler can clear it
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- SETTINGS PANEL
@@ -677,6 +679,10 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining, shiftNum)
         activeOrders = {}; emptyLbl.Visible = true; coachBar.Visible = false
         hideTray()
         carryPill.Visible = false  -- BUG-73: clear carry pill on state change
+        -- BUG-84: clear combo pill on shift end (can't call applyComboStreak — defined later)
+        comboLbl.Text = ""; _prevComboStreak = 0
+        local tw = TweenService:Create(comboPill, TI(0.3), { BackgroundTransparency = 1 })
+        if tw then tw:Play() end
     end
     if state == "Open" and coachCount < 3 then coachBar.Visible = true end
 end)
@@ -914,7 +920,6 @@ npcOrderFailedEvent.OnClientEvent:Connect(function(npcName, _orderId, position)
         xt.Completed:Connect(function() if xa.Parent then xa:Destroy() end end)
     end
 end)
-local _prevComboStreak = 0
 local function applyComboStreak(streak)
     streak = streak or 0
     if streak >= 2 then

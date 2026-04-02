@@ -211,6 +211,8 @@ function PlayerDataManager.DeductCoins(player, amount)
     if not p then return false, 0 end
     if p.coins < amount then return false, p.coins end
     p.coins = p.coins - amount
+    -- BUG-85: fire HUDUpdate so client coin counter stays in sync after deductions
+    pcall(function() getRemoteManager().Get("HUDUpdate"):FireClient(player, p.coins, p.xp, nil) end)
     return true, p.coins
 end
 
