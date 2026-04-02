@@ -212,7 +212,14 @@ local function runCycle()
         summary.employees = SessionStats.GetEmployeeOfShift()
         summary.shiftGrade = SessionStats.GetShiftGrade(summary)
         summaryRemote:FireAllClients(summary)
-        task.wait(SUMMARY_DURATION)
+        do  -- BUG-79: tick EndOfDay countdown so client timer actually counts down
+            local _eod = SUMMARY_DURATION
+            while _eod > 0 do
+                task.wait(1)
+                _eod -= 1
+                stateChangedRemote:FireAllClients("EndOfDay", _eod)
+            end
+        end
 
         -- BUG-63: clear fridge/warmer displays before Intermission so they don't
         -- show stale shift data during the break
