@@ -686,14 +686,15 @@
 - [x] **BUG-78** Lifetime milestones tracking order count correctly ✅ 2026-04-02 Session 17
 - [x] **BUG-79** End-of-day timer counts down visually from :30 to :00 ✅ 2026-04-02 Session 17
 - [x] **BUG-80** Cookie menu selection board opens after tutorial ends ✅ 2026-04-02 Session 17
-- [ ] **BUG-77/86** Drive-thru arm pose + box removed after delivery — still broken, see BUG-86
-- [ ] **BUG-83** Warmer prompt disabled at EndOfDay (re-verify)
-- [ ] **BUG-84** Combo pill clears on EndOfDay/Intermission
-- [ ] **BUG-85** Coin counter updates after cosmetic purchases (DeductCoins fix)
-- [ ] **BUG-87** Shift counter label visible on HUD
-- [ ] **BUG-88** Station grades show real values in summary (not "--")
-- [ ] **BUG-89** 2nd/3rd cookie unlock buttons work (not stuck on "...")
-- [ ] **BUG-92** ProximityPrompt ObjectText cleared on all fridges/warmers
+- [x] **BUG-86** Drive-thru arm pose cleared after delivery ✅ 2026-04-02 Session 18 — DriveThruServer now fires CarryPoseUpdate:FireClient(player,false) after delivery
+- [x] **BUG-84** Combo pill clears on EndOfDay/Intermission ✅ 2026-04-02 Session 18 — HUDController state handler directly clears combo pill
+- [x] **BUG-85** Coin counter updates after cosmetic purchases ✅ 2026-04-02 Session 18 — PlayerDataManager.DeductCoins fires HUDUpdate
+- [x] **BUG-87** Shift counter label visible on HUD ✅ 2026-04-02 Session 18 — shiftLbl reparented from topBar to hud, Y=54
+- [x] **BUG-88** Station grades show real values in summary ✅ 2026-04-02 Session 18 — GameStateManager fires summaryRemote per-player with GetPlayerBreakdown
+- [x] **BUG-89** Cookie unlock buttons work (not stuck on "...") ✅ 2026-04-02 Session 18 — MenuClient _currentPayload closure fix + smart Destroying guard
+- [x] **BUG-92** ProximityPrompt ObjectText cleared on all fridges/warmers ✅ 2026-04-02 Session 18 — StationRemapService clears ObjectText at 3 sites
+- [ ] **BUG-83** Warmer prompt disabled at EndOfDay (re-verify in next session)
+- [ ] **RISK-5** 4–6 player Rush Hour live load test
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
