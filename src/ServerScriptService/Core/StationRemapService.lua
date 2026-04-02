@@ -81,6 +81,7 @@ local function showWarmerSlot(model, cookie)
         local wpp = shell:FindFirstChild("WarmerPickupPrompt", true)
         if wpp then
             wpp.ActionText = "Take " .. cookie.name
+            wpp.ObjectText = ""  -- BUG-92: clear subtitle text
             -- Leave Enabled as-is here; StaffManager.setWarmersEnabled controls it per phase
         end
 
@@ -162,6 +163,7 @@ function StationRemapService.RemapStations(orderedMenuIds)
             for _, desc in ipairs(model:GetDescendants()) do
                 if desc:IsA("ProximityPrompt") then
                     desc.ActionText = "Pull " .. cookie.name .. " Dough"
+                    desc.ObjectText = ""  -- BUG-92: clear subtitle text
                     desc.Enabled    = true
                 end
             end
@@ -184,7 +186,10 @@ function StationRemapService.RemapStations(orderedMenuIds)
             if fId ~= "" and not activeFridgeIds[fId] then
                 -- Clear and hide
                 for _, desc in ipairs(model:GetDescendants()) do
-                    if desc:IsA("ProximityPrompt") then desc.Enabled = false end
+                    if desc:IsA("ProximityPrompt") then
+                        desc.Enabled    = false
+                        desc.ObjectText = ""  -- BUG-92: clear subtitle text
+                    end
                 end
                 local display = model:FindFirstChild("FridgeDisplay", true)
                 if display then
