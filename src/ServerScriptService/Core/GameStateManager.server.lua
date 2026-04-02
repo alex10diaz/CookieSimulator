@@ -93,7 +93,7 @@ local function broadcast(state, timeRemaining)
     currentState = state
     -- Expose state server-wide via Workspace attribute (other scripts read this)
     game:GetService("Workspace"):SetAttribute("GameState", state)
-    stateChangedRemote:FireAllClients(state, timeRemaining or 0)
+    stateChangedRemote:FireAllClients(state, timeRemaining or 0, shiftNumber)
     print("[GameStateManager] → " .. state .. " (" .. (timeRemaining or 0) .. "s)")
     fireListeners(state)
 end
@@ -150,8 +150,11 @@ skipPreOpenRemote.OnServerEvent:Connect(function()
     skipPreOpenFlag = true
 end)
 
+local shiftNumber = 0  -- FEAT-2: increments each loop so clients can display "Shift N"
+
 local function runCycle()
     while true do
+        shiftNumber += 1  -- FEAT-2
         OrderManager.Reset()   -- wipe pipeline state before every new shift
         SessionStats.Reset()
         -- BUG-23: comboStreak is per-shift — reset for all players at shift boundary
