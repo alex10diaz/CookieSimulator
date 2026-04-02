@@ -600,4 +600,32 @@ Players.PlayerAdded:Connect(function(player)
     end)
 end)
 
+-- BUG-74: disable warmer pickup prompts on EndOfDay/Intermission; re-enable on PreOpen/Open
+local function setWarmerPromptsEnabled(enabled)
+    local wf = Workspace:FindFirstChild("Warmers")
+    if not wf then return end
+    for _, model in ipairs(wf:GetChildren()) do
+        for _, desc in ipairs(model:GetDescendants()) do
+            if desc:IsA("ProximityPrompt") and desc.Name == "WarmerPickupPrompt" then
+                desc.Enabled = enabled
+            end
+        end
+    end
+end
+
+workspace:GetAttributeChangedSignal("GameState"):Connect(function()
+    local state = workspace:GetAttribute("GameState")
+    if state == "EndOfDay" or state == "Intermission" then
+        setWarmerPromptsEnabled(false)
+        -- clear all active dress locks so players aren't stuck mid-order
+        for player in pairs(dressLocked) do
+            clearDressLock(player)
+            orderLocked:FireClient(player, { state = "cancelled", message = "Shift ended" })
+        end
+        activeKDS = {}
+    elseif state == "PreOpen" or state == "Open" then
+        setWarmerPromptsEnabled(true)
+    end
+end)
+
 print("[DressStationServer] Ready — KDS v2 (TV display + warmer pickup).")
