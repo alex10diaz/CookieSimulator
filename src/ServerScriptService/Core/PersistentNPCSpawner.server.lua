@@ -754,6 +754,7 @@ addDeliverPrompt = function(npcId)
             packSize    = d.order.packSize or 1,
         })
         LifetimeChallengeManager.CheckAll(player)
+        LifetimeChallengeManager.SendToPlayer(player)  -- BUG-78: refresh progress after each delivery
         -- Advance tutorial step 9 gate (replaces TestNPCSpawner dependency)
         do
             local _evts = game:GetService("ServerStorage"):FindFirstChild("Events")
