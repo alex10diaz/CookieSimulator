@@ -559,6 +559,11 @@ npcLeave = function(npcId, reason)
             for _, p in ipairs(Players:GetPlayers()) do
                 PlayerDataManager.AddCoins(p, -FAIL_PENALTY)
             end
+            -- BUG-75: reset combo for all players when NPC leaves due to patience
+            for _, p in ipairs(Players:GetPlayers()) do
+                PlayerDataManager.ResetCombo(p)
+                comboUpdateRemote:FireClient(p, 0)
+            end
         end
     end
 
