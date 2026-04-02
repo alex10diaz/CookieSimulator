@@ -27,18 +27,18 @@ local function getSortedWarmers()
     return list
 end
 
--- Sort fridge models by current FridgeId alphabetically for stable ordering
+-- Sort fridge models by model NAME (stable — never changes between shifts).
+-- Previously sorted by FridgeId attribute, which gets overwritten each remap causing
+-- duplicate labels on shift 2+ (two models ending up with the same FridgeId).
 local function getSortedFridges()
     local folder = Workspace:FindFirstChild("Fridges")
     if not folder then return {} end
     local list = {}
     for _, model in ipairs(folder:GetChildren()) do
-        local fridgeId = model:GetAttribute("FridgeId")
-        if fridgeId and fridgeId ~= "" then
-            table.insert(list, { model = model, fridgeId = fridgeId })
-        end
+        -- Include every fridge model regardless of its current FridgeId value
+        table.insert(list, { model = model })
     end
-    table.sort(list, function(a, b) return a.fridgeId < b.fridgeId end)
+    table.sort(list, function(a, b) return a.model.Name < b.model.Name end)
     return list
 end
 
