@@ -356,21 +356,24 @@ local function buildMenuBoard(payload)
             end)
         end
 
-        local currentPayload = payload
+        -- BUG-89: capture refs at this build scope so rebuild picks up fresh table
+        local _unlockBtnRefs = unlockBtnRefs
+        local _currentPayload = payload
         onPurchaseResultCallback = function(success, newCoinsOrMsg, cookieId)
             if success then
                 local newOwned = {}
-                for _, id in ipairs(currentPayload.ownedCookies or {}) do table.insert(newOwned, id) end
+                for _, id in ipairs(_currentPayload.ownedCookies or {}) do table.insert(newOwned, id) end
                 table.insert(newOwned, cookieId)
-                local updatedPayload = { allCookies=currentPayload.allCookies,
-                    activeMenu=currentPayload.activeMenu, ownedCookies=newOwned }
-                currentPayload = updatedPayload
+                local updatedPayload = { allCookies=_currentPayload.allCookies,
+                    activeMenu=_currentPayload.activeMenu, ownedCookies=newOwned }
+                _currentPayload = updatedPayload
                 local currentSelected = {}
                 for id in pairs(selected) do table.insert(currentSelected, id) end
                 updatedPayload.activeMenu = currentSelected
                 buildMenuBoard(updatedPayload)
             else
-                local btn = unlockBtnRefs[cookieId]
+                -- BUG-89: use local refs so we always reference the correct board's buttons
+                local btn = _unlockBtnRefs[cookieId]
                 if btn and btn.Parent then btn.Active=true; btn.Text="Retry" end
             end
         end
@@ -419,10 +422,16 @@ local function buildMenuBoard(payload)
 
     onResultCallback=handleResult; onLockCallback=lockMenu
 
+    -- BUG-89: capture the purchase callback at this build scope; only nil it if it
+    -- hasn't been overwritten by a rebuild that's already in progress
+    local _myPurchaseCallback = onPurchaseResultCallback
     sg.Destroying:Connect(function()
         if onResultCallback==handleResult then onResultCallback=nil end
         if onLockCallback==lockMenu then onLockCallback=nil end
-        if onPurchaseResultCallback~=nil then onPurchaseResultCallback=nil end
+        -- only clear if our callback hasn't already been replaced by a newer board
+        if onPurchaseResultCallback == _myPurchaseCallback then
+            onPurchaseResultCallback = nil
+        end
     end)
 
     confirmBtn.MouseButton1Click:Connect(function()
