@@ -100,5 +100,13 @@ forceDropBox.OnClientEvent:Connect(function()
     end
 end)
 
+-- BUG-73: clear carry indicator when shift ends (Intermission / EndOfDay)
+RemoteManager.Get("GameStateChanged").OnClientEvent:Connect(function(state)
+    if state == "Intermission" or state == "EndOfDay" then
+        carriedBoxId = nil
+        clearCarryIndicator()
+    end
+end)
+
 -- Delivery trigger is handled server-side via ProximityPrompt in PersistentNPCSpawner.
 print("[DeliveryClient] Ready.")
