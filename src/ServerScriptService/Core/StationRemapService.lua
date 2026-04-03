@@ -103,6 +103,19 @@ function StationRemapService.RemapStations(orderedMenuIds)
 
     local warmers = getSortedWarmers()
     local fridges = getSortedFridges()
+
+    -- BUG-96: disable ALL fridge prompts before re-enabling only active ones.
+    -- Prevents locked/unused fridge prompts from showing on first load or shift change.
+    for _, fEntry in ipairs(fridges) do
+        for _, desc in ipairs(fEntry.model:GetDescendants()) do
+            if desc:IsA("ProximityPrompt") then
+                desc.Enabled    = false
+                desc.ObjectText = ""
+            end
+        end
+        local display = fEntry.model:FindFirstChild("FridgeDisplay", true)
+        if display then display.Enabled = false end
+    end
     local slotMap = {}  -- slot index -> cookieId (for remote broadcast)
 
     -- Snapshot old CookieId per slot BEFORE overwriting (for warmer entry remap)
