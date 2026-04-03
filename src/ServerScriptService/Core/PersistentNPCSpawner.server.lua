@@ -949,8 +949,16 @@ local COUNTER_TIMEOUT = 90  -- seconds before NPC gives up at counter
 local function callNPCToCounter(npcId)
     local data = npcs[npcId]
     if not data then return end
+    -- BUG-94: spread multiple counter NPCs laterally to prevent visual pile-up
+    local counterSlot = 0
+    for id, d in pairs(npcs) do
+        if id ~= npcId and (d.state == "at_counter" or d.state == "walking_to_counter") then
+            counterSlot += 1
+        end
+    end
+    local counterTarget = getCounterPos() + Vector3.new(counterSlot * 2.5, 0, 0)
     data.state      = "walking_to_counter"
-    data.cancelMove = NPCSpawner.MoveTo(data.model, getCounterPos(), function()
+    data.cancelMove = NPCSpawner.MoveTo(data.model, counterTarget, function()
         local d = npcs[npcId]
         if not d then return end
         d.state      = "at_counter"
