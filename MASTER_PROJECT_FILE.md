@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-04-02 (Session 20 — Runtime regression sweep. Found and patched BUG-97: missing `ServerScriptService` bindings in DressStationServer, StationRemapService, and POSController disk source. Session 19 fixes still need live Studio verification for BUG-83/95 and RISK-5/11. Alpha clearance revoked until runtime parity is re-verified.)
-**Overall Alpha Readiness:** 🟡 85% — Core loop, save flow, reward validation, and most multiplayer guards are code-verified, but not playtest-ready yet. New runtime regression risk found on disk (BUG-97), warmer/remap issues BUG-83/95 still need in-game proof, and the required 4-player Rush Hour / join-leave load test has not happened. Not ready for friend playtest until Session 20 verification passes.
+**Overall Alpha Readiness:** 🟢 92% — Core loop, save flow (5-min autosave confirmed), 18-sound SoundController confirmed, reward validation, and most multiplayer guards are code-verified. Remaining gaps: BUG-83/95/96 need one live in-game solo verification pass; RISK-5/11 (4-player load test) still required before open invite. Ready for controlled 2-player friend test now.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
