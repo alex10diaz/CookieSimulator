@@ -41,6 +41,7 @@
 ### CORE SYSTEMS
 | System | Verification Status | Notes |
 |---|---|---|
+| 2026-04-02 | **Session 20 — Runtime regression lockdown (disk patch only)** | Found BUG-97 during audit: `ServerScriptService` was referenced without a local binding in DressStationServer, StationRemapService, and POSController disk source. Added the missing service declarations. This still needs Studio sync + boot verification before the bug can be closed. |
 | Order System (batch pipeline) | ✅ Verified Implemented | Mix→Dough→Fridge→Oven→[Frost]→Warmers→Dress. Well-architected, event-driven |
 | NPC System | ✅ Verified Implemented | Spawning/lifecycle complete. facePosition fixed: task.spawn+0.2s wait, AutoRotate disabled during CFrame snap. |
 | Station System (Mix/Dough/Oven/Frost) | ✅ Verified Implemented | All 4 stations functional. Movement locked (WalkSpeed/JumpPower/JumpHeight=0) on session start — C-1 ✅ |
@@ -275,33 +276,21 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Session 19 — Pre-Alpha Final Stabilization: Risk Audit + BUG-93/96 + Studio Sync`
-**Status:** ✅ COMPLETE — BUG-93 (packSize) and BUG-96 (fridge prompts) fixed + pushed to Studio. RISK-6/7/8/9/10 code-verified. Studio sync confirmed (9/9 checks green). Alpha cleared pending live multiplayer test (RISK-5/11).
-**Fix Priority Order:**
-1. BUG-84 — combo pill not clearing on EndOfDay/Intermission (2 lines in HUDController)
-2. BUG-85 — coin counter stale after cosmetic purchases (DeductCoins missing HUDUpdate)
-3. BUG-87 — shift counter label clipped/invisible (repositioning shiftLbl)
-4. BUG-86 — drive-thru arm carry pose persists (CarryPoseUpdate not fired after delivery)
-5. BUG-88 — station grades show "--" (stationBreakdown missing from summaryRemote payload)
-6. BUG-89 — 2nd/3rd cookie unlock "..." stuck (callback closure referencing stale unlockBtnRefs)
-7. BUG-92 — fridge/warmer ProximityPrompt ObjectText not cleared
-8. BUG-83 — warmer prompt still visible at EndOfDay (re-investigate hook timing)
-9. Delete TEMP scripts, add FEAT-4 (skip intermission)
+**TASK:** `Session 20 — Runtime Regression Lockdown + Live Verification`
+**Status:** IN PROGRESS — Disk source patched for BUG-97, but not Studio-verified. Alpha is not cleared. Biggest risk right now: runtime parity between disk and the live place, especially DressStationServer + StationRemapService on a fresh boot.
+**Fix / Verify Priority Order:**
+1. BUG-97 — Studio sync + boot verify for DressStationServer, StationRemapService, POSController
+2. BUG-83 — verify warmer pickup prompts are disabled at EndOfDay / Intermission
+3. BUG-95 — verify newly unlocked cookie warmer name / color / material after remap
+4. RISK-5 / RISK-11 — run live 4-player Rush Hour test with join-mid-shift and leave-mid-task cases
+5. BUG-94 — observe NPC counter pile-up under load; decide if it is cosmetic or blocking
 
-**Session 18 — Solo Playtest (2026-04-02) findings:** What's working: delivery to NPC ✅, variety pack ✅, tutorial flow ✅, rating system ✅, bakery level-up ✅, challenges ✅, combo UI ✅, NPC patience ✅, end-of-shift summary ✅, shift loop ✅, drive-thru ✅. New issues: BUG-81 (AntiExploit mismatch log), BUG-82 (NPC pileup), BUG-83 (warmer prompt), BUG-84 (combo not clearing), BUG-85 (coin after cosmetics), BUG-86 (drive-thru arm), BUG-87 (shift label invisible), BUG-88 (station grades "--"), BUG-89 (unlock "..."), BUG-90/91 (new cookie warmer display), BUG-92 (ObjectText).
+**Audit Summary (Session 20):**
+- Order, reward, combo, and save paths still have strong server-side validation in code.
+- New regression risk found in disk source: three server files referenced `ServerScriptService` before binding it locally.
+- Disk fix applied narrowly. This is not a verified fix until Studio boot and in-game behavior are rechecked.
 
-**Resolved this session (Session 10):**
-- ✅ BUG-25 — SpeedPass wired into GameStateManager PreOpen skip; VIPPass wired into PersistentNPCSpawner + DriveThruServer delivery payout (1.5× multiply)
-- ✅ BUG-32 — Resolved by BUG-36 fix: AIBakerSystem disabled, updateSoloMode() never fires, no silent dismissal possible
-- ✅ BUG-36 — AIBakerSystem disabled (do return end + Studio Disabled=true). StaffManager is canonical AI worker system.
-- ✅ GamepassManager converted from Script → ModuleScript (was crashing all three callers with "invalid require argument")
-- ✅ Zero-error boot confirmed in Studio after all fixes
-
-**Resolved this session (Session 9):**
-- ✅ BUG-22/23/24/26/27/28/29/30/31/33/34/35/37 — see Section 6 for details
-
-**What was correctly completed (Sessions 1–10):**
-- All C/H/M priority items complete. All 38 bugs resolved. Performance baseline verified. ✅
+**Do not advance to friend playtest until the above five checks are green.**
 
 ---
 
@@ -406,6 +395,16 @@
 | 7 | In-game verify BUG-95 (warmer label/color) | StationRemapService | Needs live test |
 | 8 | Live 4-player test (RISK-5/RISK-11) | All | Must do before alpha |
 
+### 🔴 SESSION 20 — Runtime Regression Lockdown + Final Alpha Gate
+
+| Order | Task | System | Status |
+|---|---|---|---|
+| 1 | Fix BUG-97 missing `ServerScriptService` bindings on disk | DressStationServer / StationRemapService / POSController | ✅ Disk patched 2026-04-02 — needs Studio verify |
+| 2 | Verify BUG-83 warmer prompt fully disables at EndOfDay | DressStationServer / WarmersSystem | Needs live test |
+| 3 | Verify BUG-95 warmer label / color / material on newly unlocked cookie | StationRemapService | Needs live test |
+| 4 | Run live 4-player test (RISK-5 / RISK-11) | All | Must do before friend playtest |
+| 5 | Stress join-mid-shift / leave-mid-task during Rush Hour | GameState / NPC / Minigame systems | Must do before friend playtest |
+
 ### 🔁 REGRESSION WATCH LIST
 
 Items that could have been inadvertently affected by Session 18–19 changes:
@@ -418,6 +417,7 @@ Items that could have been inadvertently affected by Session 18–19 changes:
 | Fridge display shows on open (not blank) | StationRemapService (BUG-96 also hides FridgeDisplay) | Confirm fridge name labels appear on shift start |
 | Combo pill doesn't reappear after EndOfDay | HUDController (BUG-84) | Enter PreOpen after EndOfDay; verify combo pill is hidden |
 | Coin counter correct after shop purchase | PlayerDataManager (BUG-85) | Buy a cosmetic; confirm balance deducts immediately |
+| Fresh server boot loads core server scripts | DressStationServer / StationRemapService / POSController (BUG-97) | Verify no nil `ServerScriptService` runtime errors after sync |
 
 ### ✅ Previously Resolved — CRITICAL BLOCKERS
 
@@ -661,6 +661,7 @@ Items that could have been inadvertently affected by Session 18–19 changes:
 | BUG-94 | 🟠 High | PersistentNPCSpawner / NPCQueueManager | Customer counter pile-up / queue congestion — multiple NPCs stack at the counter when several orders are pending simultaneously. Slot-assignment exists but positional spread is insufficient; NPCs clip through each other when 3+ are queued. | Open — P1. Fix: increase spread radius or use grid-based slot assignment. |
 | BUG-95 | 🟠 High | StationRemapService / WarmersSystem | Newly unlocked cookie's warmer slot has no name label and wrong material/colour after remap. `showWarmerSlot` updates `WarmerNameGui` and `DoorPanel` colour but the physical warmer mesh/material may not update if the model lacks a `Shell` or `DoorPanel` matching the expected hierarchy. | Open — P1. Investigate warmer model hierarchy for new cookie types. |
 | BUG-96 | 🟠 High | FridgeDisplayServer / MenuServer | Locked (unowned) cookie fridge still shows the `E` proximity prompt allowing players to attempt a pull. `FridgePickupPrompt.Enabled` should be false for any cookie not in the active menu. Previously only active-menu fridges were explicitly enabled; locked fridges were never explicitly disabled after StationRemapService ran. | ✅ Resolved 2026-04-02 Session 19 — StationRemapService.RemapStations now disables ALL fridge prompts and hides all FridgeDisplays at the top of the function, before the active-menu loop re-enables only the correct slots. |
+| BUG-97 | 🔴 Critical | DressStationServer / StationRemapService / POSController | Disk source regression: these server files require `ServerScriptService:WaitForChild(...)` but were missing `local ServerScriptService = game:GetService("ServerScriptService")` at the top. On a fresh sync / boot this can hard-fail core order, remap, and dress flows before play starts. | Patched on disk 2026-04-02 — needs Studio boot verification before close. Add to Regression Watch. |
 | BAL-3 | 🟡 Balance | AIWorkerService / OvenServer | AI stations are over-producing — warmer stock reaches 40+ cookies, far exceeding NPC demand. AI bake loop does not check warmer fullness before queueing another batch. No production cap or max-stock throttle is implemented. | Open — P2. Fix: throttle AI bake when warmer stock for that cookie ≥ target threshold (e.g. 12). |
 | FEAT-7 | 🟡 Feature | LeaderboardController | Leaderboard only shows top ~10 entries and is not scrollable. Players want to see their own rank even if outside top 10. Needs ScrollingFrame + rank-highlight for the local player's row. | Open — P2. Post-alpha OK. |
 | FEAT-8 | 🟡 Feature | GameStateManager / HUDController | Skip Break button — allow all players (or majority vote) to skip the Intermission early. Currently no SkipIntermission remote exists. Relates to SpeedPass gamepass design. | Open — P2. Post-alpha OK. |
@@ -732,6 +733,7 @@ Items that could have been inadvertently affected by Session 18–19 changes:
 - [ ] **BUG-94** NPC queue spread — no counter pile-up (cosmetic, not blocking alpha)
 - [ ] **BUG-95** New cookie warmer label + material — code infrastructure verified correct (doughColor/name/ActionText all properly mapped); needs in-game verify
 - [x] **BUG-96** Locked fridge prompts disabled ✅ 2026-04-02 Session 19 — StationRemapService now disables ALL fridge prompts at remap start before re-enabling only active slots
+- [ ] **BUG-97** Fresh server boot / Studio sync runtime check — DressStationServer, StationRemapService, and POSController disk patch must boot cleanly before alpha
 - [ ] **RISK-5** 4–6 player Rush Hour live load test (must test with real players)
 - [x] **RISK-6** Same-box delivery race — code verified ✅ `deliveryLocked` atomic flag in PersistentNPCSpawner prevents double delivery
 - [x] **RISK-7** Player leaves during order — code verified ✅ MinigameServer + PersistentNPCSpawner + BoxCarryServer all handle PlayerRemoving; box dropped, order cancelled
