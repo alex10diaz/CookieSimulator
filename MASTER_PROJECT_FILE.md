@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-04-02 (Session 19 — Risk audit + final pre-alpha fixes. Fixed BUG-93 (packSize >=), BUG-96 (fridge prompt blanket-disable). Code-verified RISK-6/7/8/9/10 all have coverage. RISK-11 needs live test. RISK-12 covered by NPC patience timer. BUG-83/95 need in-game verify. FEAT-7/8 deferred post-alpha.)
-**Overall Alpha Readiness:** 🟢 88% — All Session 17 bugs resolved. Core loop verified 3-shift solo. Variety pack, tutorial, combo, carry, warmer prompts all working. 12 new Session 18 bugs — most are cosmetic/polish. Release candidate with known issues documented.
+**Overall Alpha Readiness:** 🟢 93% — Session 19 complete. BUG-93 (packSize mismatch) and BUG-96 (locked fridge E prompt) fixed. RISK-6/7/8/9/10 code-verified with existing coverage. Remaining gaps: RISK-5/11 (needs live 4-player test), BUG-83/95 (needs in-game verify), BUG-94 (cosmetic NPC pileup). All critical delivery, save, and multiplayer code paths confirmed. Cleared for alpha pending live test session.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -274,8 +274,8 @@
 
 ## 🔨 SECTION 4 — CURRENT TASK
 
-**TASK:** `Session 18 — Pre-Release Final Fix Pass: BUG-81 through BUG-92 + FEAT-4`
-**Status:** 🟡 IN PROGRESS — Session 17 completed all 14 BUG-67–80 fixes. Session 18 playtest (2026-04-02) found 12 new bugs + 3 feature requests. Release is tomorrow. Fixing P1 bugs now.
+**TASK:** `Session 19 — Pre-Alpha Final Stabilization: Risk Audit + BUG-93/96 + Studio Sync`
+**Status:** ✅ COMPLETE — BUG-93 (packSize) and BUG-96 (fridge prompts) fixed + pushed to Studio. RISK-6/7/8/9/10 code-verified. Studio sync confirmed (9/9 checks green). Alpha cleared pending live multiplayer test (RISK-5/11).
 **Fix Priority Order:**
 1. BUG-84 — combo pill not clearing on EndOfDay/Intermission (2 lines in HUDController)
 2. BUG-85 — coin counter stale after cosmetic purchases (DeductCoins missing HUDUpdate)
@@ -391,6 +391,32 @@
 | 15 | FEAT-1 | DoughTable2 / OrderManager | Trash/discard option at Dough Table 2 |
 | 16 | FEAT-2 | GameStateManager / HUDController | Shift counter above PreOpen/Open timer |
 | 17 | FEAT-3 | SummaryController / LeaderboardManager | "This Shift" → "This Session" label |
+
+### ✅ SESSION 19 — Pre-Alpha Risk Audit + Final Fixes (COMPLETE 2026-04-02)
+
+| Order | Task | System | Status |
+|---|---|---|---|
+| ~~1~~ | ~~Fix BUG-93 (packSize mismatch false rejection)~~ | ~~OrderManager~~ | ✅ Changed strict == to >= in DeliverBox |
+| ~~2~~ | ~~Fix BUG-96 (locked fridge E prompt)~~ | ~~StationRemapService~~ | ✅ Blanket-disable all fridge prompts at remap start |
+| ~~3~~ | ~~Fix duplicate fridge label (shift 2+)~~ | ~~StationRemapService~~ | ✅ getSortedFridges now sorts by model.Name (stable) |
+| ~~4~~ | ~~Code-audit RISK-6/7/8/9/10~~ | ~~OrderManager/NpcSpawner/PDM~~ | ✅ All verified — existing coverage confirmed |
+| ~~5~~ | ~~Studio sync verification (9 checks)~~ | ~~All~~ | ✅ 9/9 green |
+| 6 | In-game verify BUG-83 (warmer prompt at EndOfDay) | DressStationServer | Needs live test |
+| 7 | In-game verify BUG-95 (warmer label/color) | StationRemapService | Needs live test |
+| 8 | Live 4-player test (RISK-5/RISK-11) | All | Must do before alpha |
+
+### 🔁 REGRESSION WATCH LIST
+
+Items that could have been inadvertently affected by Session 18–19 changes:
+
+| Risk | System Changed | What to Check |
+|---|---|---|
+| Fridge prompt re-enable on new shift | StationRemapService (BUG-96 blanket-disable) | Verify active fridge prompts appear correctly on shift 2 start |
+| Variety pack matching still works | OrderManager (BUG-93 packSize >=) | Deliver a variety pack order end-to-end |
+| Regular single-type pack still works | OrderManager (BUG-93 packSize >=) | Deliver a 4-pack or 6-pack single-type order |
+| Fridge display shows on open (not blank) | StationRemapService (BUG-96 also hides FridgeDisplay) | Confirm fridge name labels appear on shift start |
+| Combo pill doesn't reappear after EndOfDay | HUDController (BUG-84) | Enter PreOpen after EndOfDay; verify combo pill is hidden |
+| Coin counter correct after shop purchase | PlayerDataManager (BUG-85) | Buy a cosmetic; confirm balance deducts immediately |
 
 ### ✅ Previously Resolved — CRITICAL BLOCKERS
 
