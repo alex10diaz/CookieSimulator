@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-04-02 (Session 19 — Risk audit + final pre-alpha fixes. Fixed BUG-93 (packSize >=), BUG-96 (fridge prompt blanket-disable). Code-verified RISK-6/7/8/9/10 all have coverage. RISK-11 needs live test. RISK-12 covered by NPC patience timer. BUG-83/95 need in-game verify. FEAT-7/8 deferred post-alpha.)
-**Overall Alpha Readiness:** 🟡 87% — Final pre-playtest audit complete. Core loop, security, save, tutorial, delivery all verified. Two confirmed gaps block full confidence: (1) No autosave — 30-min crash = full session loss. (2) No sounds confirmed in SoundService — game feel risk. (3) No live 4-player test. Functionally ready for a controlled 2-player friend test. Not ready for open invite until RISK-5 live test passes.
+**Last Updated:** 2026-04-02 (Session 20 — Runtime regression sweep. Found and patched BUG-97: missing `ServerScriptService` bindings in DressStationServer, StationRemapService, and POSController disk source. Session 19 fixes still need live Studio verification for BUG-83/95 and RISK-5/11. Alpha clearance revoked until runtime parity is re-verified.)
+**Overall Alpha Readiness:** 🟡 85% — Core loop, save flow, reward validation, and most multiplayer guards are code-verified, but not playtest-ready yet. New runtime regression risk found on disk (BUG-97), warmer/remap issues BUG-83/95 still need in-game proof, and the required 4-player Rush Hour / join-leave load test has not happened. Not ready for friend playtest until Session 20 verification passes.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---
@@ -201,6 +201,7 @@
 | Order Expired Visual | Complete | — | ✅ Done |
 | Per-Station Results Breakdown | Complete | — | ✅ Done |
 | Shop Cosmetic Preview | Complete | — | ✅ Done |
+| Server Runtime Wiring | Regression Risk | HIGH | Needs Studio / live verify (BUG-97) |
 | Bakery Rating (persistent) | Not Started | LOW | After Alpha |
 | Daily Login Rewards | Not Started | LOW | After Alpha |
 | Event System | Not Started | LOW | After Alpha |
