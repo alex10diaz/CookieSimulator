@@ -1,6 +1,7 @@
 -- src/ServerScriptService/POSController.server.lua
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local OrderManager   = require(ServerScriptService:WaitForChild("Core"):WaitForChild("OrderManager"))

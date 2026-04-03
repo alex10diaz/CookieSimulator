@@ -1,7 +1,7 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
 **Last Updated:** 2026-04-02 (Session 19 — Risk audit + final pre-alpha fixes. Fixed BUG-93 (packSize >=), BUG-96 (fridge prompt blanket-disable). Code-verified RISK-6/7/8/9/10 all have coverage. RISK-11 needs live test. RISK-12 covered by NPC patience timer. BUG-83/95 need in-game verify. FEAT-7/8 deferred post-alpha.)
-**Overall Alpha Readiness:** 🟢 93% — Session 19 complete. BUG-93 (packSize mismatch) and BUG-96 (locked fridge E prompt) fixed. RISK-6/7/8/9/10 code-verified with existing coverage. Remaining gaps: RISK-5/11 (needs live 4-player test), BUG-83/95 (needs in-game verify), BUG-94 (cosmetic NPC pileup). All critical delivery, save, and multiplayer code paths confirmed. Cleared for alpha pending live test session.
+**Overall Alpha Readiness:** 🟡 87% — Final pre-playtest audit complete. Core loop, security, save, tutorial, delivery all verified. Two confirmed gaps block full confidence: (1) No autosave — 30-min crash = full session loss. (2) No sounds confirmed in SoundService — game feel risk. (3) No live 4-player test. Functionally ready for a controlled 2-player friend test. Not ready for open invite until RISK-5 live test passes.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
 ---

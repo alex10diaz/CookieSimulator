@@ -3,8 +3,9 @@
 -- Call RemapStations(orderedMenuIds) once per shift at Open start.
 -- orderedMenuIds: array of up to 6 cookieId strings, in slot order.
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace         = game:GetService("Workspace")
+local ReplicatedStorage   = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Workspace           = game:GetService("Workspace")
 
 local CookieData    = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CookieData"))
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
