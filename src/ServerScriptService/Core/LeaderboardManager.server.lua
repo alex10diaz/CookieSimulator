@@ -18,8 +18,7 @@ local PlayerDataManager = require(ServerScriptService:WaitForChild("Core"):WaitF
 
 local leaderboardUpdate = RemoteManager.Get("LeaderboardUpdate")
 
--- ── SESSION STATE ─────────────────────────────────────────────
--- playerName -> { cookies, orders, coins }
+-- SESSION STATE: playerName -> { cookies, orders, coins }
 local sessionData = {}
 
 local function getOrCreate(name)
@@ -29,50 +28,56 @@ local function getOrCreate(name)
     return sessionData[name]
 end
 
--- ── SORT + TOP-6 ──────────────────────────────────────────────
-local function topSix(list)
+local function rankAllAndTop6(list)
     table.sort(list, function(a, b)
         if a.cookies ~= b.cookies then return a.cookies > b.cookies end
         return a.coins > b.coins
     end)
     local top = {}
-    for i = 1, math.min(6, #list) do
+    for i = 1, #list do
         list[i].rank = i
-        top[i] = list[i]
+        if i <= 6 then top[i] = list[i] end
     end
-    return top
+    return top, list  -- FEAT-7: return full ranked list too
 end
 
--- ── BROADCAST ─────────────────────────────────────────────────
 local function broadcast()
     if not LEADERBOARD_ENABLED then return end
-    -- Session
     local sessionList = {}
     for name, s in pairs(sessionData) do
         table.insert(sessionList, { name = name, cookies = s.cookies, orders = s.orders, coins = s.coins })
     end
-
-    -- All-time (online players only)
     local alltimeList = {}
     for _, player in ipairs(Players:GetPlayers()) do
         local data = PlayerDataManager.GetData(player)
         if data then
             table.insert(alltimeList, {
                 name    = player.Name,
-                cookies = data.cookiesSold      or 0,
-                orders  = data.ordersCompleted  or 0,
-                coins   = data.coins            or 0,
+                cookies = data.cookiesSold     or 0,
+                orders  = data.ordersCompleted or 0,
+                coins   = data.coins           or 0,
             })
         end
     end
-
-    leaderboardUpdate:FireAllClients({
-        session = topSix(sessionList),
-        alltime = topSix(alltimeList),
-    })
+    -- FEAT-7: rank all players, send each their own rank if outside top 6
+    local sessionTop6, sessionRanked = rankAllAndTop6(sessionList)
+    local alltimeTop6, alltimeRanked = rankAllAndTop6(alltimeList)
+    local sessionByName = {}
+    for _, e in ipairs(sessionRanked) do sessionByName[e.name] = e end
+    local alltimeByName = {}
+    for _, e in ipairs(alltimeRanked) do alltimeByName[e.name] = e end
+    for _, player in ipairs(Players:GetPlayers()) do
+        local ss = sessionByName[player.Name]
+        local sa = alltimeByName[player.Name]
+        leaderboardUpdate:FireClient(player, {
+            session     = sessionTop6,
+            alltime     = alltimeTop6,
+            selfSession = ss and ss.rank > 6 and ss or nil,
+            selfAlltime = sa and sa.rank > 6 and sa or nil,
+        })
+    end
 end
 
--- ── HOOKS ─────────────────────────────────────────────────────
 -- Cookies + orders from BoxDelivered
 OrderManager.On("BoxDelivered", function(data)
     if not LEADERBOARD_ENABLED then return end
@@ -100,7 +105,7 @@ if ssEvents then
     end
 end
 
--- ── RESET ON EACH OPEN PHASE ──────────────────────────────────
+-- Reset on new Open phase
 Workspace:GetAttributeChangedSignal("GameState"):Connect(function()
     if Workspace:GetAttribute("GameState") == "Open" then
         sessionData = {}
@@ -108,11 +113,13 @@ Workspace:GetAttributeChangedSignal("GameState"):Connect(function()
     end
 end)
 
--- ── INITIAL BROADCAST WHEN PLAYER JOINS ──────────────────────
+-- Broadcast to new players after their profile loads
 Players.PlayerAdded:Connect(function()
     task.wait(3)
     broadcast()
 end)
+
+print("[LeaderboardManager] Ready (tracking disabled until launch)")
 
 -- S-10: Live broadcast every 30s during Open phase
 task.spawn(function()
@@ -123,5 +130,3 @@ task.spawn(function()
         end
     end
 end)
-
-print("[LeaderboardManager] Ready")
