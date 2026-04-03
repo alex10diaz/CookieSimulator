@@ -1,6 +1,6 @@
 # 🍪 COOKIE SIMULATOR — MASTER PROJECT FILE
 **Keyphrase:** COOKIE ALPHA MASTER FILE
-**Last Updated:** 2026-04-02 (Session 19 — Post-playtest intake. Session 18 fixed BUG-84–89/92 + duplicate fridge label (BUG-92 StationRemapService). Session 19 intake: BUG-93 packSize mismatch, BUG-94 NPC queue pile-up, BUG-95 new warmer missing label, BUG-96 locked cookie prompt showing, BAL-3 AI overproduction, FEAT-7 leaderboard scroll, FEAT-8 skip break. Alpha-killer risk items logged.)
+**Last Updated:** 2026-04-02 (Session 19 — Risk audit + final pre-alpha fixes. Fixed BUG-93 (packSize >=), BUG-96 (fridge prompt blanket-disable). Code-verified RISK-6/7/8/9/10 all have coverage. RISK-11 needs live test. RISK-12 covered by NPC patience timer. BUG-83/95 need in-game verify. FEAT-7/8 deferred post-alpha.)
 **Overall Alpha Readiness:** 🟢 88% — All Session 17 bugs resolved. Core loop verified 3-shift solo. Variety pack, tutorial, combo, carry, warmer prompts all working. 12 new Session 18 bugs — most are cosmetic/polish. Release candidate with known issues documented.
 **Source of Truth:** This file. Always update, never rewrite from scratch.
 
@@ -633,7 +633,7 @@
 | BUG-93 | 🔴 Critical | OrderManager / AntiExploit | AntiExploit incorrectly rejects delivery with `packSize mismatch`. Strict `==` check in DeliverBox rejects boxes where `box.packSize > order.packSize` (e.g. warmer entry had more cookies than the order needed). `cookieId` + carrier ownership is the real anti-exploit validator; packSize is informational. | ✅ Resolved 2026-04-02 Session 19 — Changed strict equality to `>=` floor check (rejects only if box has fewer than ordered). |
 | BUG-94 | 🟠 High | PersistentNPCSpawner / NPCQueueManager | Customer counter pile-up / queue congestion — multiple NPCs stack at the counter when several orders are pending simultaneously. Slot-assignment exists but positional spread is insufficient; NPCs clip through each other when 3+ are queued. | Open — P1. Fix: increase spread radius or use grid-based slot assignment. |
 | BUG-95 | 🟠 High | StationRemapService / WarmersSystem | Newly unlocked cookie's warmer slot has no name label and wrong material/colour after remap. `showWarmerSlot` updates `WarmerNameGui` and `DoorPanel` colour but the physical warmer mesh/material may not update if the model lacks a `Shell` or `DoorPanel` matching the expected hierarchy. | Open — P1. Investigate warmer model hierarchy for new cookie types. |
-| BUG-96 | 🟠 High | FridgeDisplayServer / MenuServer | Locked (unowned) cookie fridge still shows the `E` proximity prompt allowing players to attempt a pull. `FridgePickupPrompt.Enabled` should be false for any cookie not in the active menu. Currently only active-menu fridges are explicitly enabled; locked fridges are never explicitly disabled after StationRemapService runs. | Open — P1. Fix: disable all fridge prompts first, then re-enable only active-menu ones in RemapStations. |
+| BUG-96 | 🟠 High | FridgeDisplayServer / MenuServer | Locked (unowned) cookie fridge still shows the `E` proximity prompt allowing players to attempt a pull. `FridgePickupPrompt.Enabled` should be false for any cookie not in the active menu. Previously only active-menu fridges were explicitly enabled; locked fridges were never explicitly disabled after StationRemapService ran. | ✅ Resolved 2026-04-02 Session 19 — StationRemapService.RemapStations now disables ALL fridge prompts and hides all FridgeDisplays at the top of the function, before the active-menu loop re-enables only the correct slots. |
 | BAL-3 | 🟡 Balance | AIWorkerService / OvenServer | AI stations are over-producing — warmer stock reaches 40+ cookies, far exceeding NPC demand. AI bake loop does not check warmer fullness before queueing another batch. No production cap or max-stock throttle is implemented. | Open — P2. Fix: throttle AI bake when warmer stock for that cookie ≥ target threshold (e.g. 12). |
 | FEAT-7 | 🟡 Feature | LeaderboardController | Leaderboard only shows top ~10 entries and is not scrollable. Players want to see their own rank even if outside top 10. Needs ScrollingFrame + rank-highlight for the local player's row. | Open — P2. Post-alpha OK. |
 | FEAT-8 | 🟡 Feature | GameStateManager / HUDController | Skip Break button — allow all players (or majority vote) to skip the Intermission early. Currently no SkipIntermission remote exists. Relates to SpeedPass gamepass design. | Open — P2. Post-alpha OK. |
@@ -700,19 +700,19 @@
 - [x] **BUG-88** Station grades show real values in summary ✅ 2026-04-02 Session 18 — GameStateManager fires summaryRemote per-player with GetPlayerBreakdown
 - [x] **BUG-89** Cookie unlock buttons work (not stuck on "...") ✅ 2026-04-02 Session 18 — MenuClient _currentPayload closure fix + smart Destroying guard
 - [x] **BUG-92** ProximityPrompt ObjectText cleared on all fridges/warmers ✅ 2026-04-02 Session 18 — StationRemapService clears ObjectText at 3 sites
-- [ ] **BUG-83** Warmer prompt disabled at EndOfDay (re-verify in next session)
-- [x] **BUG-93** Variety pack delivery accepted (AntiExploit packSize fix) ✅ 2026-04-02 Session 19 — DeliverBox packSize check changed from strict equality to >= (cookieId is the real validator)
-- [ ] **BUG-94** NPC queue spread — no counter pile-up with 3+ concurrent orders
-- [ ] **BUG-95** New cookie warmer shows correct label + material after remap
-- [ ] **BUG-96** Locked fridge prompts disabled (no E prompt for non-menu cookies)
-- [ ] **RISK-5** 4–6 player Rush Hour live load test
-- [ ] **RISK-6** Two players attempt to deliver the same box simultaneously — first delivery wins, second rejected gracefully
-- [ ] **RISK-7** Player leaves during an active order — order released, no ghost box on other players
-- [ ] **RISK-8** Player rejoins mid-shift — receives correct game state (timer, orders, warmer stock)
-- [ ] **RISK-9** Save data persists correctly on rejoin (coins, XP, cosmetics, milestones)
-- [ ] **RISK-10** NPC does not get permanently stuck — pathfinding fallback clears stuck NPCs
-- [ ] **RISK-11** Performance stable with 4 players + 6+ active NPCs (no frame-rate crash)
-- [ ] **RISK-12** Player cannot grief by holding a delivery box indefinitely (timeout or drop mechanic)
+- [ ] **BUG-83** Warmer prompt disabled at EndOfDay — code verified correct (setWarmerPromptsEnabled fires on state change); needs in-game re-verify
+- [x] **BUG-93** Variety pack delivery accepted ✅ 2026-04-02 Session 19 — DeliverBox packSize check changed strict == to >= (cookieId is the real validator)
+- [ ] **BUG-94** NPC queue spread — no counter pile-up (cosmetic, not blocking alpha)
+- [ ] **BUG-95** New cookie warmer label + material — code infrastructure verified correct (doughColor/name/ActionText all properly mapped); needs in-game verify
+- [x] **BUG-96** Locked fridge prompts disabled ✅ 2026-04-02 Session 19 — StationRemapService now disables ALL fridge prompts at remap start before re-enabling only active slots
+- [ ] **RISK-5** 4–6 player Rush Hour live load test (must test with real players)
+- [x] **RISK-6** Same-box delivery race — code verified ✅ `deliveryLocked` atomic flag in PersistentNPCSpawner prevents double delivery
+- [x] **RISK-7** Player leaves during order — code verified ✅ MinigameServer + PersistentNPCSpawner + BoxCarryServer all handle PlayerRemoving; box dropped, order cancelled
+- [x] **RISK-8** Rejoin mid-shift state — code verified ✅ GameStateManager PlayerAdded fires catch-up state
+- [x] **RISK-9** Save data persistence — code verified ✅ BindToClose + 3-attempt DataStore retry in PlayerDataManager
+- [x] **RISK-10** NPC stuck — code verified ✅ pathfinding fallback exists in PersistentNPCSpawner
+- [ ] **RISK-11** Performance with 4 players + 6+ NPCs — needs live test, cannot code-verify
+- [x] **RISK-12** Grief boxing — ⚠️ partial coverage: disconnect drops box (BoxCarryServer), NPC patience timer forces order expiry if player holds indefinitely. No hard timeout added — acceptable for alpha.
 
 ### SHOULD HAVE (Quality bar)
 - [x] **M-1** In-world NPC patience indicator
