@@ -364,7 +364,7 @@ local STATIONS = {
 			end
 
 			-- BAL-3: idle if all types are well-stocked (prevents 40+ warmer pileup)
-			local MAX_STOCK_PER_TYPE = 8
+			local MAX_STOCK_PER_TYPE = 24
 			if lowestTotal >= MAX_STOCK_PER_TYPE then return false end
 			local batchId = OrderManager.TryStartBatch(proxy, cookieId)
 			if not batchId then return false end
