@@ -141,15 +141,8 @@ local function makeButton(label, color)
     button.ZIndex = 10
     button.Parent = panel
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
-
-    button.MouseEnter:Connect(function()
-        button.BackgroundColor3 = BTN_H
-    end)
-
-    button.MouseLeave:Connect(function()
-        button.BackgroundColor3 = color or BTN
-    end)
-
+    button.MouseEnter:Connect(function() button.BackgroundColor3 = BTN_H end)
+    button.MouseLeave:Connect(function() button.BackgroundColor3 = color or BTN end)
     nextY += 34
     return button
 end
@@ -165,7 +158,71 @@ local function makeDivider()
     nextY += 14
 end
 
-local resetButton = makeButton("Reset My Data", RED)
+-- Input row: label + text box + send button
+local function makeInputRow(label, color, onSubmit)
+    local INPUT_W = 72
+    local BTN_W   = 52
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(0, INPUT_W, 0, 30)
+    box.Position = UDim2.new(0, 8, 0, nextY)
+    box.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    box.TextColor3 = TEXT
+    box.PlaceholderText = "0"
+    box.PlaceholderColor3 = Color3.fromRGB(90, 90, 110)
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 13
+    box.BorderSizePixel = 0
+    box.ClearTextOnFocus = true
+    box.ZIndex = 10
+    box.Parent = panel
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+    Instance.new("UIStroke", box).Color = Color3.fromRGB(60, 60, 90)
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -(INPUT_W + BTN_W + 28), 0, 30)
+    lbl.Position = UDim2.new(0, INPUT_W + 14, 0, nextY)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = TEXT
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 12
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Text = label
+    lbl.ZIndex = 10
+    lbl.Parent = panel
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, BTN_W, 0, 30)
+    btn.Position = UDim2.new(1, -(BTN_W + 8), 0, nextY)
+    btn.BackgroundColor3 = color or BTN
+    btn.TextColor3 = TEXT
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.Text = "Give"
+    btn.BorderSizePixel = 0
+    btn.ZIndex = 10
+    btn.Parent = panel
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = BTN_H end)
+    btn.MouseLeave:Connect(function() btn.BackgroundColor3 = color or BTN end)
+
+    local function send()
+        local n = tonumber(box.Text)
+        if n and n > 0 then onSubmit(n); box.Text = "" end
+    end
+    btn.MouseButton1Click:Connect(send)
+    box.FocusLost:Connect(function(enter) if enter then send() end end)
+
+    nextY += 34
+end
+
+local GREEN = Color3.fromRGB(50, 160, 70)
+
+makeInputRow("Coins", GREEN, function(n) addCoinsRemote:FireServer(n) end)
+makeInputRow("XP",    GREEN, function(n) addXPRemote:FireServer(n) end)
+
+makeDivider()
+
+local resetButton = makeButton("Reset + Start Tutorial", RED)
 local confirmReset = false
 
 resetButton.MouseButton1Click:Connect(function()
