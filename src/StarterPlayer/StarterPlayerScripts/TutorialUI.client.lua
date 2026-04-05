@@ -307,8 +307,8 @@ tutorialStepRemote.OnClientEvent:Connect(function(data)
 			return
 		end
 
-		-- BUG-38: returning / completed players never see the tutorial panel again
-		if isTutorialComplete then return end
+		-- BUG-38: reset flag on any valid step so dev-triggered restarts work
+		isTutorialComplete = false
 
 		-- Steps 1–N: show bottom panel with dynamic counter
 		stepLbl.Text  = "Tutorial  —  Step " .. data.step .. " / " .. (data.total or 5)

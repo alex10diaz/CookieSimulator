@@ -52,7 +52,7 @@ RemoteManager.Get("DevAdmin_AddPlayerXP").OnServerEvent:Connect(function(player,
     local newXP, newLevel = PlayerDataManager.AddXP(player, math.floor(amount))
     local data = PlayerDataManager.GetData(player)
     if data then
-        RemoteManager.Get("HUDUpdate"):FireClient(player, data.coins, newXP, newLevel)
+        RemoteManager.Get("HUDUpdate"):FireClient(player, data.coins, newXP, nil)
     end
     print("[DevAdmin] +" .. math.floor(amount) .. " player XP to " .. player.Name)
 end)
