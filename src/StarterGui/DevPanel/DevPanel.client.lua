@@ -4,10 +4,12 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
-local stateRemote = RemoteManager.Get("GameStateChanged")
-local resetRemote = RemoteManager.Get("DevAdmin_ResetData")
-local noteRemote = RemoteManager.Get("DevAdmin_Note")
+local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
+local stateRemote    = RemoteManager.Get("GameStateChanged")
+local resetRemote    = RemoteManager.Get("DevAdmin_ResetData")
+local noteRemote     = RemoteManager.Get("DevAdmin_Note")
+local addCoinsRemote = RemoteManager.Get("DevAdmin_AddCoins")
+local addXPRemote    = RemoteManager.Get("DevAdmin_AddXP")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
