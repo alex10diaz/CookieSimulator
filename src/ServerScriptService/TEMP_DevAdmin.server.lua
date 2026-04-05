@@ -49,7 +49,11 @@ RemoteManager.Get("DevAdmin_AddPlayerXP").OnServerEvent:Connect(function(player,
     if not isAuthorized(player) then return end
     amount = tonumber(amount)
     if not amount or amount <= 0 or amount > 1000000 then return end
-    PlayerDataManager.AddXP(player, math.floor(amount))
+    local newXP, newLevel = PlayerDataManager.AddXP(player, math.floor(amount))
+    local data = PlayerDataManager.GetData(player)
+    if data then
+        RemoteManager.Get("HUDUpdate"):FireClient(player, data.coins, newXP, newLevel)
+    end
     print("[DevAdmin] +" .. math.floor(amount) .. " player XP to " .. player.Name)
 end)
 
