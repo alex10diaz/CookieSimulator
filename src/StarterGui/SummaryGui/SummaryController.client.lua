@@ -11,6 +11,21 @@ local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local gui       = playerGui:WaitForChild("SummaryGui")
 
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
+local function ensureTextConstraint(label, minSize, maxSize)
+    local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+    if not constraint then
+        constraint = Instance.new("UITextSizeConstraint")
+        constraint.Parent = label
+    end
+    constraint.MinTextSize = minSize
+    constraint.MaxTextSize = maxSize
+end
+
 -- ── Palette (dark navy-blue modal — matches minigame modals) ──────────────────
 local C = {
     BG       = Color3.fromRGB(15, 30, 60),    -- dark navy-blue
@@ -29,10 +44,11 @@ if frame then frame:Destroy() end
 frame = Instance.new("Frame")
 frame.Name             = "SummaryFrame"
 -- Use 45% of screen width (min 400px, max 560px) for a fuller panel on all screens
-local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 800
-local _vpH = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.Y or 900
-local _fw  = math.clamp(math.floor(_vpW * 0.45), 400, 560)
-local _fh  = math.min(630, math.floor(_vpH * 0.90))
+local _vpW = getViewportSize().X
+local _vpH = getViewportSize().Y
+local _compact = _vpW <= 700 or _vpH <= 560
+local _fw  = _compact and math.clamp(_vpW - 24, 300, 420) or math.clamp(math.floor(_vpW * 0.45), 400, 560)
+local _fh  = _compact and math.min(540, math.floor(_vpH * 0.88)) or math.min(630, math.floor(_vpH * 0.90))
 frame.Size             = UDim2.new(0, _fw, 0, _fh)
 frame.Position         = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -math.floor(_fh/2))
 frame.BackgroundColor3 = C.BG
@@ -66,6 +82,7 @@ title.Name = "Title"; title.Size = UDim2.new(1,0,1,0)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(30,20,0); title.Font = Enum.Font.GothamBold
 title.TextScaled = true; title.Text = "End of Shift!"
+ensureTextConstraint(title, 14, 28)
 
 -- ── Stats grid ────────────────────────────────────────────────────────────────
 local STAT_DEFS = {
@@ -244,6 +261,25 @@ Instance.new("UICorner", continueBtn).CornerRadius = UDim.new(0, 10)
 local btnStroke = Instance.new("UIStroke", continueBtn)
 btnStroke.Color = Color3.fromRGB(240, 90, 150); btnStroke.Thickness = 1.5
 
+local summaryScroller = nil
+if _compact then
+    local visibleH = math.min(460, math.floor(_vpH * 0.78))
+    summaryScroller = Instance.new("ScrollingFrame")
+    summaryScroller.Name = "SummaryScroller"
+    summaryScroller.Size = UDim2.new(0, _fw, 0, visibleH)
+    summaryScroller.Position = UDim2.new(0.5, -math.floor(_fw / 2), 0.5, -math.floor(visibleH / 2))
+    summaryScroller.BackgroundTransparency = 1
+    summaryScroller.BorderSizePixel = 0
+    summaryScroller.ScrollBarThickness = 6
+    summaryScroller.Active = true
+    summaryScroller.CanvasSize = UDim2.new(0, 0, 0, _fh + 12)
+    summaryScroller.Parent = gui
+
+    frame.Parent = summaryScroller
+    frame.Size = UDim2.new(1, -6, 0, _fh)
+    frame.Position = UDim2.new(0, 0, 0, 0)
+end
+
 gui.Enabled = false
 
 -- ── Dismiss logic ─────────────────────────────────────────────────────────────
@@ -252,6 +288,11 @@ local function dismiss()
     if dismissThread then task.cancel(dismissThread) dismissThread = nil end
     countdownLabel.Text = ""
     TweenService:Create(frame, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+    if summaryScroller then
+        TweenService:Create(summaryScroller, TweenInfo.new(0.2), {
+            Position = UDim2.new(0.5, -math.floor(_fw / 2), 1.1, 0)
+        }):Play()
+    end
     task.delay(0.25, function() gui.Enabled = false end)
 end
 
@@ -335,19 +376,23 @@ summaryEvent.OnClientEvent:Connect(function(data)
     end
 
     -- M-7: Animate in — slide up from below + staggered stat counters + grade bounce
-    local centreY  = UDim2.new(0.5, -math.floor(_fh/2), 0.5, -math.floor(_fh/2))
-    local offscreenY = UDim2.new(frame.Position.X.Scale, frame.Position.X.Offset, 1.15, 0)
+    local target = summaryScroller or frame
+    local targetHeight = target.Size.Y.Offset
+    local centreY  = UDim2.new(0.5, -math.floor(_fw/2), 0.5, -math.floor(targetHeight/2))
+    local offscreenY = UDim2.new(0.5, -math.floor(_fw/2), 1.15, 0)
     gui.Enabled = true
+    if summaryScroller then
+        summaryScroller.CanvasPosition = Vector2.new(0, 0)
+    end
     frame.BackgroundTransparency = 1
-    frame.Position = offscreenY
+    target.Position = offscreenY
     outerStroke.Transparency = 1
 
     -- Slide up + fade in simultaneously
-    TweenService:Create(frame,
+    TweenService:Create(target,
         TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        { Position = frame.Position:Lerp(
-            UDim2.new(0.5, -math.floor(_fw/2), 0.5, -math.floor(_fh/2)), 1),
-          BackgroundTransparency = 0 }):Play()
+        { Position = centreY }):Play()
+    TweenService:Create(frame, TweenInfo.new(0.3), { BackgroundTransparency = 0 }):Play()
     TweenService:Create(outerStroke, TweenInfo.new(0.4), { Transparency = 0.3 }):Play()
 
     -- Staggered stat counter tick-ups

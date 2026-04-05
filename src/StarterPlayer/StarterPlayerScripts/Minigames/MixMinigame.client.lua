@@ -32,6 +32,11 @@ local MAX_ANG_SPEED   = 200   -- degrees/sec cap on cursor rotation
 
 local ACCENT = Color3.fromRGB(255, 200, 0)  -- gold
 
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
 local function toAngle360(dx, dy)
     return (math.deg(math.atan2(dy, dx)) + 360) % 360
 end
@@ -54,9 +59,14 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     sg.Parent                = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
-    local _fw = math.min(380, workspace.CurrentCamera.ViewportSize.X - 20)
-    bg.Size = UDim2.new(0, _fw, 0, 440)
-    bg.Position = UDim2.new(0.5, -_fw/2, 0.5, -220)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 540
+    local _fw = math.min(380, viewport.X - 20)
+    local _fh = compact and 392 or 440
+    local ringSize = compact and 240 or 300
+    local ringRadius = compact and 96 or RING_RADIUS
+    bg.Size = UDim2.new(0, _fw, 0, _fh)
+    bg.Position = UDim2.new(0.5, -_fw/2, 0.5, -math.floor(_fh/2))
     bg.BackgroundColor3 = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel = 0
@@ -91,7 +101,7 @@ startRemote.OnClientEvent:Connect(function(settings, label)
 
     local progressLbl = Instance.new("TextLabel")
     progressLbl.Size = UDim2.new(1, 0, 0, 26)
-    progressLbl.Position = UDim2.new(0, 0, 0, 48)
+    progressLbl.Position = UDim2.new(0, 0, 0, compact and 44 or 48)
     progressLbl.BackgroundTransparency = 1
     progressLbl.TextColor3 = Color3.fromRGB(180, 185, 220)
     progressLbl.TextScaled = true
@@ -100,8 +110,8 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     progressLbl.Parent = bg
 
     local ringFrame = Instance.new("Frame")
-    ringFrame.Size = UDim2.new(0, 300, 0, 300)
-    ringFrame.Position = UDim2.new(0.5, -150, 0, 78)
+    ringFrame.Size = UDim2.new(0, ringSize, 0, ringSize)
+    ringFrame.Position = UDim2.new(0.5, -math.floor(ringSize/2), 0, compact and 72 or 78)
     ringFrame.BackgroundTransparency = 1
     ringFrame.BorderSizePixel = 0
     ringFrame.ClipsDescendants = false
@@ -118,8 +128,8 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     ringStroke.Thickness = 1
 
     local ringInner = Instance.new("Frame")
-    ringInner.Size = UDim2.new(0, 190, 0, 190)
-    ringInner.Position = UDim2.new(0.5, -95, 0.5, -95)
+    ringInner.Size = UDim2.new(0, compact and 150 or 190, 0, compact and 150 or 190)
+    ringInner.Position = UDim2.new(0.5, compact and -75 or -95, 0.5, compact and -75 or -95)
     ringInner.BackgroundColor3 = Color3.fromRGB(15, 30, 60)
     ringInner.BorderSizePixel = 0
     ringInner.ZIndex = 2
@@ -185,8 +195,8 @@ startRemote.OnClientEvent:Connect(function(settings, label)
     local function placeCpDot()
         local rad = math.rad(cpAngle)
         cpDot.Position = UDim2.new(
-            0, 150 + math.cos(rad) * RING_RADIUS,
-            0, 150 + math.sin(rad) * RING_RADIUS
+            0, ringSize * 0.5 + math.cos(rad) * ringRadius,
+            0, ringSize * 0.5 + math.sin(rad) * ringRadius
         )
         cpDot.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
         hitFlash = false
@@ -252,8 +262,8 @@ startRemote.OnClientEvent:Connect(function(settings, label)
 
         local crad = math.rad(cursorAngle)
         cursorDot.Position = UDim2.new(
-            0, 150 + math.cos(crad) * RING_RADIUS,
-            0, 150 + math.sin(crad) * RING_RADIUS
+            0, ringSize * 0.5 + math.cos(crad) * ringRadius,
+            0, ringSize * 0.5 + math.sin(crad) * ringRadius
         )
 
         if prevCursorAngle and not hitFlash then

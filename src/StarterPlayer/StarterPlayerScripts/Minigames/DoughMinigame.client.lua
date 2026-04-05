@@ -27,6 +27,11 @@ local TRAY_MAX_PTS    = 33
 
 local ACCENT = Color3.fromRGB(255, 170, 40)  -- warm amber (dough)
 
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
 startRemote.OnClientEvent:Connect(function()
     if player:WaitForChild("PlayerGui"):FindFirstChild("DoughGui") then return end
     local char = player.Character
@@ -45,9 +50,12 @@ startRemote.OnClientEvent:Connect(function()
     sg.Parent                = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
-    local _fw = math.min(380, workspace.CurrentCamera.ViewportSize.X - 20)
-    bg.Size                   = UDim2.new(0, _fw, 0, 460)
-    bg.Position               = UDim2.new(0.5, -_fw/2, 0.5, -230)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 560
+    local _fw = math.min(380, viewport.X - 20)
+    local _fh = compact and 404 or 460
+    bg.Size                   = UDim2.new(0, _fw, 0, _fh)
+    bg.Position               = UDim2.new(0.5, -_fw/2, 0.5, -math.floor(_fh/2))
     bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
@@ -82,7 +90,7 @@ startRemote.OnClientEvent:Connect(function()
 
     local subLbl = Instance.new("TextLabel")
     subLbl.Size                   = UDim2.new(1, -20, 0, 28)
-    subLbl.Position               = UDim2.new(0, 10, 0, 48)
+    subLbl.Position               = UDim2.new(0, 10, 0, compact and 44 or 48)
     subLbl.BackgroundTransparency = 1
     subLbl.TextColor3             = Color3.fromRGB(165, 168, 210)
     subLbl.TextScaled             = true
@@ -91,8 +99,8 @@ startRemote.OnClientEvent:Connect(function()
     subLbl.Parent                 = bg
 
     local content = Instance.new("Frame")
-    content.Size             = UDim2.new(1, -20, 0, 336)
-    content.Position         = UDim2.new(0, 10, 0, 80)
+    content.Size             = UDim2.new(1, -20, 0, compact and 294 or 336)
+    content.Position         = UDim2.new(0, 10, 0, compact and 74 or 80)
     content.BackgroundTransparency = 1
     content.BorderSizePixel  = 0
     content.Parent           = bg

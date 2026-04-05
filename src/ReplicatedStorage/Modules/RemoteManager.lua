@@ -138,6 +138,9 @@ local REMOTES = {
     "ShowAlert",               -- Server->Client: toast notification (used by GamepassManager ProcessReceipt)
     "DismissMainMenu",         -- Client->Server: player clicked Play on the main menu
     "RequestPlayerData",       -- BUG-54: Client->Server pull to avoid PlayerDataInit race condition
+    -- TEMP_DEV tools
+    "DevAdmin_ResetData",      -- Client->Server: wipe caller profile and re-init client data
+    "DevAdmin_Note",           -- Client->Server: write a dev note to server output
 }
 
 -- Server creates all remotes; client waits for server-created ones.

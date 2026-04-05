@@ -9,6 +9,12 @@ local RemoteManager      = require(ReplicatedStorage:WaitForChild("Modules"):Wai
 local stateRemote        = RemoteManager.Get("GameStateChanged")
 local dismissMenuRemote  = RemoteManager.Get("DismissMainMenu")
 
+local coolTransitions  = require(ReplicatedStorage:WaitForChild("coolTransitions"))
+local menuTransitions  = coolTransitions.TransitionManager.new(
+    game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"),
+    { color = Color3.fromRGB(10, 10, 20), displayOrder = 50 }
+)
+
 -- ── Palette (matches HUDController) ──────────────────────────────────────────
 local C = {
     BG_DARK  = Color3.fromRGB(10, 10, 20),
@@ -28,6 +34,10 @@ for _, ch in ipairs(gui:GetChildren()) do
     if ch:IsA("GuiObject") then ch:Destroy() end
 end
 gui.ResetOnSpawn = false
+
+local function markMenuDismissed()
+    dismissMenuRemote:FireServer()
+end
 
 -- ── Overlay ───────────────────────────────────────────────────────────────────
 local overlay = Instance.new("Frame", gui)
@@ -152,10 +162,12 @@ end)
 local function hideMenu()
     if dismissed then return end
     dismissed = true
-    TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-        { BackgroundTransparency = 1 }):Play()
-    TweenService:Create(overlay, TweenInfo.new(0.4), { BackgroundTransparency = 1 }):Play()
-    task.delay(0.45, function() gui.Enabled = false end)
+    markMenuDismissed()
+    task.spawn(function()
+        menuTransitions:PlayInOut(0.6, function()
+            gui.Enabled = false
+        end, "Center", "Iris", 0.5)
+    end)
 end
 
 -- Hide when game is actually running (safety net — player should have clicked Play already)
@@ -167,8 +179,11 @@ end)
 
 -- Play button: notify server + hide menu
 playBtn.Activated:Connect(function()
-    dismissMenuRemote:FireServer()
     hideMenu()
 end)
+
+if gui.Enabled == false then
+    markMenuDismissed()
+end
 
 print("[MainMenuController] Ready.")

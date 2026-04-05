@@ -103,6 +103,11 @@ local function spawnWorkerRig(workerName, spawnCF, _hiringPlayer)
 		rig = result
 	end
 
+	if not rig then
+		warn("[StaffManager] Failed to create worker rig for", workerName)
+		return nil
+	end
+
 	applyBakerUniform(rig)
 
 	-- NameTag + StatusBillboard on HRP
@@ -486,6 +491,12 @@ local function hireWorker(player, stationId)
 	local stationDef = STATIONS[stationId]
 	local proxy = makeProxy(workerName)
 	local rig   = spawnWorkerRig(workerName, stationDef.spawnCF, player)
+	if not rig then
+		workerCount -= 1
+		PlayerDataManager.AddCoins(player, HIRE_COST)
+		warn("[StaffManager] Worker hire failed for", player.Name, "at", stationId, "- refunded", HIRE_COST, "coins")
+		return false
+	end
 
 	workers[stationId] = { rig = rig, proxy = proxy, active = true }
 	task.spawn(runWorkerLoop, stationId, rig, proxy)

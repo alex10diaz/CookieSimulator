@@ -27,6 +27,25 @@ local AUTO_DISMISS_SECONDS = 15
 local currentDismiss    = nil
 local currentForceClose = nil
 
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
+local function clamp(n, minValue, maxValue)
+    return math.max(minValue, math.min(maxValue, n))
+end
+
+local function ensureTextConstraint(label, minSize, maxSize)
+    local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+    if not constraint then
+        constraint = Instance.new("UITextSizeConstraint")
+        constraint.Parent = label
+    end
+    constraint.MinTextSize = minSize
+    constraint.MaxTextSize = maxSize
+end
+
 -- ─── BUILD CUTSCENE MODAL ─────────────────────────────────────────────────────
 local function showOrderCutscene(payload)
     if currentForceClose then currentForceClose() end
@@ -36,10 +55,12 @@ local function showOrderCutscene(payload)
     -- ── Main card ──
     local modal = Instance.new("Frame")
     modal.Name                   = "OrderModal"
-    local _vpW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 500
-    local _mw  = math.min(440, _vpW - 20)
-    modal.Size                   = UDim2.new(0, _mw, 0, 310)
-    modal.Position               = UDim2.new(0.5, -math.floor(_mw/2), 0.5, -155)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 500
+    local _mw  = clamp(viewport.X - 20, 280, 440)
+    local _mh  = compact and 280 or 310
+    modal.Size                   = UDim2.new(0, _mw, 0, _mh)
+    modal.Position               = UDim2.new(0.5, -math.floor(_mw/2), 0.5, -math.floor(_mh/2))
     modal.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
     modal.BackgroundTransparency = 0
     modal.BorderSizePixel        = 0
@@ -52,7 +73,7 @@ local function showOrderCutscene(payload)
     -- ── Gold header bar ──
     local headerBar = Instance.new("Frame", modal)
     headerBar.Name             = "HeaderBar"
-    headerBar.Size             = UDim2.new(1, 0, 0, 46)
+    headerBar.Size             = UDim2.new(1, 0, 0, compact and 42 or 46)
     headerBar.BackgroundColor3 = ACCENT
     headerBar.BorderSizePixel  = 0
     Instance.new("UICorner", headerBar).CornerRadius = UDim.new(0, 16)
@@ -71,6 +92,7 @@ local function showOrderCutscene(payload)
     titleLbl.Font                   = Enum.Font.GothamBold
     titleLbl.Text                   = "New Order"
     titleLbl.TextXAlignment         = Enum.TextXAlignment.Left
+    ensureTextConstraint(titleLbl, 13, 24)
 
     -- ── X close button (sits in header) ──
     local closeBtn = Instance.new("TextButton", modal)
@@ -85,12 +107,13 @@ local function showOrderCutscene(payload)
     closeBtn.BorderSizePixel   = 0
     closeBtn.ZIndex            = 5
     Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+    ensureTextConstraint(closeBtn, 12, 20)
 
     -- ── Speech bubble ──
     local bubble = Instance.new("TextLabel", modal)
     bubble.Name                   = "SpeechBubble"
-    bubble.Size                   = UDim2.new(1, -24, 0, 96)
-    bubble.Position               = UDim2.new(0, 12, 0, 54)
+    bubble.Size                   = UDim2.new(1, -24, 0, compact and 88 or 96)
+    bubble.Position               = UDim2.new(0, 12, 0, compact and 50 or 54)
     bubble.BackgroundColor3       = Color3.fromRGB(22, 22, 44)
     bubble.BackgroundTransparency = 0
     bubble.TextColor3             = Color3.fromRGB(220, 220, 240)
@@ -104,6 +127,7 @@ local function showOrderCutscene(payload)
     local bubbleStroke = Instance.new("UIStroke", bubble)
     bubbleStroke.Color     = Color3.fromRGB(50, 50, 80)
     bubbleStroke.Thickness = 1
+    ensureTextConstraint(bubble, 12, 22)
 
     -- ── Earnings card ──
     local earningsLines = {
@@ -117,8 +141,8 @@ local function showOrderCutscene(payload)
 
     local earnings = Instance.new("TextLabel", modal)
     earnings.Name                   = "EarningsCard"
-    earnings.Size                   = UDim2.new(1, -24, 0, 104)
-    earnings.Position               = UDim2.new(0, 12, 0, 160)
+    earnings.Size                   = UDim2.new(1, -24, 0, compact and 92 or 104)
+    earnings.Position               = UDim2.new(0, 12, 0, compact and 146 or 160)
     earnings.BackgroundColor3       = payload.isVIP
         and Color3.fromRGB(40, 30, 4)
         or  Color3.fromRGB(20, 20, 38)
@@ -136,6 +160,7 @@ local function showOrderCutscene(payload)
         and Color3.fromRGB(180, 140, 20)
         or  Color3.fromRGB(40, 40, 70)
     earningsStroke.Thickness = 1
+    ensureTextConstraint(earnings, 12, 20)
 
     -- ── Countdown label ──
     local countdown = Instance.new("TextLabel", modal)
@@ -148,6 +173,7 @@ local function showOrderCutscene(payload)
     countdown.TextScaled             = true
     countdown.Font                   = Enum.Font.Gotham
     countdown.Text                   = "Auto-dismissing in " .. AUTO_DISMISS_SECONDS .. "..."
+    ensureTextConstraint(countdown, 10, 16)
 
     -- ── Dismiss helpers ─────────────────────────────────────────────────────
     local dismissed = false

@@ -14,6 +14,8 @@ local dismissMenuRemote = RemoteManager.Get("DismissMainMenu")
 
 Players.PlayerAdded:Connect(function(player)
     player:SetAttribute("OnMainMenu", true)
+    player:SetAttribute("SkipPreOpenVoted", false)
+    player:SetAttribute("SkipIntermissionVoted", false)
 end)
 
 dismissMenuRemote.OnServerEvent:Connect(function(player)
@@ -28,6 +30,12 @@ end)
 for _, p in ipairs(Players:GetPlayers()) do
     if p:GetAttribute("OnMainMenu") == nil then
         p:SetAttribute("OnMainMenu", true)
+    end
+    if p:GetAttribute("SkipPreOpenVoted") == nil then
+        p:SetAttribute("SkipPreOpenVoted", false)
+    end
+    if p:GetAttribute("SkipIntermissionVoted") == nil then
+        p:SetAttribute("SkipIntermissionVoted", false)
     end
 end
 local SessionStats      = require(ServerScriptService:WaitForChild("Core"):WaitForChild("SessionStats"))
@@ -46,6 +54,8 @@ end
 local DEV_SKIP_PREOPEN    = false     -- PreOpen enabled for live play
 local skipPreOpenFlag     = false
 local skipPreOpenRemote   = RemoteManager.Get("SkipPreOpen")
+local skipIntermissionFlag   = false
+local skipIntermissionRemote = RemoteManager.Get("SkipIntermission")
 local PREOPEN_DURATION    = 3 * 60   -- 3 minutes: enough time to prep dough before first customers
 local OPEN_DURATION       = 5 * 60   -- 5 minutes (playtest)
 -- S-1: rush hour fires when 30% of Open remains (= 70% elapsed)
@@ -98,12 +108,58 @@ local function broadcast(state, timeRemaining)
     fireListeners(state)
 end
 
+local function isReadyForPreOpen(player)
+    return not player:GetAttribute("OnMainMenu") and not player:GetAttribute("InTutorial")
+end
+
+local function resetSkipPreOpenVotes()
+    skipPreOpenFlag = false
+    for _, player in ipairs(Players:GetPlayers()) do
+        player:SetAttribute("SkipPreOpenVoted", false)
+    end
+end
+
+-- FEAT-8: Intermission skip votes (same pattern as PreOpen)
+local function resetSkipIntermissionVotes()
+    skipIntermissionFlag = false
+    for _, player in ipairs(Players:GetPlayers()) do
+        player:SetAttribute("SkipIntermissionVoted", false)
+    end
+end
+
+local function getSkipIntermissionVoteStatus()
+    local total = #Players:GetPlayers()
+    local voteCount = 0
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player:GetAttribute("SkipIntermissionVoted") then voteCount += 1 end
+    end
+    return voteCount, math.max(1, math.floor(total / 2) + 1), total
+end
+
+local function getSkipVoteStatus()
+    local readyPlayers = {}
+    local voteCount = 0
+    for _, player in ipairs(Players:GetPlayers()) do
+        if isReadyForPreOpen(player) then
+            table.insert(readyPlayers, player)
+            if player:GetAttribute("SkipPreOpenVoted") then
+                voteCount += 1
+            end
+        end
+    end
+    local requiredVotes = #readyPlayers > 0 and (math.floor(#readyPlayers / 2) + 1) or 1
+    return voteCount, requiredVotes, #readyPlayers
+end
+
 -- BUG-30: use indexed radial spread instead of math.random so 6 players
 -- don't all land on the same spot and clip through each other
 local function teleportAllTo(targetCF)
     local playerList = Players:GetPlayers()
     local count = #playerList
     for i, player in ipairs(playerList) do
+        if player:GetAttribute("InTutorial") then
+            continue
+        end
         local char = player.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -120,20 +176,32 @@ end
 
 local function runPhase(duration, stateName)
     local remaining = duration
+    if stateName == "PreOpen" then
+        resetSkipPreOpenVotes()
+    elseif stateName == "Intermission" then
+        resetSkipIntermissionVotes()  -- FEAT-8
+    end
     broadcast(stateName, remaining)
     while remaining > 0 do
         if stateName == "PreOpen" and skipPreOpenFlag then
             skipPreOpenFlag = false
             stateChangedRemote:FireAllClients(stateName, 0)
             break
+        elseif stateName == "Intermission" and skipIntermissionFlag then  -- FEAT-8
+            skipIntermissionFlag = false
+            stateChangedRemote:FireAllClients(stateName, 0)
+            break
         end
         task.wait(1)
-        -- BUG-45/BUG-39: pause PreOpen while any player is on the main menu OR in tutorial
+        -- Pause PreOpen only if nobody is ready yet. One AFK/menu/tutorial player
+        -- should not freeze the whole server for everyone else.
         local paused = false
         if stateName == "PreOpen" then
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p:GetAttribute("OnMainMenu") or p:GetAttribute("InTutorial") then
-                    paused = true
+            local players = Players:GetPlayers()
+            paused = #players > 0
+            for _, p in ipairs(players) do
+                if not p:GetAttribute("OnMainMenu") and not p:GetAttribute("InTutorial") then
+                    paused = false
                     break
                 end
             end
@@ -145,9 +213,47 @@ local function runPhase(duration, stateName)
     end
 end
 
-skipPreOpenRemote.OnServerEvent:Connect(function()
-    if not game:GetService("RunService"):IsStudio() then return end
-    skipPreOpenFlag = true
+skipPreOpenRemote.OnServerEvent:Connect(function(player)
+    if currentState ~= "PreOpen" then
+        return
+    end
+    if not isReadyForPreOpen(player) then
+        return
+    end
+    if player:GetAttribute("SkipPreOpenVoted") then
+        local voteCount, requiredVotes = getSkipVoteStatus()
+        tipRemote:FireClient(player, string.format("Skip votes: %d/%d", voteCount, requiredVotes))
+        return
+    end
+
+    player:SetAttribute("SkipPreOpenVoted", true)
+
+    local voteCount, requiredVotes = getSkipVoteStatus()
+    fireTipAll(string.format("Skip to Open vote: %d/%d", voteCount, requiredVotes))
+
+    if voteCount >= requiredVotes then
+        skipPreOpenFlag = true
+        print("[GameStateManager] PreOpen vote passed (" .. voteCount .. "/" .. requiredVotes .. ")")
+    else
+        print("[GameStateManager] PreOpen vote updated (" .. voteCount .. "/" .. requiredVotes .. ")")
+    end
+end)
+
+-- FEAT-8: Intermission skip vote handler
+skipIntermissionRemote.OnServerEvent:Connect(function(player)
+    if currentState ~= "Intermission" then return end
+    if player:GetAttribute("SkipIntermissionVoted") then
+        local v, r = getSkipIntermissionVoteStatus()
+        tipRemote:FireClient(player, string.format("Skip break votes: %d/%d", v, r))
+        return
+    end
+    player:SetAttribute("SkipIntermissionVoted", true)
+    local voteCount, requiredVotes = getSkipIntermissionVoteStatus()
+    fireTipAll(string.format("Skip break vote: %d/%d", voteCount, requiredVotes))
+    if voteCount >= requiredVotes then
+        skipIntermissionFlag = true
+        print("[GameStateManager] Intermission skip passed (" .. voteCount .. "/" .. requiredVotes .. ")")
+    end
 end)
 
 local shiftNumber = 0  -- FEAT-2: increments each loop so clients can display "Shift N"

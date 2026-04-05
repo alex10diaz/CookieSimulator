@@ -3,6 +3,7 @@
 
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService  = game:GetService("UserInputService")
 
 local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 
@@ -28,6 +29,21 @@ local TIER_COLORS = {
     Color3.fromRGB(80, 150, 220),
     Color3.fromRGB(220, 100, 220),
 }
+
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
+local function ensureTextConstraint(label, minSize, maxSize)
+    local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+    if not constraint then
+        constraint = Instance.new("UITextSizeConstraint")
+        constraint.Parent = label
+    end
+    constraint.MinTextSize = minSize
+    constraint.MaxTextSize = maxSize
+end
 
 -- ─── HUD Widget ─────────────────────────────────────────────────────────────
 local hudWidget
@@ -74,6 +90,40 @@ local function makeHudWidget()
     end
     frame.Visible = false
     return frame
+end
+
+local dailyViewportConn = nil
+local function applyHudWidgetLayout()
+    if not hudWidget then return end
+    local viewport = getViewportSize()
+    local compact = UserInputService.TouchEnabled and (viewport.X <= 900 or viewport.Y <= 560)
+    hudWidget.Size = compact and UDim2.new(0, 174, 0, 62) or UDim2.new(0, 230, 0, 84)
+    hudWidget.Position = compact and UDim2.new(0, 10, 1, -60) or UDim2.new(0, 20, 1, -104)
+
+    local title = hudWidget:FindFirstChild("Title")
+    if title and title:IsA("TextLabel") then
+        title.Size = UDim2.new(1, -8, 0, compact and 16 or 20)
+        title.Position = UDim2.new(0, 4, 0, 0)
+        ensureTextConstraint(title, 8, compact and 13 or 18)
+    end
+
+    for i = 1, 3 do
+        local row = hudWidget:FindFirstChild("Row" .. i)
+        if row and row:IsA("TextLabel") then
+            row.Size = UDim2.new(1, -10, 0, compact and 13 or 20)
+            row.Position = UDim2.new(0, 5, 0, compact and (14 + (i - 1) * 14) or (18 + (i - 1) * 22))
+            ensureTextConstraint(row, 7, compact and 11 or 16)
+        end
+    end
+end
+
+local function connectViewportResize()
+    local camera = workspace.CurrentCamera
+    if not camera then return end
+    if dailyViewportConn then
+        dailyViewportConn:Disconnect()
+    end
+    dailyViewportConn = camera:GetPropertyChangedSignal("ViewportSize"):Connect(applyHudWidgetLayout)
 end
 
 local function updateHudWidget()
@@ -218,4 +268,10 @@ end)
 
 -- ─── Init ────────────────────────────────────────────────────────────────────
 hudWidget = makeHudWidget()
+applyHudWidgetLayout()
+connectViewportResize()
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    applyHudWidgetLayout()
+    connectViewportResize()
+end)
 print("[DailyChallengeClient] Ready.")

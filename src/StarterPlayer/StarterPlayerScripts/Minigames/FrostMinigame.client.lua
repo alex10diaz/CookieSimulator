@@ -16,6 +16,11 @@ local NUM_CHECKPOINTS = 8
 
 local ACCENT = Color3.fromRGB(100, 210, 255)  -- ice blue
 
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
 local CHECKPOINT_OFFSETS = {
     Vector2.new(  0, -150),
     Vector2.new(120,  -90),
@@ -51,9 +56,13 @@ startRemote.OnClientEvent:Connect(function()
     sg.Parent                = player:WaitForChild("PlayerGui")
 
     local bg = Instance.new("Frame")
-    local _fw = math.min(420, workspace.CurrentCamera.ViewportSize.X - 20)
-    bg.Size                   = UDim2.new(0, _fw, 0, 460)
-    bg.Position               = UDim2.new(0.5, -_fw/2, 0.5, -230)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 560
+    local _fw = math.min(420, viewport.X - 20)
+    local _fh = compact and 404 or 460
+    local playSize = compact and 280 or 360
+    bg.Size                   = UDim2.new(0, _fw, 0, _fh)
+    bg.Position               = UDim2.new(0.5, -_fw/2, 0.5, -math.floor(_fh/2))
     bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
@@ -102,8 +111,8 @@ startRemote.OnClientEvent:Connect(function()
     Instance.new("UICorner", timerFill).CornerRadius = UDim.new(0, 4)
 
     local playArea = Instance.new("Frame")
-    playArea.Size             = UDim2.new(0, 360, 0, 360)
-    playArea.Position         = UDim2.new(0.5, -180, 0, 56)
+    playArea.Size             = UDim2.new(0, playSize, 0, playSize)
+    playArea.Position         = UDim2.new(0.5, -math.floor(playSize/2), 0, compact and 52 or 56)
     playArea.BackgroundColor3 = Color3.fromRGB(18, 24, 48)
     playArea.BorderSizePixel  = 0
     playArea.ClipsDescendants = false
@@ -113,7 +122,7 @@ startRemote.OnClientEvent:Connect(function()
     playStroke.Color = Color3.fromRGB(40, 60, 100)
     playStroke.Thickness = 1
 
-    local AREA_CENTER = Vector2.new(180, 180)
+    local AREA_CENTER = Vector2.new(playSize / 2, playSize / 2)
 
     local activeIndex = 1
     local numHit      = 0
@@ -162,7 +171,7 @@ startRemote.OnClientEvent:Connect(function()
     local dots = {}
     for i, offset in ipairs(CHECKPOINT_OFFSETS) do
         local dot = Instance.new("TextButton")
-        dot.Size        = UDim2.new(0, 60, 0, 60)
+        dot.Size        = UDim2.new(0, compact and 48 or 60, 0, compact and 48 or 60)
         dot.AnchorPoint = Vector2.new(0.5, 0.5)
         dot.Position    = UDim2.new(0, AREA_CENTER.X + offset.X,
                                      0, AREA_CENTER.Y + offset.Y)

@@ -13,7 +13,7 @@ local TutorialKitchen   = require(ServerScriptService:WaitForChild("TutorialKitc
 local tutorialStepRemote = RemoteManager.Get("TutorialStep")
 local TOTAL_STEPS = 5
 
-local DEV_FORCE_TUTORIAL = true  -- SET false to restore normal routing
+local DEV_FORCE_TUTORIAL = false  -- enable only for tutorial-specific local testing
 
 local function handlePlayerJoin(player)
 	local data
@@ -27,6 +27,8 @@ local function handlePlayerJoin(player)
 	if not player or not player.Parent then return end
 	if not data then
 		warn("[TutorialController] DataStore timed out for " .. player.Name)
+		player:SetAttribute("InTutorial", false)
+		tutorialStepRemote:FireClient(player, { step = 0, total = TOTAL_STEPS, msg = "", isReturn = true })
 		return
 	end
 

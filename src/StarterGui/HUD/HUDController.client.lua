@@ -3,6 +3,7 @@
 local Players           = game:GetService("Players")
 local TweenService      = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService  = game:GetService("UserInputService")
 
 local RemoteManager          = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local stateRemote            = RemoteManager.Get("GameStateChanged")
@@ -26,6 +27,53 @@ local workerFeedbackEvent    = RemoteManager.Get("WorkerFeedback")
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local hud       = playerGui:WaitForChild("HUD")
+local currentState = nil
+
+local coolTransitions = require(ReplicatedStorage:WaitForChild("coolTransitions"))
+local hudTransitions  = coolTransitions.TransitionManager.new(playerGui, {
+    color        = Color3.fromRGB(14, 14, 26),
+    displayOrder = 20,
+})
+local _prevHudState = nil
+local TRANSITION_EFFECTS = {
+    PreOpen      = { "Checkerboard", "Center"      },
+    Open         = { "Hexagon",      "Center"      },
+    EndOfDay     = { "Linear Wipe",  "TopLeft"     },
+    Intermission = { "Split",        "Center"      },
+}
+
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
+local function clamp(n, minValue, maxValue)
+    return math.max(minValue, math.min(maxValue, n))
+end
+
+local function ensureTextConstraint(label, minSize, maxSize)
+    local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+    if not constraint then
+        constraint = Instance.new("UITextSizeConstraint")
+        constraint.Parent = label
+    end
+    constraint.MinTextSize = minSize
+    constraint.MaxTextSize = maxSize
+end
+
+local function ensureScale(instance)
+    local scale = instance:FindFirstChildOfClass("UIScale")
+    if not scale then
+        scale = Instance.new("UIScale")
+        scale.Parent = instance
+    end
+    return scale
+end
+
+local function isCompactHud()
+    local viewport = getViewportSize()
+    return UserInputService.TouchEnabled and (viewport.X <= 900 or viewport.Y <= 560)
+end
 
 -- Hide HUD during tutorial; restore when InTutorial clears
 hud.Enabled = not player:GetAttribute("InTutorial")
@@ -264,6 +312,39 @@ skipBtn.TextColor3 = Color3.fromRGB(25, 55, 100); skipBtn.Font = Enum.Font.Gotha
 skipBtn.TextSize = 13; skipBtn.Text = "Skip to Open  →"; skipBtn.Visible = false
 corner(skipBtn, 8); addStroke(skipBtn, Color3.fromRGB(80, 130, 170), 1, 0)
 
+local function refreshSkipButton()
+    local inPreOpen = currentState == "PreOpen"
+    local inTutorial = player:GetAttribute("InTutorial")
+    local hasVoted = player:GetAttribute("SkipPreOpenVoted") == true
+
+    skipBtn.Visible = inPreOpen and not inTutorial
+    skipBtn.Active = not hasVoted
+    skipBtn.AutoButtonColor = not hasVoted
+    skipBtn.BackgroundTransparency = hasVoted and 0.35 or 0
+    skipBtn.TextTransparency = hasVoted and 0.15 or 0
+    skipBtn.Text = hasVoted and "Voted to Open" or "Vote to Open  →"
+end
+
+-- FEAT-8: SKIP BREAK BUTTON (shown during Intermission only)
+local skipBreakBtn = Instance.new("TextButton", hud)
+skipBreakBtn.Name = "SkipBreakBtn"
+skipBreakBtn.Size = UDim2.new(0, 148, 0, 26); skipBreakBtn.Position = UDim2.new(0.5, -74, 0, 60)
+skipBreakBtn.ZIndex = 5; skipBreakBtn.BackgroundColor3 = Color3.fromRGB(215, 175, 90)
+skipBreakBtn.TextColor3 = Color3.fromRGB(80, 50, 10); skipBreakBtn.Font = Enum.Font.Gotham
+skipBreakBtn.TextSize = 13; skipBreakBtn.Text = "Vote to Skip Break  →"; skipBreakBtn.Visible = false
+corner(skipBreakBtn, 8); addStroke(skipBreakBtn, Color3.fromRGB(160, 120, 40), 1, 0)
+
+local function refreshSkipBreakButton()
+    local inIntermission = currentState == "Intermission"
+    local hasVoted = player:GetAttribute("SkipIntermissionVoted") == true
+    skipBreakBtn.Visible = inIntermission
+    skipBreakBtn.Active = not hasVoted
+    skipBreakBtn.AutoButtonColor = not hasVoted
+    skipBreakBtn.BackgroundTransparency = hasVoted and 0.35 or 0
+    skipBreakBtn.TextTransparency = hasVoted and 0.15 or 0
+    skipBreakBtn.Text = hasVoted and "Voted to Skip Break" or "Vote to Skip Break  →"
+end
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- ORDERS PANEL (LEFT)
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -331,10 +412,11 @@ end
 local function createCard(key, displayName, isVIP, cookieId)
     if orderCards[key] then orderCards[key]:Destroy() end
     emptyLbl.Visible = false
+    local compact = isCompactHud()
 
     local card = Instance.new("Frame", ordersList)
     card.Name = "Card_" .. key
-    card.Size = UDim2.new(1, -4, 0, 100)
+    card.Size = UDim2.new(1, -4, 0, compact and 92 or 100)
     card.BackgroundColor3 = C.CARD; card.BackgroundTransparency = 0.04
     card.BorderSizePixel = 0; card.ZIndex = 10
     corner(card, 8)
@@ -348,20 +430,22 @@ local function createCard(key, displayName, isVIP, cookieId)
 
     local statusLbl = Instance.new("TextLabel", card)
     statusLbl.Name = "StatusLabel"
-    statusLbl.Size = UDim2.new(0,82,0,16); statusLbl.Position = UDim2.new(0,20,0,6)
+    statusLbl.Size = UDim2.new(0, compact and 74 or 82, 0, 16); statusLbl.Position = UDim2.new(0,20,0,6)
     statusLbl.BackgroundTransparency = 1; statusLbl.TextColor3 = cookieAccent(cookieId)
     statusLbl.Font = Enum.Font.GothamBold; statusLbl.TextSize = 11
     statusLbl.TextXAlignment = Enum.TextXAlignment.Left
     statusLbl.Text = "NEW"; statusLbl.ZIndex = 11
+    ensureTextConstraint(statusLbl, 9, 11)
 
     if isVIP then
         local vip = Instance.new("TextLabel", card)
-        vip.Size = UDim2.new(0,38,0,16); vip.Position = UDim2.new(1,-42,0,6)
+        vip.Size = UDim2.new(0, compact and 34 or 38, 0, 16); vip.Position = UDim2.new(1, compact and -38 or -42, 0, 6)
         vip.BackgroundColor3 = C.GOLD; vip.BackgroundTransparency = 0.2
         vip.BorderSizePixel = 0; vip.ZIndex = 12
         vip.TextColor3 = Color3.fromRGB(80,60,0); vip.Font = Enum.Font.GothamBold
         vip.TextSize = 10; vip.Text = "VIP ⭐"
         corner(vip, 6)
+        ensureTextConstraint(vip, 8, 10)
     end
 
     -- Divider
@@ -373,11 +457,12 @@ local function createCard(key, displayName, isVIP, cookieId)
     -- Cookie label
     local cookieLbl = Instance.new("TextLabel", card)
     cookieLbl.Name = "CookieLabel"
-    cookieLbl.Size = UDim2.new(1,-16,0,40); cookieLbl.Position = UDim2.new(0,8,0,30)
+    cookieLbl.Size = UDim2.new(1,-16,0, compact and 34 or 40); cookieLbl.Position = UDim2.new(0,8,0, compact and 28 or 30)
     cookieLbl.BackgroundTransparency = 1; cookieLbl.TextColor3 = C.TEXT_DRK
     cookieLbl.Font = Enum.Font.GothamBold; cookieLbl.TextSize = 13
     cookieLbl.TextWrapped = true; cookieLbl.TextXAlignment = Enum.TextXAlignment.Left
     cookieLbl.TextYAlignment = Enum.TextYAlignment.Top
+    ensureTextConstraint(cookieLbl, 10, compact and 12 or 13)
     cookieLbl.Text = "🍪 " .. displayName; cookieLbl.ZIndex = 11
 
     -- Patience bar
@@ -633,6 +718,86 @@ local trayVisible = false
 local TRAY_SHOW_X = UDim2.new(1, -168, 0, 58)
 local TRAY_HIDE_X = UDim2.new(1, 180, 0, 58)
 
+ensureTextConstraint(coinsLbl, 11, 22)
+ensureTextConstraint(levelLbl, 10, 18)
+ensureTextConstraint(xpLbl, 9, 15)
+ensureTextConstraint(timerLbl, 12, 20)
+ensureTextConstraint(shiftLbl, 10, 16)
+ensureTextConstraint(coachLbl, 10, 14)
+ensureTextConstraint(comboLbl, 10, 18)
+
+local coinBadgeScale = ensureScale(coinBadge)
+local lvlBadgeScale = ensureScale(lvlBadge)
+local timerBadgeScale = ensureScale(timerBadge)
+local settingsBtnScale = ensureScale(settingsBtn)
+local skipBtnScale = ensureScale(skipBtn)
+local coachBarScale = ensureScale(coachBar)
+local comboPillScale = ensureScale(comboPill)
+local settingsPanelScale = ensureScale(settingsPanel)
+local trayPanelScale = ensureScale(trayPanel)
+
+local function applyResponsiveHud()
+    local viewport = getViewportSize()
+    local compact = UserInputService.TouchEnabled and (viewport.X <= 900 or viewport.Y <= 560)
+    local scale = compact and clamp(math.min(viewport.X / 820, viewport.Y / 620), 0.78, 0.94) or 1
+    local sideScale = compact and clamp(scale - 0.04, 0.82, 0.94) or 1
+
+    topBar.Size = UDim2.new(1, 0, 0, compact and 46 or 52)
+    coinBadgeScale.Scale = scale
+    lvlBadgeScale.Scale = scale
+    timerBadgeScale.Scale = scale
+    settingsBtnScale.Scale = scale
+    skipBtnScale.Scale = scale
+
+    coinBadge.Position = UDim2.new(0, compact and 6 or 10, 0.5, compact and -16 or -18)
+    lvlBadge.Position = UDim2.new(0, compact and 136 or 166, 0, compact and 4 or 7)
+    timerBadge.Position = UDim2.new(0.5, compact and -84 or -100, 0.5, compact and -17 or -19)
+    settingsBtn.Position = UDim2.new(1, compact and -44 or -50, 0.5, compact and -18 or -20)
+    shiftLbl.Position = UDim2.new(0.5, -70, 0, compact and 46 or 54)
+    skipBtn.Position = UDim2.new(0.5, -74, 0, compact and 52 or 60)
+
+    ordersPanel.Position = UDim2.new(0, compact and 6 or 8, 0, compact and 82 or 110)
+    ordersPanel.Size = UDim2.new(0, compact and 212 or 176, 1, compact and -214 or -322)
+
+    coachBarScale.Scale = scale
+    coachBar.Size = UDim2.new(compact and 0.58 or 0.65, 0, 0, 34)
+    coachBar.Position = UDim2.new(compact and 0.22 or 0.20, 0, 1, compact and -44 or -50)
+
+    comboPillScale.Scale = scale
+    comboPill.Position = UDim2.new(0.5, -69, 1, compact and -74 or -90)
+
+    settingsPanelScale.Scale = scale
+    settingsPanel.Position = UDim2.new(1, compact and -212 or -230, 0, compact and 52 or 58)
+
+    trayPanelScale.Scale = sideScale
+    TRAY_SHOW_X = UDim2.new(1, compact and -152 or -168, 0, compact and 52 or 58)
+    TRAY_HIDE_X = UDim2.new(1, compact and 156 or 180, 0, compact and 52 or 58)
+    if trayVisible then
+        trayPanel.Position = TRAY_SHOW_X
+    else
+        trayPanel.Position = TRAY_HIDE_X
+    end
+end
+
+local hudViewportConn = nil
+local function connectHudViewportResize()
+    local camera = workspace.CurrentCamera
+    if not camera then
+        return
+    end
+    if hudViewportConn then
+        hudViewportConn:Disconnect()
+    end
+    hudViewportConn = camera:GetPropertyChangedSignal("ViewportSize"):Connect(applyResponsiveHud)
+end
+
+applyResponsiveHud()
+connectHudViewportResize()
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    applyResponsiveHud()
+    connectHudViewportResize()
+end)
+
 local function showTray(name, pct)
     local stars = math.clamp(math.round((pct or 0) / 20), 0, 5)
     trayCookieLbl.Text = "🍪 " .. (name or "Cookie")
@@ -660,8 +825,20 @@ local STATE_LABELS = {
 local STATE_ACCENT = { Open=C.GREEN, Intermission=C.BLUE, EndOfDay=C.ORANGE }
 
 local coachCount = 0
+local currentShiftNumber = nil
 
 stateRemote.OnClientEvent:Connect(function(state, timeRemaining, shiftNum)
+    local isNewState = state ~= _prevHudState
+    if isNewState then
+        _prevHudState = state
+        local e = TRANSITION_EFFECTS[state]
+        if e then
+            task.spawn(function()
+                hudTransitions:PlayInOut(0.7, function() end, e[2], e[1], 0.5)
+            end)
+        end
+    end
+    currentState = state
     local bg = STATE_ACCENT[state] and
         (state == "Open" and Color3.fromRGB(160, 218, 175) or
          state == "Intermission" and Color3.fromRGB(148, 195, 215) or
@@ -669,10 +846,18 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining, shiftNum)
     TweenService:Create(timerBadge, TI(0.3), { BackgroundColor3 = bg }):Play()
     timerStroke.Color = STATE_ACCENT[state] or C.TEXT_LT
     timerLbl.Text = (STATE_LABELS[state] or state) .. "  " .. formatTime(timeRemaining or 0)
-    if shiftNum and shiftNum > 0 then shiftLbl.Text = "SHIFT " .. shiftNum else shiftLbl.Text = "" end  -- FEAT-2
+    if shiftNum and shiftNum > 0 then
+        currentShiftNumber = shiftNum
+    end
+    if currentShiftNumber and currentShiftNumber > 0 then
+        shiftLbl.Text = "SHIFT " .. currentShiftNumber
+    else
+        shiftLbl.Text = ""
+    end  -- FEAT-2
 
     timerBadge.Visible = not (state == "PreOpen" and player:GetAttribute("InTutorial"))
-    skipBtn.Visible = (state == "PreOpen" and not player:GetAttribute("InTutorial"))
+    refreshSkipButton()
+    refreshSkipBreakButton()  -- FEAT-8
 
     if state == "Intermission" or state == "EndOfDay" then
         for key in pairs(orderCards) do removeCard(key) end
@@ -689,7 +874,12 @@ end)
 
 player:GetAttributeChangedSignal("InTutorial"):Connect(function()
     if not player:GetAttribute("InTutorial") then timerBadge.Visible = true end
+    refreshSkipButton()
+    refreshSkipBreakButton()  -- FEAT-8
 end)
+
+player:GetAttributeChangedSignal("SkipPreOpenVoted"):Connect(refreshSkipButton)
+player:GetAttributeChangedSignal("SkipIntermissionVoted"):Connect(refreshSkipBreakButton)  -- FEAT-8
 
 settingsBtn.MouseButton1Click:Connect(function()
     TweenService:Create(settingsBtn, TI(0.1), { BackgroundTransparency = 0.05 }):Play()
@@ -701,7 +891,15 @@ end)
 
 local skipRemote = RemoteManager.Get("SkipPreOpen")
 skipBtn.MouseButton1Click:Connect(function()
-    skipBtn.Visible = false; skipRemote:FireServer()
+    if player:GetAttribute("SkipPreOpenVoted") then return end
+    skipRemote:FireServer()
+end)
+
+-- FEAT-8: Skip Break button wiring
+local skipBreakRemote = RemoteManager.Get("SkipIntermission")
+skipBreakBtn.MouseButton1Click:Connect(function()
+    if player:GetAttribute("SkipIntermissionVoted") then return end
+    skipBreakRemote:FireServer()
 end)
 
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -1338,14 +1536,20 @@ carryLbl.TextScaled         = true
 carryLbl.TextXAlignment     = Enum.TextXAlignment.Center
 carryLbl.Text               = ""
 carryLbl.ZIndex             = 25
+ensureTextConstraint(carryLbl, 10, 18)
+
+local carryTargetName = nil
+local carryPillScale = ensureScale(carryPill)
 
 RemoteManager.Get("BoxCarried").OnClientEvent:Connect(function(npcName)
     if npcName then
+        carryTargetName = npcName
         carryLbl.Text = "\xF0\x9F\x93\xA6  Deliver to: " .. npcName
         carryPill.Visible = true
-        TweenService:Create(carryPill, TIB(0.3), { Size = UDim2.new(0.86, 0, 0, 44) }):Play()
+        TweenService:Create(carryPill, TIB(0.3), { Size = UDim2.new(isCompactHud() and 0.78 or 0.86, 0, 0, isCompactHud() and 40 or 44) }):Play()
     else
-        TweenService:Create(carryPill, TI(0.2), { Size = UDim2.new(0.78, 0, 0, 36) }):Play()
+        carryTargetName = nil
+        TweenService:Create(carryPill, TI(0.2), { Size = UDim2.new(isCompactHud() and 0.72 or 0.78, 0, 0, 36) }):Play()
         task.delay(0.25, function() carryPill.Visible = false end)
     end
 end)
@@ -1375,6 +1579,22 @@ coachLbl.TextScaled         = true
 coachLbl.TextXAlignment     = Enum.TextXAlignment.Center
 coachLbl.Text               = ""
 coachLbl.ZIndex             = 26
+ensureTextConstraint(coachLbl, 10, 16)
+
+local bottomCoachScale = ensureScale(coachBar)
+local bottomHudViewportConn = nil
+local function applyBottomHudLayout()
+    local compact = isCompactHud()
+    carryPillScale.Scale = compact and 0.9 or 1
+    carryPill.Size = UDim2.new(compact and 0.74 or 0.82, 0, 0, compact and 36 or 40)
+    carryPill.Position = UDim2.new(compact and 0.13 or 0.09, 0, 1, compact and -104 or -118)
+    bottomCoachScale.Scale = compact and 0.9 or 1
+    coachBar.Size = UDim2.new(compact and 0.8 or 0.88, 0, 0, compact and 38 or 42)
+    coachBar.Position = UDim2.new(compact and 0.1 or 0.06, 0, 1, compact and -62 or -70)
+    if carryTargetName and carryPill.Visible then
+        carryLbl.Text = "\xF0\x9F\x93\xA6  Deliver to: " .. carryTargetName
+    end
+end
 
 local coachDismissThread = nil
 local function showCoachTip(msg)
@@ -1392,5 +1612,20 @@ local function showCoachTip(msg)
 end
 
 RemoteManager.Get("PlayerTipUpdate").OnClientEvent:Connect(showCoachTip)
+
+applyBottomHudLayout()
+local function connectBottomHudViewport()
+    local camera = workspace.CurrentCamera
+    if not camera then return end
+    if bottomHudViewportConn then
+        bottomHudViewportConn:Disconnect()
+    end
+    bottomHudViewportConn = camera:GetPropertyChangedSignal("ViewportSize"):Connect(applyBottomHudLayout)
+end
+connectBottomHudViewport()
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    applyBottomHudLayout()
+    connectBottomHudViewport()
+end)
 
 print("[HUDController] Redesign v2 ready.")

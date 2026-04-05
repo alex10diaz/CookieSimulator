@@ -7,6 +7,7 @@
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService      = game:GetService("TweenService")
+local UserInputService  = game:GetService("UserInputService")
 
 local RemoteManager            = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 local openMenuBoardRemote      = RemoteManager.Get("OpenMenuBoard")
@@ -21,6 +22,25 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 local MAX_SELECT = 6
 local ACCENT     = Color3.fromRGB(255, 200, 0)  -- gold
+
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
+local function clamp(n, minValue, maxValue)
+    return math.max(minValue, math.min(maxValue, n))
+end
+
+local function ensureTextConstraint(label, minSize, maxSize)
+    local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+    if not constraint then
+        constraint = Instance.new("UITextSizeConstraint")
+        constraint.Parent = label
+    end
+    constraint.MinTextSize = minSize
+    constraint.MaxTextSize = maxSize
+end
 
 local onResultCallback         = nil
 local onLockCallback           = nil
@@ -129,9 +149,14 @@ local function buildMenuBoard(payload)
     overlay.BorderSizePixel        = 0
 
     -- Main card
+    local viewport = getViewportSize()
+    local compact = UserInputService.TouchEnabled and (viewport.X <= 900 or viewport.Y <= 560)
+    local cardWidth = clamp(viewport.X - 24, 280, 410)
+    local cardHeight = clamp(viewport.Y - 36, compact and 350 or 400, 490)
+
     local card = Instance.new("Frame", sg)
-    card.Size                   = UDim2.new(0, 410, 0, 490)
-    card.Position               = UDim2.new(0.5, -205, 0.5, -245)
+    card.Size                   = UDim2.new(0, cardWidth, 0, cardHeight)
+    card.Position               = UDim2.new(0.5, -math.floor(cardWidth / 2), 0.5, -math.floor(cardHeight / 2))
     card.BackgroundColor3       = Color3.fromRGB(14, 14, 26)
     card.BackgroundTransparency = 0
     card.BorderSizePixel        = 0
@@ -160,6 +185,7 @@ local function buildMenuBoard(payload)
     titleLbl.Font                   = Enum.Font.GothamBold
     titleLbl.Text                   = "Today's Menu"
     titleLbl.TextXAlignment         = Enum.TextXAlignment.Left
+    ensureTextConstraint(titleLbl, 13, 24)
 
     local sub = Instance.new("TextLabel", card)
     sub.Size                   = UDim2.new(1, -20, 0, 20)
@@ -169,6 +195,7 @@ local function buildMenuBoard(payload)
     sub.TextScaled             = true
     sub.Font                   = Enum.Font.Gotham
     sub.Text                   = "Pick up to " .. MAX_SELECT .. " cookies to serve today"
+    ensureTextConstraint(sub, 11, 17)
 
     local statusLabel = Instance.new("TextLabel", card)
     statusLabel.Size                   = UDim2.new(1, -20, 0, 20)
@@ -178,9 +205,10 @@ local function buildMenuBoard(payload)
     statusLabel.TextScaled             = true
     statusLabel.Font                   = Enum.Font.GothamBold
     statusLabel.Text                   = "0 / " .. MAX_SELECT .. " selected"
+    ensureTextConstraint(statusLabel, 11, 17)
 
     local listFrame = Instance.new("ScrollingFrame", card)
-    listFrame.Size                   = UDim2.new(1, -20, 0, 300)
+    listFrame.Size                   = UDim2.new(1, -20, 1, compact and -148 or -190)
     listFrame.Position               = UDim2.new(0, 10, 0, 100)
     listFrame.BackgroundTransparency = 1
     listFrame.BorderSizePixel        = 0
@@ -206,15 +234,39 @@ local function buildMenuBoard(payload)
     local cbStroke = Instance.new("UIStroke", confirmBtn)
     cbStroke.Color     = Color3.fromRGB(50, 185, 75)
     cbStroke.Thickness = 1.5
+    ensureTextConstraint(confirmBtn, 12, 20)
 
     local hintLabel = Instance.new("TextLabel", card)
     hintLabel.Size                   = UDim2.new(1, -20, 0, 16)
-    hintLabel.Position               = UDim2.new(0, 10, 0, 462)
+    hintLabel.Position               = UDim2.new(0, 10, 1, -22)
     hintLabel.BackgroundTransparency = 1
     hintLabel.TextColor3             = Color3.fromRGB(80, 80, 110)
     hintLabel.TextScaled             = true
     hintLabel.Font                   = Enum.Font.Gotham
     hintLabel.Text                   = "Menu locks when the store opens"
+    ensureTextConstraint(hintLabel, 10, 14)
+
+    local function applyResponsiveMenuLayout()
+        local vp = getViewportSize()
+        local isCompact = UserInputService.TouchEnabled and (vp.X <= 900 or vp.Y <= 560)
+        local width = clamp(vp.X - 24, 280, 410)
+        local height = clamp(vp.Y - 36, isCompact and 350 or 400, 490)
+        card.Size = UDim2.new(0, width, 0, height)
+        card.Position = UDim2.new(0.5, -math.floor(width / 2), 0.5, -math.floor(height / 2))
+
+        headerBar.Size = UDim2.new(1, 0, 0, isCompact and 42 or 46)
+        sub.Position = UDim2.new(0, 10, 0, isCompact and 50 or 54)
+        sub.Size = UDim2.new(1, -20, 0, isCompact and 18 or 20)
+        statusLabel.Position = UDim2.new(0, 10, 0, isCompact and 70 or 76)
+        statusLabel.Size = UDim2.new(1, -20, 0, isCompact and 18 or 20)
+        listFrame.Position = UDim2.new(0, 10, 0, isCompact and 92 or 100)
+        listFrame.Size = UDim2.new(1, -20, 1, isCompact and -140 or -190)
+        confirmBtn.Size = UDim2.new(1, -20, 0, isCompact and 40 or 44)
+        confirmBtn.Position = UDim2.new(0, 10, 1, isCompact and -64 or -76)
+        hintLabel.Position = UDim2.new(0, 10, 1, -22)
+    end
+
+    applyResponsiveMenuLayout()
 
     -- ── Row helpers ────────────────────────────────────────────────────────────
     local checkboxRefs = {}

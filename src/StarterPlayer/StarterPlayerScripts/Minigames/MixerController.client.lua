@@ -16,6 +16,11 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 local ACCENT = Color3.fromRGB(255, 200, 0)  -- gold
 
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
 local function showPicker(menuList)
     if playerGui:FindFirstChild("MixPickerGui") or playerGui:FindFirstChild("MixGui") then return end
 
@@ -38,8 +43,12 @@ local function showPicker(menuList)
 
     -- ── Main card ──
     local bg = Instance.new("Frame", sg)
-    bg.Size                   = UDim2.new(0, 300, 0, 320)
-    bg.Position               = UDim2.new(0.5, -150, 0.5, -160)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 520
+    local width = math.clamp(viewport.X - 24, 260, 300)
+    local height = compact and 288 or 320
+    bg.Size                   = UDim2.new(0, width, 0, height)
+    bg.Position               = UDim2.new(0.5, -math.floor(width/2), 0.5, -math.floor(height/2))
     bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
@@ -100,7 +109,7 @@ local function showPicker(menuList)
     list.HorizontalAlignment = Enum.HorizontalAlignment.Center
     list.SortOrder           = Enum.SortOrder.LayoutOrder
 
-    local ROW_H   = 36
+    local ROW_H   = compact and 32 or 36
     local ROW_GAP = 6
     local rowCount = 0
 

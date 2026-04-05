@@ -298,6 +298,28 @@ function PlayerDataManager.AwardBakeryXP(player, amount)
     return p.bakeryXP, p.bakeryLevel, didLevelUp
 end
 
+-- TEMP_DEV: Wipe DataStore + in-memory profile for a player. Remove before launch.
+function PlayerDataManager.ResetData(player)
+    local userId = player.UserId
+    pcall(function() playerStore:RemoveAsync("Player_" .. userId) end)
+    profiles[userId] = newProfile()
+    local p = profiles[userId]
+    local ok, rm = pcall(getRemoteManager)
+    if ok then
+        rm.Get("PlayerDataInit"):FireClient(player, {
+            coins             = p.coins,
+            level             = p.level,
+            xp                = p.xp,
+            unlockedStations  = p.unlockedStations,
+            unlockedCosmetics = p.unlockedCosmetics,
+            equippedCosmetics = p.equippedCosmetics,
+            bakeryName        = p.bakeryName,
+            bakeryLevel       = p.bakeryLevel,
+        })
+    end
+    print("[PlayerDataManager] Data reset for " .. player.Name)
+end
+
 -- BUG-23: Reset comboStreak for all loaded players at shift start.
 -- comboStreak is per-shift; it must not carry over between shifts.
 function PlayerDataManager.ResetAllCombos()

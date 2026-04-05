@@ -15,6 +15,11 @@ local toppingCompleteRemote = RemoteManager.Get("ToppingComplete")
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
 -- ─── Constants ────────────────────────────────────────────────────────────────
 local ACCENT = Color3.fromRGB(255, 200, 0)   -- gold
 
@@ -123,8 +128,12 @@ local function showToppingMinigame(data)
     sg.Parent                = playerGui
 
     local bg = Instance.new("Frame", sg)
-    bg.Size                   = UDim2.new(0, 400, 0, 200)
-    bg.Position               = UDim2.new(0.5, -200, 0.5, -100)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 520
+    local width = math.clamp(viewport.X - 24, 280, 400)
+    local height = compact and 184 or 200
+    bg.Size                   = UDim2.new(0, width, 0, height)
+    bg.Position               = UDim2.new(0.5, -math.floor(width / 2), 0.5, -math.floor(height / 2))
     bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
@@ -193,8 +202,8 @@ local function showToppingMinigame(data)
 
     -- Large tap button
     local tapBtn = Instance.new("TextButton", bg)
-    tapBtn.Size                   = UDim2.new(1, -24, 0, 68)
-    tapBtn.Position               = UDim2.new(0, 12, 0, 124)
+    tapBtn.Size                   = UDim2.new(1, -24, 0, compact and 56 or 68)
+    tapBtn.Position               = UDim2.new(0, 12, 0, compact and 116 or 124)
     tapBtn.BackgroundColor3       = Color3.fromRGB(22, 22, 44)
     tapBtn.BackgroundTransparency = 0
     tapBtn.TextColor3             = Color3.fromRGB(255, 215, 80)
@@ -293,8 +302,11 @@ local function showWarmerOverlay(cookieName, cookieId, step, total)
     sg.Parent                = playerGui
 
     local bg = Instance.new("Frame", sg)
-    bg.Size                   = UDim2.new(0, 420, 0, 70)
-    bg.Position               = UDim2.new(0.5, -210, 1, -110)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 520
+    local width = math.clamp(viewport.X - 24, 280, 420)
+    bg.Size                   = UDim2.new(0, width, 0, compact and 62 or 70)
+    bg.Position               = UDim2.new(0.5, -math.floor(width / 2), 1, compact and -96 or -110)
     bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0
@@ -323,8 +335,8 @@ local function showWarmerOverlay(cookieName, cookieId, step, total)
     msg.TextXAlignment         = Enum.TextXAlignment.Left
 
     local cancelBtn = Instance.new("TextButton", bg)
-    cancelBtn.Size             = UDim2.new(0, 60, 0, 60)
-    cancelBtn.Position         = UDim2.new(1, -66, 0.5, -30)
+    cancelBtn.Size             = UDim2.new(0, compact and 52 or 60, 0, compact and 52 or 60)
+    cancelBtn.Position         = UDim2.new(1, compact and -58 or -66, 0.5, compact and -26 or -30)
     cancelBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
     cancelBtn.TextColor3       = Color3.fromRGB(255, 255, 255)
     cancelBtn.TextScaled       = true
@@ -361,8 +373,11 @@ local function showKDS(payload)
     sg.Parent                = playerGui
 
     local bg = Instance.new("Frame", sg)
-    bg.Size                   = UDim2.new(0, 450, 0, panelH)
-    bg.Position               = UDim2.new(0.5, -225, 0.5, -panelH / 2)
+    local viewport = getViewportSize()
+    local compact = viewport.X <= 700 or viewport.Y <= 560
+    local width = math.clamp(viewport.X - 24, 300, 450)
+    bg.Size                   = UDim2.new(0, width, 0, compact and math.min(panelH, 360) or panelH)
+    bg.Position               = UDim2.new(0.5, -math.floor(width / 2), 0.5, -math.floor((compact and math.min(panelH, 360) or panelH) / 2))
     bg.BackgroundColor3       = Color3.fromRGB(15, 30, 60)
     bg.BackgroundTransparency = 0
     bg.BorderSizePixel        = 0

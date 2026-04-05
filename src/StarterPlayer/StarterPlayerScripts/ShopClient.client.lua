@@ -6,6 +6,7 @@
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService        = game:GetService("RunService")
+local UserInputService  = game:GetService("UserInputService")
 
 local RemoteManager = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("RemoteManager"))
 
@@ -24,9 +25,47 @@ local coinsLabel = bg:WaitForChild("CoinsLabel")
 local tabUpgrade = bg:WaitForChild("TabUpgrades")
 local tabCosm    = bg:WaitForChild("TabCosmetics")
 local itemList   = bg:WaitForChild("ItemList")  -- ScrollingFrame
+itemList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local itemListLayout = itemList:FindFirstChildOfClass("UIListLayout")
+if not itemListLayout then
+    itemListLayout = Instance.new("UIListLayout")
+    itemListLayout.Padding = UDim.new(0, 4)
+    itemListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    itemListLayout.Parent = itemList
+end
+
+local itemListPadding = itemList:FindFirstChildOfClass("UIPadding")
+if not itemListPadding then
+    itemListPadding = Instance.new("UIPadding")
+    itemListPadding.PaddingTop = UDim.new(0, 2)
+    itemListPadding.PaddingBottom = UDim.new(0, 6)
+    itemListPadding.Parent = itemList
+end
 
 local ACCENT   = Color3.fromRGB(255, 205, 50)  -- gold
 local NAVY     = Color3.fromRGB(15, 30, 60)
+
+local function getViewportSize()
+    local camera = workspace.CurrentCamera
+    return camera and camera.ViewportSize or Vector2.new(1280, 720)
+end
+
+local function isCompact()
+    local vp = getViewportSize()
+    return UserInputService.TouchEnabled and (vp.X <= 900 or vp.Y <= 560)
+end
+
+local function ensureScale(instance)
+    local scale = instance:FindFirstChildOfClass("UIScale")
+    if not scale then
+        scale = Instance.new("UIScale")
+        scale.Parent = instance
+    end
+    return scale
+end
+
+local shopViewportConn = nil
 
 -- ── CLIENT STATE ────────────────────────────────────────────────
 local ownedStations   = {}
@@ -66,7 +105,7 @@ local function isOwned(item)
 end
 
 local function canAfford(item)
-    return playerCoins >= item.price
+    return type(item.price) == "number" and playerCoins >= item.price
 end
 
 local function requiresMet(item)
@@ -149,6 +188,114 @@ hintLabel.TextSize               = 10
 hintLabel.TextXAlignment         = Enum.TextXAlignment.Left
 hintLabel.Parent                 = previewPane
 
+local shopScale = ensureScale(bg)
+local function applyShopLayout()
+    local viewport = getViewportSize()
+    local compact = isCompact()
+    if compact then
+        local topInset = 68
+        local bottomInset = 12
+        local panelWidth = math.clamp(viewport.X - 24, 300, 360)
+        local panelHeight = math.clamp(viewport.Y - topInset - bottomInset, 320, 500)
+        local leftPad = 10
+        local topPad = 10
+        local headerHeight = 28
+        local tabHeight = 30
+        local tabTop = topPad + headerHeight + 8
+        local previewHeight = activeTab == "Cosmetics" and 96 or 0
+        local listTop = tabTop + tabHeight + 8 + previewHeight + (activeTab == "Cosmetics" and 8 or 0)
+        local listHeight = math.max(panelHeight - listTop - 14, 140)
+
+        shopScale.Scale = 1
+        bg.AnchorPoint = Vector2.new(0.5, 0)
+        bg.Size = UDim2.new(0, panelWidth, 0, panelHeight)
+        bg.Position = UDim2.new(0.5, 0, 0, topInset)
+
+        closeBtn.AnchorPoint = Vector2.new(1, 0)
+        closeBtn.Size = UDim2.new(0, 28, 0, 28)
+        closeBtn.Position = UDim2.new(1, -10, 0, 10)
+
+        coinsLabel.Size = UDim2.new(1, -60, 0, 24)
+        coinsLabel.Position = UDim2.new(0, leftPad, 0, topPad + 2)
+        coinsLabel.TextSize = 14
+        coinsLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        tabUpgrade.Size = UDim2.new(0.5, -6, 0, tabHeight)
+        tabUpgrade.Position = UDim2.new(0, leftPad, 0, tabTop)
+        tabUpgrade.TextSize = 13
+
+        tabCosm.Size = UDim2.new(0.5, -6, 0, tabHeight)
+        tabCosm.Position = UDim2.new(0.5, 2, 0, tabTop)
+        tabCosm.TextSize = 13
+
+        previewPane.Size = UDim2.new(1, -(leftPad * 2), 0, 96)
+        previewPane.Position = UDim2.new(0, leftPad, 0, tabTop + tabHeight + 8)
+
+        vpFrame.Size = UDim2.new(0, 72, 0, 72)
+        vpFrame.Position = UDim2.new(0, 8, 0, 8)
+
+        previewName.Size = UDim2.new(1, -92, 0, 18)
+        previewName.Position = UDim2.new(0, 84, 0, 8)
+        previewName.TextSize = 12
+
+        previewDesc.Size = UDim2.new(1, -92, 0, 42)
+        previewDesc.Position = UDim2.new(0, 84, 0, 28)
+        previewDesc.TextSize = 9
+
+        hintLabel.Size = UDim2.new(1, -92, 0, 12)
+        hintLabel.Position = UDim2.new(0, 84, 1, -16)
+        hintLabel.TextSize = 9
+
+        itemList.Position = UDim2.new(0, leftPad, 0, listTop)
+        itemList.Size = UDim2.new(1, -(leftPad * 2), 0, listHeight)
+        itemList.ScrollBarThickness = 3
+    else
+        shopScale.Scale = 1
+        bg.AnchorPoint = Vector2.new(0.5, 0.5)
+        bg.Size = UDim2.new(0, 420, 0, activeTab == "Cosmetics" and 620 or 540)
+        bg.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+        closeBtn.AnchorPoint = Vector2.new(1, 0)
+        closeBtn.Size = UDim2.new(0, 28, 0, 28)
+        closeBtn.Position = UDim2.new(1, -12, 0, 12)
+
+        coinsLabel.Size = UDim2.new(1, -28, 0, 28)
+        coinsLabel.Position = UDim2.new(0, 14, 0, 56)
+        coinsLabel.TextSize = 16
+        coinsLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+        tabUpgrade.Size = UDim2.new(0.5, -10, 0, 34)
+        tabUpgrade.Position = UDim2.new(0, 8, 0, 92)
+        tabUpgrade.TextSize = 14
+
+        tabCosm.Size = UDim2.new(0.5, -10, 0, 34)
+        tabCosm.Position = UDim2.new(0.5, 2, 0, 92)
+        tabCosm.TextSize = 14
+
+        previewPane.Size = UDim2.new(1, -16, 0, 162)
+        previewPane.Position = UDim2.new(0, 8, 1, -170)
+
+        vpFrame.Size = UDim2.new(0, 130, 1, -8)
+        vpFrame.Position = UDim2.new(0, 4, 0, 4)
+
+        previewName.Size = UDim2.new(1, -142, 0, 24)
+        previewName.Position = UDim2.new(0, 138, 0, 8)
+        previewName.TextSize = 14
+
+        previewDesc.Size = UDim2.new(1, -142, 0, 60)
+        previewDesc.Position = UDim2.new(0, 138, 0, 34)
+        previewDesc.TextSize = 11
+
+        hintLabel.Size = UDim2.new(1, -142, 0, 16)
+        hintLabel.Position = UDim2.new(0, 138, 1, -22)
+        hintLabel.TextSize = 10
+
+        itemList.Position = UDim2.new(0, 8, 0, 134)
+        itemList.Size = UDim2.new(1, -16, 0, activeTab == "Cosmetics" and 300 or 286)
+        itemList.ScrollBarThickness = 4
+    end
+end
+
 -- Preview state
 local previewOrbitConn  = nil
 local previewModelClone = nil
@@ -211,8 +358,9 @@ end
 
 local function renderItems()
     clearList()
-    local yOffset = 0
-    local ROW_H   = 72
+    local rowOrder = 0
+    local compact = isCompact()
+    local ROW_H   = compact and 64 or 72
 
     for _, item in ipairs(CATALOG) do
         if item.tab ~= activeTab then continue end
@@ -225,7 +373,8 @@ local function renderItems()
         local row = Instance.new("Frame")
         row.Name             = item.id
         row.Size             = UDim2.new(1, -8, 0, ROW_H - 4)
-        row.Position         = UDim2.new(0, 4, 0, yOffset + 2)
+        row.Position         = UDim2.new(0, 4, 0, 0)
+        row.LayoutOrder      = rowOrder
         row.BackgroundColor3 = owned
             and Color3.fromRGB(18, 48, 24)
             or  Color3.fromRGB(22, 42, 80)
@@ -256,19 +405,19 @@ local function renderItems()
             and Color3.fromRGB(120, 220, 120)
             or  Color3.fromRGB(240, 240, 255)
         nameLabel.Font                   = Enum.Font.GothamBold
-        nameLabel.TextSize               = 14
+        nameLabel.TextSize               = compact and 13 or 14
         nameLabel.TextXAlignment         = Enum.TextXAlignment.Left
         nameLabel.Parent                 = row
 
         -- Description
         local descLabel = Instance.new("TextLabel")
-        descLabel.Size                   = UDim2.new(0.7, 0, 0, 24)
+        descLabel.Size                   = UDim2.new(0.68, 0, 0, compact and 20 or 24)
         descLabel.Position               = UDim2.new(0, 14, 0, 32)
         descLabel.BackgroundTransparency = 1
         descLabel.Text                   = item.desc
         descLabel.TextColor3             = Color3.fromRGB(110, 140, 190)
         descLabel.Font                   = Enum.Font.Gotham
-        descLabel.TextSize               = 11
+        descLabel.TextSize               = compact and 10 or 11
         descLabel.TextXAlignment         = Enum.TextXAlignment.Left
         descLabel.TextWrapped            = true
         descLabel.Parent                 = row
@@ -277,7 +426,7 @@ local function renderItems()
 
         -- Price / earn label
         local priceLabel = Instance.new("TextLabel")
-        priceLabel.Size                   = UDim2.new(0.27, 0, 0, 20)
+        priceLabel.Size                   = UDim2.new(compact and 0.3 or 0.27, 0, 0, 20)
         priceLabel.Position               = UDim2.new(0.71, 0, 0, 8)
         priceLabel.BackgroundTransparency = 1
         priceLabel.Font                   = Enum.Font.GothamBold
@@ -306,10 +455,10 @@ local function renderItems()
         -- Equip / Unequip button for owned cosmetics
         if owned and item.tab == "Cosmetics" then
             local btn = Instance.new("TextButton")
-            btn.Size             = UDim2.new(0.27, 0, 0, 26)
+            btn.Size             = UDim2.new(compact and 0.3 or 0.27, 0, 0, compact and 24 or 26)
             btn.Position         = UDim2.new(0.71, 0, 0, 34)
             btn.Font             = Enum.Font.GothamBold
-            btn.TextSize         = 12
+            btn.TextSize         = compact and 11 or 12
             btn.AutoButtonColor  = false
             btn.BorderSizePixel  = 0
             btn.Parent           = row
@@ -343,7 +492,7 @@ local function renderItems()
         if not owned and not isStation then
             local canBuy = afford and prereq
             local buyBtn = Instance.new("TextButton")
-            buyBtn.Size             = UDim2.new(0.27, 0, 0, 26)
+            buyBtn.Size             = UDim2.new(compact and 0.3 or 0.27, 0, 0, compact and 24 or 26)
             buyBtn.Position         = UDim2.new(0.71, 0, 0, 34)
             buyBtn.BackgroundColor3 = canBuy
                 and Color3.fromRGB(200, 40, 100)
@@ -353,7 +502,7 @@ local function renderItems()
                 and Color3.fromRGB(255, 255, 255)
                 or  Color3.fromRGB(110, 140, 190)
             buyBtn.Font             = Enum.Font.GothamBold
-            buyBtn.TextSize         = 13
+            buyBtn.TextSize         = compact and 11 or 13
             buyBtn.AutoButtonColor  = false
             buyBtn.BorderSizePixel  = 0
             buyBtn.Parent           = row
@@ -383,10 +532,9 @@ local function renderItems()
             end)
         end
 
-        yOffset += ROW_H
+        rowOrder += 1
     end
-
-    itemList.CanvasSize = UDim2.new(0, 0, 0, yOffset + 4)
+    itemList.CanvasPosition = Vector2.zero
 end
 
 -- ── TAB SWITCHING ───────────────────────────────────────────────
@@ -408,17 +556,17 @@ local function setTab(tab)
 
     -- Show/hide preview pane and resize ItemList to avoid overlap
     if tab == "Cosmetics" then
-        itemList.Size    = UDim2.new(1, -16, 0, 186)
         previewPane.Visible = true
         previewName.Text = "Select a cosmetic"
         previewDesc.Text = ""
         hintLabel.Text   = "Click a row to preview"
     else
-        itemList.Size    = UDim2.new(1, -16, 0, 358)
         previewPane.Visible = false
         clearPreview()
     end
 
+    applyShopLayout()
+    itemList.CanvasPosition = Vector2.zero
     renderItems()
 end
 
@@ -430,6 +578,24 @@ local function openShop()
     ShopGui.Enabled = true
     updateCoinsLabel()
     setTab("Upgrades")
+    applyShopLayout()
+    itemList.CanvasPosition = Vector2.zero
+end
+
+local function connectShopViewport()
+    if shopViewportConn then
+        shopViewportConn:Disconnect()
+        shopViewportConn = nil
+    end
+
+    local camera = workspace.CurrentCamera
+    if camera then
+        shopViewportConn = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+            if ShopGui.Enabled then
+                applyShopLayout()
+            end
+        end)
+    end
 end
 
 local function closeShop()
@@ -438,6 +604,8 @@ end
 
 closeBtn.MouseButton1Click:Connect(closeShop)
 ShopGui.Enabled = false
+connectShopViewport()
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(connectShopViewport)
 
 -- ── PROXIMITY PROMPT (back room shop terminal) ──────────────────
 -- The prompt is on a Part named "ShopTerminal" inside Workspace/BackRoom
