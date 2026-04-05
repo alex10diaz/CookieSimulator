@@ -141,8 +141,10 @@ local REMOTES = {
     -- TEMP_DEV tools
     "DevAdmin_ResetData",      -- Client->Server: wipe caller profile and re-init client data
     "DevAdmin_Note",           -- Client->Server: write a dev note to server output
-    "DevAdmin_AddCoins",       -- Client->Server: give coins (amount)
-    "DevAdmin_AddXP",          -- Client->Server: give XP (amount)
+    "DevAdmin_AddCoins",        -- Client->Server: give coins (amount)
+    "DevAdmin_AddPlayerXP",    -- Client->Server: give player XP (amount)
+    "DevAdmin_AddBakeryXP",    -- Client->Server: give bakery XP (amount)
+    "DevAdmin_StartTutorial",  -- Client->Server: start tutorial without resetting data
 }
 
 -- Server creates all remotes; client waits for server-created ones.

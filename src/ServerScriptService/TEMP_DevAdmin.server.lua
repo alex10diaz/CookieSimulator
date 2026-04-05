@@ -23,14 +23,18 @@ end
 RemoteManager.Get("DevAdmin_ResetData").OnServerEvent:Connect(function(player)
     if not isAuthorized(player) then return end
     PlayerDataManager.ResetData(player)
-    -- Start tutorial like a brand new player
+    print("[DevAdmin] Data reset for " .. player.Name)
+end)
+
+RemoteManager.Get("DevAdmin_StartTutorial").OnServerEvent:Connect(function(player)
+    if not isAuthorized(player) then return end
     player:SetAttribute("InTutorial", true)
     task.delay(0.5, function()
         if player and player.Parent then
             TutorialKitchen.StartForPlayer(player)
         end
     end)
-    print("[DevAdmin] Reset + tutorial started for " .. player.Name)
+    print("[DevAdmin] Tutorial started for " .. player.Name)
 end)
 
 RemoteManager.Get("DevAdmin_AddCoins").OnServerEvent:Connect(function(player, amount)
@@ -41,12 +45,20 @@ RemoteManager.Get("DevAdmin_AddCoins").OnServerEvent:Connect(function(player, am
     print("[DevAdmin] +" .. math.floor(amount) .. " coins to " .. player.Name)
 end)
 
-RemoteManager.Get("DevAdmin_AddXP").OnServerEvent:Connect(function(player, amount)
+RemoteManager.Get("DevAdmin_AddPlayerXP").OnServerEvent:Connect(function(player, amount)
     if not isAuthorized(player) then return end
     amount = tonumber(amount)
     if not amount or amount <= 0 or amount > 1000000 then return end
     PlayerDataManager.AddXP(player, math.floor(amount))
-    print("[DevAdmin] +" .. math.floor(amount) .. " XP to " .. player.Name)
+    print("[DevAdmin] +" .. math.floor(amount) .. " player XP to " .. player.Name)
+end)
+
+RemoteManager.Get("DevAdmin_AddBakeryXP").OnServerEvent:Connect(function(player, amount)
+    if not isAuthorized(player) then return end
+    amount = tonumber(amount)
+    if not amount or amount <= 0 or amount > 1000000 then return end
+    PlayerDataManager.AwardBakeryXP(player, math.floor(amount))
+    print("[DevAdmin] +" .. math.floor(amount) .. " bakery XP to " .. player.Name)
 end)
 
 RemoteManager.Get("DevAdmin_Note").OnServerEvent:Connect(function(player, note)

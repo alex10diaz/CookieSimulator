@@ -8,8 +8,10 @@ local RemoteManager  = require(ReplicatedStorage:WaitForChild("Modules"):WaitFor
 local stateRemote    = RemoteManager.Get("GameStateChanged")
 local resetRemote    = RemoteManager.Get("DevAdmin_ResetData")
 local noteRemote     = RemoteManager.Get("DevAdmin_Note")
-local addCoinsRemote = RemoteManager.Get("DevAdmin_AddCoins")
-local addXPRemote    = RemoteManager.Get("DevAdmin_AddXP")
+local addCoinsRemote    = RemoteManager.Get("DevAdmin_AddCoins")
+local addPlayerXPRemote = RemoteManager.Get("DevAdmin_AddPlayerXP")
+local addBakeryXPRemote = RemoteManager.Get("DevAdmin_AddBakeryXP")
+local startTutRemote    = RemoteManager.Get("DevAdmin_StartTutorial")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -217,32 +219,36 @@ end
 
 local GREEN = Color3.fromRGB(50, 160, 70)
 
-makeInputRow("Coins", GREEN, function(n) addCoinsRemote:FireServer(n) end)
-makeInputRow("XP",    GREEN, function(n) addXPRemote:FireServer(n) end)
+makeInputRow("Coins",     GREEN, function(n) addCoinsRemote:FireServer(n) end)
+makeInputRow("Player XP", GREEN, function(n) addPlayerXPRemote:FireServer(n) end)
+makeInputRow("Bakery XP", GREEN, function(n) addBakeryXPRemote:FireServer(n) end)
 
 makeDivider()
 
-local resetButton = makeButton("Reset + Start Tutorial", RED)
+-- Reset Data (confirm required)
+local resetButton = makeButton("Reset Data", RED)
 local confirmReset = false
-
 resetButton.MouseButton1Click:Connect(function()
     if not confirmReset then
         confirmReset = true
         resetButton.Text = "CONFIRM RESET?"
-
         task.delay(3, function()
             if confirmReset then
                 confirmReset = false
-                resetButton.Text = "Reset My Data"
+                resetButton.Text = "Reset Data"
             end
         end)
-
         return
     end
-
     confirmReset = false
-    resetButton.Text = "Reset My Data"
+    resetButton.Text = "Reset Data"
     resetRemote:FireServer()
+end)
+
+-- Start Tutorial (no confirm needed)
+local tutButton = makeButton("Start Tutorial", Color3.fromRGB(60, 100, 180))
+tutButton.MouseButton1Click:Connect(function()
+    startTutRemote:FireServer()
 end)
 
 makeDivider()
