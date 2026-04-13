@@ -20,7 +20,7 @@ local COOKIE_DISPLAY = {
     cookies_and_cream    = "Cookies & Cream",
     snickerdoodle        = "Snickerdoodle",
     lemon_blackraspberry = "Lemon Berry",
-    butterscotch_chip    = "Butterscotch",
+    butterscotch_chip    = "Butterscotch Chip",
 }
 
 local function showCarryIndicator(box)

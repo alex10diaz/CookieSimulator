@@ -1,5 +1,5 @@
 -- MenuServer (Script, ServerScriptService/Core)
--- Handles menu remote events and wires GameState → PreOpen/Open transitions to MenuManager.
+-- Handles menu remote events and wires GameState -> PreOpen/Open transitions to MenuManager.
 
 local Players             = game:GetService("Players")
 local ReplicatedStorage   = game:GetService("ReplicatedStorage")
@@ -20,7 +20,7 @@ local purchaseCookieRemote    = RemoteManager.Get("PurchaseCookie")
 local purchaseCookieResultRemote = RemoteManager.Get("PurchaseCookieResult")
 
 local MAX_MENU_SIZE  = 6
-local _remapToken    = 0  -- P1-3: debounce PreOpen remaps so only the latest fires
+local _remapToken    = 0
 
 local function buildCookiePayload()
     local result = {}
@@ -62,57 +62,56 @@ local function sendMenuLocked()
     end
 end
 
--- ── GAME STATE LISTENER ────────────────────────────────────────
+-- Helper: update the drive-thru outside board to show the given menu
+local function updateDTBoard(menuIds)
+    local driveThru = workspace:FindFirstChild("Drive Thru")
+    local dtBoard = driveThru and driveThru:FindFirstChild("MenuBoard")
+    local dtGui = dtBoard and dtBoard:FindFirstChild("DTMenuDisplay")
+    if not dtGui then return end
+    for slot = 1, 6 do
+        local frame = dtGui:FindFirstChild("DTSlot" .. slot)
+        if frame then
+            local lbl = frame:FindFirstChild("CookieName")
+            local cookieId = menuIds[slot]
+            if cookieId then
+                local cookie = CookieData.GetById(cookieId)
+                if lbl then lbl.Text = cookie and cookie.name or cookieId end
+                frame.Visible = true
+            else
+                frame.Visible = false
+            end
+        end
+    end
+end
+
+-- GAME STATE LISTENER
 workspace:GetAttributeChangedSignal("GameState"):Connect(function()
     local state = workspace:GetAttribute("GameState")
     if state == "PreOpen" then
         MenuManager.UnlockMenu()
-        task.defer(sendOpenMenuBoard)  -- slight defer so clients have time to load
+        task.defer(sendOpenMenuBoard)
     elseif state == "Open" then
         MenuManager.LockMenu()
         sendMenuLocked()
-        -- Remap warmers/fridges to the confirmed active menu
         local activeMenu = MenuManager.GetActiveMenu()
         StationRemapService.RemapStations(activeMenu)
-        -- Update drive-thru outside board with today's active cookies
-        task.defer(function()
-            local dtBoard = workspace["Drive Thru"]:FindFirstChild("MenuBoard")
-            local dtGui = dtBoard and dtBoard:FindFirstChild("DTMenuDisplay")
-            if not dtGui then return end
-            for slot = 1, 6 do
-                local frame = dtGui:FindFirstChild("DTSlot" .. slot)
-                if frame then
-                    local lbl = frame:FindFirstChild("CookieName")
-                    local cookieId = activeMenu[slot]
-                    if cookieId then
-                        local cookie = CookieData.GetById(cookieId)
-                        if lbl then lbl.Text = cookie and cookie.name or cookieId end
-                        frame.Visible = true
-                    else
-                        frame.Visible = false
-                    end
-                end
-            end
-        end)
+        task.defer(function() updateDTBoard(activeMenu) end)
     end
 end)
 
--- ── PLAYER JOINS ────────────────────────────────────────────────
+-- PLAYER JOINS
 Players.PlayerAdded:Connect(function(player)
-    -- BUG-60: if player joins mid-tutorial, send menu board when InTutorial clears
-    -- (the broadcast on PreOpen start was silently dropped by the client guard)
+    -- BUG-80: if player joins mid-tutorial, send menu board when InTutorial clears
     player:GetAttributeChangedSignal("InTutorial"):Connect(function()
         if not player:GetAttribute("InTutorial") then
             local state = workspace:GetAttribute("GameState")
             if state == "PreOpen" then
-                task.wait(0.5)  -- brief yield so teleport lands first
+                task.wait(0.5)
                 sendOpenMenuBoard(player)
             end
         end
     end)
 
-    -- Grant starter cookies (idempotent — safe to call every join)
-    -- Wait for PlayerDataManager profile to load before granting/reading ownership
     task.spawn(function()
         local deadline = tick() + 10
         while not PlayerDataManager.GetData(player) and tick() < deadline do
@@ -126,17 +125,16 @@ Players.PlayerAdded:Connect(function(player)
     end)
 end)
 
--- ── REMOTE: SetMenuSelection ────────────────────────────────────
+-- REMOTE: SetMenuSelection
 setMenuRemote.OnServerEvent:Connect(function(player, cookieIds)
     if type(cookieIds) ~= "table" then
         menuResultRemote:FireClient(player, false, "Invalid selection")
         return
     end
     if #cookieIds < 1 or #cookieIds > MAX_MENU_SIZE then
-        menuResultRemote:FireClient(player, false, "Select 1–" .. MAX_MENU_SIZE .. " cookies")
+        menuResultRemote:FireClient(player, false, "Select 1-" .. MAX_MENU_SIZE .. " cookies")
         return
     end
-    -- Validate all IDs exist in the full catalog
     local allCookies = MenuManager.GetAllCookies()
     for _, id in ipairs(cookieIds) do
         local found = false
@@ -148,7 +146,6 @@ setMenuRemote.OnServerEvent:Connect(function(player, cookieIds)
             return
         end
     end
-    -- Validate all selected cookies are owned by this player
     for _, id in ipairs(cookieIds) do
         if not CookieUnlockManager.IsOwned(player, id) then
             menuResultRemote:FireClient(player, false, "Cookie not owned: " .. tostring(id))
@@ -163,21 +160,22 @@ setMenuRemote.OnServerEvent:Connect(function(player, cookieIds)
             menuResultRemote:FireClient(p, true, "Menu updated!", updatedMenu)
         end
         print("[MenuServer]", player.Name, "set menu to:", table.concat(updatedMenu, ", "))
-        -- P1-3: debounced remap — cancel any pending remap from a prior selection,
-        -- read live GetActiveMenu() at fire-time, skip if Open already locked+remapped.
         _remapToken += 1
         local token = _remapToken
         task.defer(function()
-            if _remapToken ~= token then return end          -- superseded by a later SetMenu
-            if MenuManager.IsLocked() then return end        -- Open transition already remapped
-            StationRemapService.RemapStations(MenuManager.GetActiveMenu())
+            if _remapToken ~= token then return end
+            if MenuManager.IsLocked() then return end
+            local activeMenu = MenuManager.GetActiveMenu()
+            StationRemapService.RemapStations(activeMenu)
+            -- Sync drive-thru board immediately when menu changes during PreOpen
+            updateDTBoard(activeMenu)
         end)
     else
         menuResultRemote:FireClient(player, false, result)
     end
 end)
 
--- ── REMOTE: PurchaseCookie ──────────────────────────────────────
+-- REMOTE: PurchaseCookie
 purchaseCookieRemote.OnServerEvent:Connect(function(player, cookieId)
     if type(cookieId) ~= "string" then
         purchaseCookieResultRemote:FireClient(player, false, "Invalid cookie", cookieId)
