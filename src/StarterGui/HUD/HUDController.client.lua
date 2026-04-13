@@ -38,7 +38,7 @@ local _prevHudState = nil
 local TRANSITION_EFFECTS = {
     PreOpen      = { "Checkerboard", "Center"      },
     Open         = { "Hexagon",      "Center"      },
-    EndOfDay     = { "Linear Wipe",  "TopLeft"     },
+    EndOfDay     = { "Iris",          "Center"      },
     Intermission = { "Split",        "Center"      },
 }
 
@@ -863,7 +863,7 @@ stateRemote.OnClientEvent:Connect(function(state, timeRemaining, shiftNum)
         for key in pairs(orderCards) do removeCard(key) end
         activeOrders = {}; emptyLbl.Visible = true; coachBar.Visible = false
         hideTray()
-        carryPill.Visible = false  -- BUG-73: clear carry pill on state change
+        if carryPill then carryPill.Visible = false end  -- BUG-73: clear carry pill on state change
         -- BUG-84: clear combo pill on shift end (can't call applyComboStreak — defined later)
         comboLbl.Text = ""; _prevComboStreak = 0
         local tw = TweenService:Create(comboPill, TI(0.3), { BackgroundTransparency = 1 })

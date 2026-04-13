@@ -149,9 +149,12 @@ function StationRemapService.RemapStations(orderedMenuIds)
                 local sg = doorPanel:FindFirstChild("WarmersDisplay")
                 if sg then
                     local lbl = sg:FindFirstChild("TextLabel", true)
-                    if lbl then lbl.Text = cookie.name end
+                    if lbl then
+                        lbl.Text = cookie.name
+                        lbl.TextColor3 = cookie.doughColor
+                    end
                 end
-                doorPanel.Color = cookie.doughColor
+                doorPanel.Color = Color3.fromRGB(22, 14, 6)  -- dark bg; cookie color goes on label
             end
 
             -- Re-enable UI and update prompt titles

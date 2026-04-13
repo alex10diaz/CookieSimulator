@@ -87,7 +87,7 @@ ensureTextConstraint(title, 14, 28)
 -- ── Stats grid ────────────────────────────────────────────────────────────────
 local STAT_DEFS = {
     { icon="📦", key="orders", label="Orders" },
-    { icon="★",  key="coins",  label="Coins Earned" },
+    { icon="🪙",  key="coins",  label="Coins Earned" },
     { icon="⚡", key="combo",  label="Best Combo" },
     { icon="⭐", key="stars",  label="Avg Rating" },
 }
@@ -148,6 +148,7 @@ gradeValL.TextXAlignment = Enum.TextXAlignment.Right; gradeValL.Text = "—"
 -- ── Station Breakdown Strip ────────────────────────────────────────────────────
 local stationStrip = Instance.new("Frame", frame)
 stationStrip.Name = "StationStrip"
+stationStrip.Visible = false
 stationStrip.Size = UDim2.new(1,-20,0,48); stationStrip.Position = UDim2.new(0,10,0,216)
 stationStrip.BackgroundTransparency = 1; stationStrip.BorderSizePixel = 0
 

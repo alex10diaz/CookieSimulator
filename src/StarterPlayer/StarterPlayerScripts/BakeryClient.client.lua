@@ -245,7 +245,7 @@ if confirmBtn then
 
     nameBox.FocusLost:Connect(function(enterPressed)
         if enterPressed then
-            confirmBtn.MouseButton1Click:Fire()
+            confirmBtn:Activate()
         end
     end)
 end

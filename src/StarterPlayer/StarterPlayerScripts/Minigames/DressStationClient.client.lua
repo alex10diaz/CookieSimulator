@@ -580,6 +580,10 @@ orderLocked.OnClientEvent:Connect(function(result)
         destroyWarmerOverlay()
         closeKDS()
         flashMsg(result.message or "Something went wrong", false)
+
+    elseif state == "cancelled" then
+        destroyWarmerOverlay()
+        closeKDS()
     end
 end)
 

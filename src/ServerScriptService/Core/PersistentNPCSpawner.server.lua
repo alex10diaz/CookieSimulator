@@ -38,6 +38,7 @@ local VARIETY_CHANCE       = 0.40  -- 40% chance of variety pack when 2+ types i
 local SPAWN_STATES = { "Open" }  -- NPCs only arrive when the store is open
 
 math.randomseed(tick())  -- Seed RNG so VIP rolls aren't identical each run
+local callNPCToCounter  -- forward-declared; defined later in file
 
 local NPC_NAMES = {
     "Alex", "Sam", "Jordan", "Riley", "Morgan", "Casey", "Taylor",
@@ -946,7 +947,7 @@ end
 -- ─── BOX READY → CALL NPC TO COUNTER ─────────────────────────────────────────
 local COUNTER_TIMEOUT = 90  -- seconds before NPC gives up at counter
 
-local function callNPCToCounter(npcId)
+callNPCToCounter = function(npcId)
     local data = npcs[npcId]
     if not data then return end
     -- BUG-94: spread multiple counter NPCs laterally to prevent visual pile-up

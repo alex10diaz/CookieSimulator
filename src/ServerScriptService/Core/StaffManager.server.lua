@@ -569,6 +569,8 @@ local function spawnHirePrompts()
 		local conn = prompt.Triggered:Connect(function(player)
 			-- BUG-42: tutorial players don't have context for hiring — silently ignore
 			if player:GetAttribute("InTutorial") then return end
+			-- Block AI hire when 2+ real players are present (solo-only feature)
+			if #Players:GetPlayers() >= 2 then return end
 			local entry = workers[capturedId]
 			if entry and entry.active then
 				dismissWorker(capturedId)

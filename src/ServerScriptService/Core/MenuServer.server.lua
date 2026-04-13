@@ -72,7 +72,28 @@ workspace:GetAttributeChangedSignal("GameState"):Connect(function()
         MenuManager.LockMenu()
         sendMenuLocked()
         -- Remap warmers/fridges to the confirmed active menu
-        StationRemapService.RemapStations(MenuManager.GetActiveMenu())
+        local activeMenu = MenuManager.GetActiveMenu()
+        StationRemapService.RemapStations(activeMenu)
+        -- Update drive-thru outside board with today's active cookies
+        task.defer(function()
+            local dtBoard = workspace["Drive Thru"]:FindFirstChild("MenuBoard")
+            local dtGui = dtBoard and dtBoard:FindFirstChild("DTMenuDisplay")
+            if not dtGui then return end
+            for slot = 1, 6 do
+                local frame = dtGui:FindFirstChild("DTSlot" .. slot)
+                if frame then
+                    local lbl = frame:FindFirstChild("CookieName")
+                    local cookieId = activeMenu[slot]
+                    if cookieId then
+                        local cookie = CookieData.GetById(cookieId)
+                        if lbl then lbl.Text = cookie and cookie.name or cookieId end
+                        frame.Visible = true
+                    else
+                        frame.Visible = false
+                    end
+                end
+            end
+        end)
     end
 end)
 

@@ -56,7 +56,6 @@ local function applyCosmetic(character, slot, cosmeticId)
     if clone:IsA("Accessory") then
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         if not humanoid then clone:Destroy(); return end
-        clone.Parent = character
         humanoid:AddAccessory(clone)
         return
     end
